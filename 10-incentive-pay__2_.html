@@ -521,6 +521,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 </head>
 <body style="-webkit-text-size-adjust:100%">
 <header class="topbar">
@@ -532,6 +533,8 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     </div>
   </div>
   <div class="tb-right">
+    <button id="spSyncBtn" onclick="spSync()" title="Sync with SharePoint" style="display:none;padding:5px 12px;border-radius:20px;border:2px solid #0078D4;background:transparent;color:#0078D4;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">☁ SharePoint</button>
+    <button id="spLoginBtn" onclick="spSignIn()" title="Sign in to sync with SharePoint" style="padding:5px 12px;border-radius:20px;border:2px solid #0078D4;background:#0078D4;color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔑 Sign In</button>
     <span class="tb-updated" id="lu">—</span>
     <div id="pinStatus" class="btn bw sm" onclick="goPage('pg-admin',document.querySelector('[data-page=\'pg-admin\']'))" style="font-size:11px;font-weight:700;cursor:pointer">🔐 Admin</div>
   </div>
@@ -2574,6 +2577,34 @@ body.admin-unlocked #sbStaffSection{display:block!important}
             <div style="color:var(--mu);font-size:13px">Loading…</div>
           </div>
         </div>
+
+        <!-- PUBLISH TO GITHUB -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-hdr" style="background:linear-gradient(135deg,#1B1F23,#2D333B)">
+            <div class="card-title">📢 Publish Live Data for Employees</div>
+          </div>
+          <div class="card-body">
+            <div style="background:linear-gradient(135deg,#F3E8FF,#FFF0F7);border:1px solid var(--se);border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:var(--se)">
+              <strong>How it works:</strong> Click Publish to push the current leaderboard and performance data to a public file on GitHub. Employees open the app URL and see the latest data automatically — no login required.
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:6px">🔑 GitHub Token (stored in your browser only)</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="password" id="ghTokenInput" placeholder="Paste your GitHub token here" style="flex:1;padding:8px 12px;border:2px solid var(--bo);border-radius:7px;font-family:'Nunito',sans-serif;font-size:12px;outline:none" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/>
+                <button class="btn bp sm" onclick="ghSaveToken()">Save Token</button>
+              </div>
+              <div id="ghTokenStatus" style="font-size:11px;color:var(--mu);margin-top:5px">—</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn bp" onclick="ghPublish()" id="ghPublishBtn" style="background:#1B1F23;border-color:#1B1F23">📢 Publish Now</button>
+              <span id="ghPublishStatus" style="font-size:12px;color:var(--mu)"></span>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--mu)">
+              Last published: <span id="ghLastPublished">Never</span>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-hdr" style="background:var(--se)">
             <div class="card-title">⚡ System Status</div>
@@ -3270,6 +3301,7 @@ function sumSwitchWeek(wkDate){
 
 // ── INIT ──
 document.addEventListener("DOMContentLoaded",()=>{
+  ghLoadPublicData();
   const _savedWk=localStorage.getItem("wfo_current_wk");
   setWk();
   if(_savedWk&&_savedWk>wk){wk=_savedWk;document.getElementById("wks").value=wk;updWB();}
@@ -3892,7 +3924,8 @@ function generateCoachSlipPDF(coachName){
   const mimBans=mimFromStores||mimFromReps;totalMim=mimBans*(ct.mimRate||10);
   const grandTotal=totalAct+totalAcc+totalMim+totalKick;
   const period=mn?formatPeriod(mn):'—';
-  const html=`<!DOCTYPE html><html><head><title>Coach Pay Slip — ${coachName}</title></head><body>
+  const html=`<!DOCTYPE html><html><head><title>Coach Pay Slip — ${coachName}</title><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
   <div class="no-print" style="margin-bottom:12px"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button><button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;margin-left:8px">✕ Close</button></div>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
   <div class="meta"><div class="meta-item"><label>Coach</label><span>${coachName}</span></div><div class="meta-item"><label>Period</label><span>${period}</span></div><div class="meta-item"><label>Stores</label><span>${stores.length}</span></div><div class="meta-item"><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div></div>
@@ -3918,7 +3951,8 @@ function generateMgrSlipPDF(storeName){
   const res=calcMgrBonus(storeName,sd);
 
   const html=`<!DOCTYPE html><html><head><title>Manager Pay Slip — ${storeName}</title>
-  </head><body>
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
   <div class="no-print" style="margin-bottom:12px">
     <button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button>
     <button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;margin-left:8px">✕ Close</button>
@@ -4904,7 +4938,8 @@ function generateCoachPayoutSlip(){
     .grand .total span{font-size:26px;font-weight:900;color:#E20074;}
     .footer{margin-top:14px;font-size:9px;color:#666;text-align:center;border-top:1px solid #E8E8E8;padding-top:8px;}
     @media print{.no-print{display:none;}}
-  </style></head><body>
+  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
   <div class="no-print" style="margin-bottom:12px">
     <button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save PDF</button>
     <button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 14px;border-radius:6px;margin-left:8px;cursor:pointer">✕ Close</button>
@@ -5123,7 +5158,8 @@ function generateMgrPayoutSlip(){
     .grand .total span{font-size:26px;font-weight:900;color:#E20074;}
     .footer{margin-top:14px;font-size:9px;color:#666;text-align:center;border-top:1px solid #E8E8E8;padding-top:8px;}
     @media print{.no-print{display:none;}}
-  </style></head><body>
+  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
   <div class="no-print" style="margin-bottom:12px">
     <button onclick="window.print()" style="background:#6E2B8B;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save PDF</button>
     <button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 14px;border-radius:6px;margin-left:8px;cursor:pointer">✕ Close</button>
@@ -5633,7 +5669,8 @@ function buildRepSlipFullHTML(r,c,wk2){
     body{font-family:'Nunito',sans-serif;background:#fff;padding:20px;}
     .no-print{display:none;}
     @media print{.no-print{display:none;}}
-  </style></head><body>${slipDiv}</body></html>`;
+  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>${slipDiv}</body></html>`;
 }
 
 function buildCoachSlipFullHTML(coachName){
@@ -5673,7 +5710,8 @@ function buildCoachSlipFullHTML(coachName){
     .totals .grand label{opacity:.7;}
     .totals .grand span{font-size:22px;color:#E20074;}
     .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-  </style></head><body>
+  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
   <div class="meta">
     <div><label>Coach</label><span>${coachName}</span></div>
@@ -5724,7 +5762,8 @@ function buildMgrSlipFullHTML(storeName){
     .totals .grand label{opacity:.7;}
     .totals .grand span{font-size:22px;color:#fff;}
     .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-  </style></head><body>
+  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Manager Bonus Pay Slip · ${storeName}</h2></div>
   <div class="meta">
     <div><label>Store</label><span>${storeName}</span></div>
@@ -5873,7 +5912,8 @@ async function downloadCoachPayoutSlipPDF(){
       .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
       .grand .total span{font-size:26px;color:#E20074;}
       .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-    </style></head><body>
+    </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
     <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Payout · ${coach}</h2></div>
     <div class="meta">
       <div><label>Coach</label><span>${coach}</span></div>
@@ -5943,7 +5983,8 @@ async function downloadMgrPayoutSlipPDF(){
       .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
       .grand .total span{font-size:26px;color:#E20074;}
       .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-    </style></head><body>
+    </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+</head><body>
     <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Manager Bonus Payout · ${mgr}</h2></div>
     <div class="meta">
       <div><label>Manager</label><span>${mgr}</span></div>
@@ -11209,6 +11250,436 @@ function printPerfCard(){
     +'<div class="ppc-conf">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div>'
     +'</div>';
   openPF(body,'Perf Card \u2014 '+name);
+}
+
+
+// ══════════════════════════════════════════════════════
+// SHAREPOINT SYNC — Microsoft Graph API via MSAL.js
+// ══════════════════════════════════════════════════════
+
+var _spConfig = {
+  clientId: '25cd6625-a940-4a23-bb82-2448af42a430',
+  tenantId: 'ebc8d7ee-ee3a-4821-b739-b0b060e7357f',
+  spHost:   'evolutionwirelessinc.sharepoint.com',
+  fileName: 'wfo_dashboard_data.json',
+  folderPath: '/Shared Documents/WFO Dashboard'
+};
+
+var _msalApp = null;
+var _spAccount = null;
+var _spToken = null;
+var _spScopes = ['Files.ReadWrite.All','Sites.ReadWrite.All','User.Read'];
+
+// Init MSAL on page load
+function spInit(){
+  try{
+    _msalApp = new msal.PublicClientApplication({
+      auth:{
+        clientId: _spConfig.clientId,
+        authority: 'https://login.microsoftonline.com/' + _spConfig.tenantId,
+        redirectUri: window.location.href.split('?')[0]
+      },
+      cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
+    });
+    // Check if already signed in
+    var accounts = _msalApp.getAllAccounts();
+    if(accounts.length > 0){
+      _spAccount = accounts[0];
+      spUpdateUI(true);
+    }
+    // Handle redirect response
+    _msalApp.handleRedirectPromise().then(function(resp){
+      if(resp && resp.account){
+        _spAccount = resp.account;
+        _spToken = resp.accessToken;
+        spUpdateUI(true);
+        tst2('Signed in to SharePoint \u2014 loading data\u2026','ok');
+        setTimeout(spLoad, 500);
+      }
+    }).catch(function(e){
+      console.log('MSAL redirect error:',e);
+    });
+  }catch(e){
+    console.log('MSAL init error:',e);
+  }
+}
+
+function spUpdateUI(signedIn){
+  var loginBtn = document.getElementById('spLoginBtn');
+  var syncBtn  = document.getElementById('spSyncBtn');
+  if(loginBtn) loginBtn.style.display = signedIn ? 'none' : '';
+  if(syncBtn)  syncBtn.style.display  = signedIn ? '' : 'none';
+  if(signedIn && _spAccount){
+    if(syncBtn) syncBtn.textContent = '\u2601 ' + (_spAccount.name||_spAccount.username||'Synced');
+  }
+}
+
+function spSignIn(){
+  if(!_msalApp){tst2('Auth not ready. Refresh and try again.','er');return;}
+  _msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
+}
+
+function spSignOut(){
+  if(!_msalApp||!_spAccount)return;
+  _msalApp.logoutRedirect({account:_spAccount});
+}
+
+function spGetToken(){
+  if(!_msalApp||!_spAccount)return Promise.reject('Not signed in');
+  return _msalApp.acquireTokenSilent({scopes:_spScopes,account:_spAccount})
+    .then(function(r){_spToken=r.accessToken;return r.accessToken;})
+    .catch(function(){
+      return _msalApp.acquireTokenRedirect({scopes:_spScopes,account:_spAccount});
+    });
+}
+
+// ── Build the full data snapshot ──
+function spBuildSnapshot(){
+  return {
+    version: 2,
+    savedAt: new Date().toISOString(),
+    savedBy: _spAccount ? (_spAccount.name||_spAccount.username) : 'unknown',
+    wfo_tiers:            localStorage.getItem('wfo_tiers'),
+    wfo_ts:               localStorage.getItem('wfo_ts'),
+    wfo_spiffs:           localStorage.getItem('wfo_spiffs'),
+    wfo_custom_roster:    localStorage.getItem('wfo_custom_roster'),
+    wfo_name_overrides:   localStorage.getItem('wfo_name_overrides'),
+    wfo_coach_roster:     localStorage.getItem('wfo_coach_roster'),
+    wfo_coach_recs:       localStorage.getItem('wfo_coach_recs'),
+    wfo_mgr_recs:         localStorage.getItem('wfo_mgr_recs'),
+    wfo_elb_data:         localStorage.getItem('wfo_elb_data'),
+    wfo_rtbdi_store:      localStorage.getItem('wfo_rtbdi_store'),
+    wfo_mim_data:         localStorage.getItem('wfo_mim_data'),
+    wfo_chargebacks:      localStorage.getItem('wfo_chargebacks'),
+    wfo_perf_metrics:     localStorage.getItem('wfo_perf_metrics'),
+    wfo_perf_thresholds:  localStorage.getItem('wfo_perf_thresholds'),
+    wfo_pu_config:        localStorage.getItem('wfo_pu_config'),
+    wfo_current_wk:       localStorage.getItem('wfo_current_wk'),
+    wfo_week_index:       localStorage.getItem('wfo_week_index'),
+    wfo_daily_index:      localStorage.getItem('wfo_daily_index'),
+    // Week data blobs
+    _weekData: (function(){
+      var idx = [];
+      try{idx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+      var out={};
+      idx.forEach(function(w){
+        var v=localStorage.getItem('wfo_week_'+w);
+        if(v)out['wfo_week_'+w]=v;
+      });
+      return JSON.stringify(out);
+    })(),
+    // Daily snapshots
+    _dailyData: (function(){
+      var idx = [];
+      try{idx=JSON.parse(localStorage.getItem('wfo_daily_index')||'[]');}catch(e){}
+      var out={};
+      idx.slice(0,30).forEach(function(d){
+        var v=localStorage.getItem('wfo_daily_'+d);
+        if(v)out['wfo_daily_'+d]=v;
+      });
+      return JSON.stringify(out);
+    })()
+  };
+}
+
+// ── Restore data from snapshot ──
+function spRestoreSnapshot(snap){
+  if(!snap||snap.version!==2)return false;
+  var keys=['wfo_tiers','wfo_ts','wfo_spiffs','wfo_custom_roster','wfo_name_overrides',
+    'wfo_coach_roster','wfo_coach_recs','wfo_mgr_recs','wfo_elb_data','wfo_rtbdi_store',
+    'wfo_mim_data','wfo_chargebacks','wfo_perf_metrics','wfo_perf_thresholds',
+    'wfo_pu_config','wfo_current_wk','wfo_week_index','wfo_daily_index'];
+  keys.forEach(function(k){if(snap[k]!=null)localStorage.setItem(k,snap[k]);});
+  // Restore week blobs
+  try{var wd=JSON.parse(snap._weekData||'{}');Object.entries(wd).forEach(function(kv){localStorage.setItem(kv[0],kv[1]);});}catch(e){}
+  // Restore daily blobs
+  try{var dd=JSON.parse(snap._dailyData||'{}');Object.entries(dd).forEach(function(kv){localStorage.setItem(kv[0],kv[1]);});}catch(e){}
+  return true;
+}
+
+// ── Get the SharePoint file path for Graph API ──
+function spFilePath(token){
+  var host = _spConfig.spHost;
+  var path = _spConfig.folderPath + '/' + _spConfig.fileName;
+  // Using root site drive
+  return 'https://graph.microsoft.com/v1.0/sites/' + host + ':/sites/root:/drive/root:' + path + ':/content';
+}
+
+function spFilePathAlt(){
+  // Fallback: use personal OneDrive root
+  return 'https://graph.microsoft.com/v1.0/me/drive/root:/WFO Dashboard/' + _spConfig.fileName + ':/content';
+}
+
+// ── SAVE to SharePoint ──
+function spSave(silent){
+  if(!_spAccount){tst2('Sign in first to sync.','wn');return;}
+  var syncBtn=document.getElementById('spSyncBtn');
+  if(syncBtn){syncBtn.textContent='\u2601 Saving\u2026';syncBtn.style.borderColor='#FFB300';syncBtn.style.color='#FFB300';}
+  spGetToken().then(function(token){
+    var data = JSON.stringify(spBuildSnapshot());
+    // Try SharePoint first, fall back to OneDrive
+    return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/' + _spConfig.fileName + ':/content',{
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:data
+    }).then(function(r){
+      if(r.ok){
+        if(!silent)tst2('\u2601 Saved to SharePoint \u2014 '+new Date().toLocaleTimeString(),'ok');
+        if(syncBtn){syncBtn.textContent='\u2601 Synced \u2713';syncBtn.style.borderColor='#00A651';syncBtn.style.color='#00A651';}
+        setTimeout(function(){if(syncBtn){syncBtn.textContent='\u2601 '+(_spAccount.name||_spAccount.username||'Synced');syncBtn.style.borderColor='#0078D4';syncBtn.style.color='#0078D4';}},3000);
+        return true;
+      }
+      return r.json().then(function(err){throw new Error(err.error&&err.error.message||r.status);});
+    });
+  }).catch(function(e){
+    console.error('SP save error:',e);
+    tst2('\u26a0 SharePoint save failed: '+e.message,'er');
+    if(syncBtn){syncBtn.textContent='\u2601 Save Failed';syncBtn.style.borderColor='var(--da)';syncBtn.style.color='var(--da)';}
+    setTimeout(function(){if(syncBtn){syncBtn.textContent='\u2601 '+(_spAccount&&(_spAccount.name||_spAccount.username)||'Retry');syncBtn.style.borderColor='#0078D4';syncBtn.style.color='#0078D4';}},4000);
+  });
+}
+
+// ── LOAD from SharePoint ──
+function spLoad(){
+  if(!_spAccount){tst2('Sign in first.','wn');return;}
+  var syncBtn=document.getElementById('spSyncBtn');
+  if(syncBtn){syncBtn.textContent='\u2601 Loading\u2026';}
+  spGetToken().then(function(token){
+    return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/' + _spConfig.fileName + ':/content',{
+      headers:{'Authorization':'Bearer '+token}
+    }).then(function(r){
+      if(r.status===404){
+        tst2('\u2601 No SharePoint data yet \u2014 this will create it on first save.','ok');
+        if(syncBtn){syncBtn.textContent='\u2601 '+(_spAccount.name||_spAccount.username||'Synced');}
+        return null;
+      }
+      if(r.ok)return r.json();
+      throw new Error('HTTP '+r.status);
+    }).then(function(snap){
+      if(!snap)return;
+      if(spRestoreSnapshot(snap)){
+        tst2('\u2601 Data loaded from SharePoint \u2014 reloading\u2026','ok');
+        setTimeout(function(){window.location.reload();},1200);
+      }else{
+        tst2('\u26a0 SharePoint data format unrecognised.','wn');
+      }
+    });
+  }).catch(function(e){
+    console.error('SP load error:',e);
+    tst2('\u26a0 SharePoint load failed: '+e,'er');
+    if(syncBtn){syncBtn.textContent='\u2601 '+(_spAccount&&(_spAccount.name||_spAccount.username)||'Retry');}
+  });
+}
+
+// ── Public sync button handler ──
+function spSync(){
+  if(!_spAccount){spSignIn();return;}
+  // Show menu
+  var existing=document.getElementById('spSyncMenu');
+  if(existing){existing.remove();return;}
+  var btn=document.getElementById('spSyncBtn');
+  var rect=btn.getBoundingClientRect();
+  var menu=document.createElement('div');
+  menu.id='spSyncMenu';
+  menu.style.cssText='position:fixed;top:'+(rect.bottom+6)+'px;right:'+(window.innerWidth-rect.right)+'px;background:#fff;border:1px solid var(--bo);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;min-width:200px;overflow:hidden;font-family:\'Nunito\',sans-serif;font-size:13px;';
+  var user=_spAccount?(_spAccount.name||_spAccount.username||'Signed in'):'';
+  menu.innerHTML='<div style="padding:10px 14px;background:#F3E8FF;font-size:11px;color:#6E2B8B;font-weight:700;border-bottom:1px solid var(--bo)">\u2601 '+user+'</div>'
+    +'<div onclick="spSave(false);document.getElementById(\'spSyncMenu\').remove()" style="padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--bo);color:#1A1A1A" onmouseover="this.style.background=\'#F5F5F5\'" onmouseout="this.style.background=\'\'">\uD83D\uDCBE Save to SharePoint</div>'
+    +'<div onclick="spLoad();document.getElementById(\'spSyncMenu\').remove()" style="padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--bo);color:#1A1A1A" onmouseover="this.style.background=\'#F5F5F5\'" onmouseout="this.style.background=\'\'">\uD83D\uDD04 Load from SharePoint</div>'
+    +'<div onclick="spSignOut();document.getElementById(\'spSyncMenu\').remove()" style="padding:11px 14px;cursor:pointer;color:var(--da)" onmouseover="this.style.background=\'#FFF5F5\'" onmouseout="this.style.background=\'\'">\uD83D\uDD12 Sign Out</div>';
+  document.body.appendChild(menu);
+  setTimeout(function(){document.addEventListener('click',function h(e){if(!menu.contains(e.target)&&e.target!==btn){menu.remove();document.removeEventListener('click',h);}});},100);
+}
+
+// ── Auto-save hooks ── 
+// Hook into saveSession to auto-sync when data is saved
+var _origSaveSession = typeof saveSession === 'function' ? saveSession : null;
+document.addEventListener('DOMContentLoaded', function(){
+  spInit();
+  // Wrap saveSession to trigger auto-save
+  if(typeof saveSession === 'function'){
+    var _orig = saveSession;
+    window.saveSession = function(){
+      _orig.apply(this, arguments);
+      if(_spAccount){
+        clearTimeout(window._spAutoSaveTimer);
+        window._spAutoSaveTimer = setTimeout(function(){spSave(true);}, 3000);
+      }
+    };
+  }
+});
+
+
+// ══════════════════════════════════════════════════════
+// GITHUB PUBLISH — push public data for employees
+// ══════════════════════════════════════════════════════
+
+var _ghRepo  = 'edgelinkinc/wfo-incentive-pay';
+var _ghFile  = 'public_data.json';
+var _ghBranch= 'main';
+var _ghDataUrl = 'https://raw.githubusercontent.com/' + _ghRepo + '/' + _ghBranch + '/' + _ghFile;
+
+// ── Token management ──
+function ghGetToken(){return localStorage.getItem('wfo_gh_token')||'';}
+function ghSaveToken(){
+  var inp=document.getElementById('ghTokenInput');
+  if(!inp||!inp.value.trim()){tst2('Paste your token first.','wn');return;}
+  localStorage.setItem('wfo_gh_token',inp.value.trim());
+  inp.value='';
+  var st=document.getElementById('ghTokenStatus');
+  if(st){st.textContent='✅ Token saved to your browser.';st.style.color='var(--ok)';}
+  tst2('GitHub token saved!','ok');
+}
+
+function ghInitTokenUI(){
+  var token=ghGetToken();
+  var st=document.getElementById('ghTokenStatus');
+  var lastPub=localStorage.getItem('wfo_gh_last_published');
+  if(st){
+    if(token){st.textContent='✅ Token is set. Leave blank to keep current.';st.style.color='var(--ok)';}
+    else{st.textContent='⚠ No token set — paste yours above.';st.style.color='var(--wa)';}
+  }
+  var lp=document.getElementById('ghLastPublished');
+  if(lp)lp.textContent=lastPub||'Never';
+}
+
+// ── Build the public snapshot (leaderboard + perf data only, no pay details) ──
+function ghBuildPublicData(){
+  // Include only what employees need to see: leaderboard and perf grades
+  // Does NOT include pay amounts, chargeback details, admin settings
+  var idx=[];
+  try{idx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+  var weekData={};
+  idx.forEach(function(w){
+    var raw=localStorage.getItem('wfo_week_'+w);
+    if(!raw)return;
+    try{
+      var d=JSON.parse(raw);
+      // Strip sensitive pay data, keep rep metrics for leaderboard/perf
+      var stripped={
+        week:d.week,locked:d.locked,repCount:d.repCount,
+        reps:(d.reps||[]).map(function(r){
+          return{
+            n:r.n,ri:r.ri,s:r.s,c:r.c,state:r.state,
+            ta:r.ta,na:r.na,ra:r.ra,up:r.up,tb:r.tb,wt:r.wt,
+            hs:r.hs,af:r.af,hr:r.hr,ap:r.ap,ml:r.ml,mb:r.mb
+            // No al (arcade log), no pay amounts
+          };
+        })
+      };
+      weekData[w]=stripped;
+    }catch(e){}
+  });
+
+  return {
+    version: 1,
+    publishedAt: new Date().toISOString(),
+    currentWeek: localStorage.getItem('wfo_current_wk')||'',
+    weekIndex: idx,
+    weekData: weekData,
+    perfMetrics:    localStorage.getItem('wfo_perf_metrics'),
+    perfThresholds: localStorage.getItem('wfo_perf_thresholds'),
+    puConfig:       localStorage.getItem('wfo_pu_config'),
+    customRoster:   localStorage.getItem('wfo_custom_roster'),
+    nameOverrides:  localStorage.getItem('wfo_name_overrides'),
+    tiers:          localStorage.getItem('wfo_tiers')
+  };
+}
+
+// ── Push to GitHub ──
+function ghPublish(){
+  var token=ghGetToken();
+  if(!token){
+    tst2('No GitHub token set. Go to Admin \u2192 Pending Actions \u2192 paste your token first.','er');
+    ghInitTokenUI();
+    return;
+  }
+  var btn=document.getElementById('ghPublishBtn');
+  var st=document.getElementById('ghPublishStatus');
+  if(btn){btn.textContent='Publishing\u2026';btn.disabled=true;}
+  if(st){st.textContent='Uploading to GitHub\u2026';st.style.color='var(--mu)';}
+
+  var data=JSON.stringify(ghBuildPublicData(),null,2);
+  var b64=btoa(unescape(encodeURIComponent(data)));
+
+  // Get current SHA first (needed for update)
+  fetch('https://api.github.com/repos/'+_ghRepo+'/contents/'+_ghFile+'?ref='+_ghBranch,{
+    headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}
+  })
+  .then(function(r){return r.ok?r.json().then(function(d){return d.sha;}):null;})
+  .then(function(sha){
+    var body={
+      message:'Publish WFO data \u2014 '+new Date().toLocaleString(),
+      content:b64,
+      branch:_ghBranch
+    };
+    if(sha)body.sha=sha;
+    return fetch('https://api.github.com/repos/'+_ghRepo+'/contents/'+_ghFile,{
+      method:'PUT',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  })
+  .then(function(r){
+    if(r.ok||r.status===201){
+      var ts=new Date().toLocaleString();
+      localStorage.setItem('wfo_gh_last_published',ts);
+      if(st){st.textContent='\u2705 Published at '+ts;st.style.color='var(--ok)';}
+      var lp=document.getElementById('ghLastPublished');if(lp)lp.textContent=ts;
+      tst2('\uD83D\uDCE2 Data published! Employees can now see the latest leaderboard.','ok');
+      if(btn){btn.textContent='\uD83D\uDCE2 Publish Now';btn.disabled=false;}
+    }else{
+      return r.json().then(function(e){throw new Error(e.message||r.status);});
+    }
+  })
+  .catch(function(e){
+    console.error('GitHub publish error:',e);
+    tst2('\u26a0 Publish failed: '+e.message,'er');
+    if(st){st.textContent='\u26a0 Failed: '+e.message;st.style.color='var(--da)';}
+    if(btn){btn.textContent='\uD83D\uDCE2 Publish Now';btn.disabled=false;}
+  });
+}
+
+// ── Auto-load public data for employees (no login needed) ──
+function ghLoadPublicData(){
+  // Only load if localStorage has no current week data (fresh browser)
+  var hasData=localStorage.getItem('wfo_current_wk');
+  if(hasData)return; // Already have local data, skip
+  fetch(_ghDataUrl+'?t='+Date.now())
+    .then(function(r){if(r.ok)return r.json();throw new Error('No public data');})
+    .then(function(snap){
+      if(!snap||snap.version!==1)return;
+      // Restore public data to localStorage
+      if(snap.currentWeek)localStorage.setItem('wfo_current_wk',snap.currentWeek);
+      if(snap.weekIndex)localStorage.setItem('wfo_week_index',JSON.stringify(snap.weekIndex));
+      if(snap.perfMetrics)localStorage.setItem('wfo_perf_metrics',snap.perfMetrics);
+      if(snap.perfThresholds)localStorage.setItem('wfo_perf_thresholds',snap.perfThresholds);
+      if(snap.puConfig)localStorage.setItem('wfo_pu_config',snap.puConfig);
+      if(snap.customRoster)localStorage.setItem('wfo_custom_roster',snap.customRoster);
+      if(snap.nameOverrides)localStorage.setItem('wfo_name_overrides',snap.nameOverrides);
+      if(snap.tiers)localStorage.setItem('wfo_tiers',snap.tiers);
+      // Restore week data
+      if(snap.weekData){
+        Object.entries(snap.weekData).forEach(function(kv){
+          localStorage.setItem('wfo_week_'+kv[0],JSON.stringify(kv[1]));
+        });
+      }
+      // Reload silently to pick up the data
+      window.location.reload();
+    })
+    .catch(function(){
+      // No public data yet, that's fine
+    });
+}
+
+// Hook into swAdmin('actions') to init token UI
+var _origSwAdmin=typeof swAdmin==='function'?swAdmin:null;
+if(typeof swAdmin==='function'){
+  var _ghOrigSwAdmin=swAdmin;
+  window.swAdmin=function(tab,btn){
+    _ghOrigSwAdmin(tab,btn);
+    if(tab==='actions')setTimeout(ghInitTokenUI,100);
+  };
 }
 
 </script>
