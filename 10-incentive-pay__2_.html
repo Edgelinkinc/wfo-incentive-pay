@@ -521,6 +521,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+
 <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 </head>
 <body style="-webkit-text-size-adjust:100%">
@@ -2763,7 +2764,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
           <th style="padding:6px 10px;text-align:left;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Metric</th>
           <th style="padding:6px 8px;text-align:center;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Actual</th>
           <th style="padding:6px 8px;text-align:center;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Target</th>
-          <th style="padding:6px 8px;text-align:center;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Raw Score</th>
+          <th style="padding:6px 8px;text-align:center;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Score</th>
           <th style="padding:6px 8px;text-align:center;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--se);text-transform:uppercase;border-bottom:2px solid var(--pr);background:#F3E8FF">Weight</th>
           <th style="padding:6px 8px;text-align:center;font-family:'Poppins',sans-serif;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Contribution</th>
         </tr></thead>
@@ -2771,7 +2772,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <tfoot id="perfBdFoot"></tfoot>
       </table>
     </div>
-    <div style="padding:0 20px 16px;font-size:11px;color:var(--mu)">Contribution = Raw Score × (Weight ÷ Total Active Weight). Click a rep on the Monthly tab to see full week history.</div>
+    <div style="padding:0 20px 16px;font-size:11px;color:var(--mu)">Contribution = Score × (Weight ÷ Total Active Weight). Click a rep on the Monthly tab to see full week history.</div>
     <div style="padding:0 20px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bo);padding-top:12px">
       <button class="btn bp sm" onclick="printPerfCard()">🖨 Print Card</button>
       <button class="btn bo sm" onclick="closePerfBreakdown()">Close</button>
@@ -3924,7 +3925,7 @@ function generateCoachSlipPDF(coachName){
   const mimBans=mimFromStores||mimFromReps;totalMim=mimBans*(ct.mimRate||10);
   const grandTotal=totalAct+totalAcc+totalMim+totalKick;
   const period=mn?formatPeriod(mn):'—';
-  const html=`<!DOCTYPE html><html><head><title>Coach Pay Slip — ${coachName}</title><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  const html=`<!DOCTYPE html><html><head><title>Coach Pay Slip — ${coachName}</title>
 </head><body>
   <div class="no-print" style="margin-bottom:12px"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button><button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;margin-left:8px">✕ Close</button></div>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
@@ -3951,7 +3952,7 @@ function generateMgrSlipPDF(storeName){
   const res=calcMgrBonus(storeName,sd);
 
   const html=`<!DOCTYPE html><html><head><title>Manager Pay Slip — ${storeName}</title>
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  
 </head><body>
   <div class="no-print" style="margin-bottom:12px">
     <button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button>
@@ -4938,7 +4939,7 @@ function generateCoachPayoutSlip(){
     .grand .total span{font-size:26px;font-weight:900;color:#E20074;}
     .footer{margin-top:14px;font-size:9px;color:#666;text-align:center;border-top:1px solid #E8E8E8;padding-top:8px;}
     @media print{.no-print{display:none;}}
-  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  </style>
 </head><body>
   <div class="no-print" style="margin-bottom:12px">
     <button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save PDF</button>
@@ -5158,7 +5159,7 @@ function generateMgrPayoutSlip(){
     .grand .total span{font-size:26px;font-weight:900;color:#E20074;}
     .footer{margin-top:14px;font-size:9px;color:#666;text-align:center;border-top:1px solid #E8E8E8;padding-top:8px;}
     @media print{.no-print{display:none;}}
-  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  </style>
 </head><body>
   <div class="no-print" style="margin-bottom:12px">
     <button onclick="window.print()" style="background:#6E2B8B;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save PDF</button>
@@ -5669,7 +5670,7 @@ function buildRepSlipFullHTML(r,c,wk2){
     body{font-family:'Nunito',sans-serif;background:#fff;padding:20px;}
     .no-print{display:none;}
     @media print{.no-print{display:none;}}
-  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  </style>
 </head><body>${slipDiv}</body></html>`;
 }
 
@@ -5710,7 +5711,7 @@ function buildCoachSlipFullHTML(coachName){
     .totals .grand label{opacity:.7;}
     .totals .grand span{font-size:22px;color:#E20074;}
     .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  </style>
 </head><body>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
   <div class="meta">
@@ -5762,7 +5763,7 @@ function buildMgrSlipFullHTML(storeName){
     .totals .grand label{opacity:.7;}
     .totals .grand span{font-size:22px;color:#fff;}
     .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-  </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  </style>
 </head><body>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Manager Bonus Pay Slip · ${storeName}</h2></div>
   <div class="meta">
@@ -5912,7 +5913,7 @@ async function downloadCoachPayoutSlipPDF(){
       .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
       .grand .total span{font-size:26px;color:#E20074;}
       .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-    </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    </style>
 </head><body>
     <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Payout · ${coach}</h2></div>
     <div class="meta">
@@ -5983,7 +5984,7 @@ async function downloadMgrPayoutSlipPDF(){
       .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
       .grand .total span{font-size:26px;color:#E20074;}
       .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-    </style><script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    </style>
 </head><body>
     <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Manager Bonus Payout · ${mgr}</h2></div>
     <div class="meta">
@@ -11243,10 +11244,10 @@ function printPerfCard(){
     +'<div class="ppc-hero">'+(heroEl?heroEl.innerHTML:'')+'</div>'
     +((gapEl&&gapEl.innerHTML)?'<div class="ppc-gap">'+gapEl.innerHTML+'</div>':'')
     +'<div class="ppc-body"><div style="font-family:\'Poppins\',sans-serif;font-weight:700;font-size:12px;color:#6E2B8B;margin-bottom:10px">Score Breakdown by Metric</div>'
-    +'<table class="ppc-t"><thead><tr><th>Metric</th><th style="text-align:center">Actual</th><th style="text-align:center">Target</th><th style="text-align:center">Raw Score</th><th style="text-align:center;background:#F3E8FF;color:#6E2B8B">Weight</th><th style="text-align:center">Contribution</th></tr></thead>'
+    +'<table class="ppc-t"><thead><tr><th>Metric</th><th style="text-align:center">Actual</th><th style="text-align:center">Target</th><th style="text-align:center">Score</th><th style="text-align:center;background:#F3E8FF;color:#6E2B8B">Weight</th><th style="text-align:center">Contribution</th></tr></thead>'
     +'<tbody>'+(rowsEl?rowsEl.innerHTML:'')+'</tbody>'
     +'<tfoot>'+(footEl?footEl.innerHTML:'')+'</tfoot></table>'
-    +'<div style="margin-top:8px;font-size:10px;color:#aaa">Contribution = Raw Score \u00d7 (Weight \u00f7 Total Active Weight)</div></div></div>'
+    +'<div style="margin-top:8px;font-size:10px;color:#aaa">Contribution = Score \u00d7 (Weight \u00f7 Total Active Weight)</div></div></div>'
     +'<div class="ppc-conf">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div>'
     +'</div>';
   openPF(body,'Perf Card \u2014 '+name);
