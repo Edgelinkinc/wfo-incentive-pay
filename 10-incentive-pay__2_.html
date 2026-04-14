@@ -517,6 +517,111 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   /* Staff gate — hidden until PIN unlock */
   body:not(.admin-unlocked) .staff-gate{display:none!important}
   body.admin-unlocked .staff-gate{display:block}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE — TABLET & PHONE OPTIMISATION
+   Tablet: 768px–1024px | Phone: <768px
+══════════════════════════════════════════════════════ */
+
+/* ── TABLET (768–1024px) ── */
+@media(min-width:769px) and (max-width:1024px){
+  .sidebar{width:180px;min-width:180px}
+  .si-label{font-size:11px}
+  .sg-label{font-size:10px}
+  .content{padding:12px}
+  .kstrip{grid-template-columns:repeat(3,1fr);gap:8px}
+  .kc{padding:10px 12px}
+  .kv{font-size:22px}
+  .card-hdr{flex-wrap:wrap;gap:6px}
+  .sub-tabs{flex-wrap:wrap}
+  .sub-tab{font-size:11px;padding:6px 12px}
+  .week-bar{flex-wrap:wrap;gap:8px;padding:10px 14px}
+  table{font-size:11px}
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  body.perf-active #pg-perf{left:180px;width:calc(100% - 180px)}
+  .fg.fc2,.fg.fc3,.fg.fc4,.fg.fc5{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 12px}
+  .tb-updated{display:none}
+}
+
+/* ── PHONE (≤768px) ── */
+@media(max-width:768px){
+  /* Layout */
+  .layout{flex-direction:column!important;height:auto!important;min-height:calc(100vh - 54px)!important}
+  .sidebar,.sidebar-toggle{display:none!important;width:0!important;min-width:0!important}
+  .content{flex:1!important;width:100%!important;padding:10px!important;padding-bottom:72px!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;height:auto!important;overflow-anchor:none!important}
+  .bnav{display:flex!important;flex-shrink:0!important;min-height:56px!important;position:fixed!important;bottom:0!important;left:0!important;right:0!important;z-index:300!important}
+
+  /* Topbar */
+  .topbar{height:54px;padding:0 10px}
+  .tb-sub-hide,.tb-updated{display:none}
+  .tb-title{font-size:14px}
+  .tb-logo{width:28px;height:28px;font-size:9px}
+  #spLoginBtn,#spSyncBtn{font-size:10px;padding:4px 8px}
+
+  /* KPI strip */
+  .kstrip{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .kc{padding:10px 12px}
+  .kv{font-size:20px}
+  .ks{font-size:9px}
+
+  /* Cards */
+  .card{border-radius:10px;margin-bottom:10px}
+  .card-hdr{padding:10px 12px;flex-wrap:wrap;gap:6px}
+  .card-title{font-size:13px}
+  .card-body{padding:12px}
+
+  /* Tables — horizontal scroll */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
+  table{font-size:11px;min-width:480px}
+  th,td{padding:6px 8px!important}
+
+  /* Week bar */
+  .week-bar{flex-wrap:wrap;gap:6px;padding:8px 10px}
+  .week-bar label{font-size:11px}
+
+  /* Sub tabs */
+  .sub-tabs{flex-wrap:wrap;gap:4px;padding:8px 10px}
+  .sub-tab{font-size:11px;padding:6px 10px;flex:1;text-align:center;min-width:80px}
+
+  /* Forms */
+  .fg,.fg.fc2,.fg.fc3,.fg.fc4,.fg.fc5{grid-template-columns:1fr!important}
+  .fi input,.fi select,.fi textarea{font-size:14px}
+
+  /* Perf review fixed page */
+  body.perf-active #pg-perf{left:0!important;width:100%!important;top:54px!important}
+
+  /* PIN pad */
+  .pin-btn{width:72px;height:72px;font-size:24px}
+
+  /* Modals */
+  .adov,.adp{padding:12px}
+  #perfBreakdownModal>div,#repHistoryModal>div,#perfGradeModal>div{width:96vw;max-width:96vw}
+
+  /* Bottom nav labels */
+  .bn-lbl{font-size:9px}
+  .bn-ic{font-size:20px}
+
+  /* Home page */
+  #pg-home>div:nth-child(2){grid-template-columns:1fr!important}
+  #pg-home>div:last-of-type{grid-template-columns:1fr!important}
+  .home-nav-btn{padding:14px 8px;font-size:12px}
+
+  /* Rep table */
+  #rb tr td:nth-child(n+5){min-width:60px}
+}
+
+/* ── SMALL PHONE (≤430px) ── */
+@media(max-width:430px){
+  .kstrip{grid-template-columns:1fr 1fr}
+  .kv{font-size:18px}
+  table{min-width:420px;font-size:10px}
+  .sub-tab{font-size:10px;padding:5px 8px}
+  .week-bar{gap:4px;padding:6px 10px}
+  .card-body{padding:10px}
+  #perfBreakdownModal>div,#repHistoryModal>div{width:99vw;max-width:99vw}
+}
+
 </style>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -2888,6 +2993,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       <button class="mm-item" onclick="goPage('pg-home',null);toggleMobileMenu()">🏠 Home</button>
       <button class="mm-item" onclick="goPage('pg-employee',null);toggleMobileMenu()">🏷️ My Bonus Slip</button>
       <button class="mm-item" onclick="goPage('pg-leaderboard',null);toggleMobileMenu()">🏆 Leaderboard</button>
+      <button class="mm-item" onclick="goPage('pg-perf',null);toggleMobileMenu()">🎓 Performance Review</button>
       <div class="mm-section-lbl">Admin</div>
       <button class="mm-item" onclick="requirePin(()=>{goPage('pg-admin',null);toggleMobileMenu();})">🔐 Admin Center</button>
     </div>
@@ -2896,6 +3002,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     <button class="bn" onclick="goPage('pg-home',this)" data-page="pg-home"><span class="bn-ic">🏠</span><span class="bn-lbl">Home</span></button>
     <button class="bn" onclick="goPage('pg-employee',this)" data-page="pg-employee"><span class="bn-ic">🏷️</span><span class="bn-lbl">My Slip</span></button>
     <button class="bn" onclick="goPage('pg-leaderboard',null)" data-page="pg-leaderboard"><span class="bn-ic">🏆</span><span class="bn-lbl">Leaderboard</span></button>
+    <button class="bn" onclick="goPage('pg-perf',this)" data-page="pg-perf"><span class="bn-ic">🎓</span><span class="bn-lbl">Grades</span></button>
     <button class="bn" onclick="requirePin(()=>goPage('pg-reps',null))" data-page="pg-reps"><span class="bn-ic">🔐</span><span class="bn-lbl">Staff</span></button>
     <button class="bn" onclick="toggleMobileMenu()" id="moreBtn"><span class="bn-ic">☰</span><span class="bn-lbl">More</span></button>
   </nav></div>
