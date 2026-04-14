@@ -251,7 +251,7 @@ tfoot td{padding:8px;font-weight:700;border-top:2px solid var(--pr);background:v
 body.admin-active .week-bar,body.admin-active .kstrip,body.admin-active .stbar{display:none!important;}
 body.page-pg-home .week-bar,body.page-pg-home .stbar,body.page-pg-home .kstrip{display:none!important;}
 body.admin-active .content{padding:0!important;}body.admin-active #pg-admin{margin:0;width:100%;position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--bg);}
-body:not(.page-pg-reps):not(.page-pg-chargebacks) .week-bar{display:none!important;}
+body:not(.page-pg-reps):not(.page-pg-chargebacks):not(.page-pg-perf) .week-bar{display:none!important;}
 body.page-pg-managers .week-bar,body.page-pg-coaches .week-bar,
 body.page-pg-leaderboard .week-bar,body.page-pg-summary .week-bar,
 body.page-pg-history .week-bar,body.page-pg-roster .week-bar,
@@ -3385,7 +3385,7 @@ function updPinDots(){for(let i=0;i<4;i++){const d=document.getElementById("pd"+
 // ── PAGE NAV ──
 function goPage(id,el){
   // Staff pages require PIN on mobile (shared device protection)
-  const _staffPages=['pg-reps','pg-managers','pg-coaches','pg-leaderboard',
+  const _staffPages=['pg-reps','pg-managers','pg-coaches',
     'pg-summary','pg-coach-payout','pg-mgr-payout','pg-chargebacks','pg-history',
     'pg-roster','pg-assign','pg-perf'];
   if(_staffPages.includes(id)&&!_pinUnlocked){
