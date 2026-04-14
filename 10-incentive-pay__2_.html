@@ -6,8 +6,8 @@
 <title>Incentive Pay — Work Force Ops</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
-html,body{background:#F8F8F8;color:#1A1A1A;height:100%;overflow-x:hidden}
-html{height:100%}
+html,body{background:#F8F8F8;color:#1A1A1A;min-height:100%;overflow-x:hidden}
+html{min-height:100%}
 :root{--bg:#F8F8F8;--sf:#fff;--pr:#E20074;--se:#6E2B8B;--dk:#4A1A6B;--ac:#FF69B4;--tx:#1A1A1A;--mu:#666;--bo:#E8E8E8;--ok:#00A651;--wa:#FFB300;--da:#D32F2F;--thb:#FFF0F7;--tht:#E20074;--ra:12px;--sh:0 2px 12px rgba(0,0,0,.07);--shm:0 6px 28px rgba(0,0,0,.15)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Nunito",sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
@@ -37,9 +37,9 @@ body{font-family:"Nunito",sans-serif;background:var(--bg);color:var(--tx);min-he
   body:not(.admin-unlocked) .si.staff-only:hover{opacity:1}
 .si.active{background:rgba(226,0,116,.2);color:#fff;border-left-color:var(--pr)}
 .si .ic{font-size:15px;width:20px;text-align:center}
-.content{flex:1;min-width:0;min-height:0;height:calc(100vh - 60px);background:var(--bg);overflow-y:auto;overflow-x:hidden;scroll-behavior:auto;-webkit-overflow-scrolling:touch}
+.content{flex:1;min-width:0;min-height:0;height:calc(100vh - 60px);min-height:calc(100vh - 60px);background:var(--bg);overflow-y:auto;overflow-x:hidden;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overflow-anchor:none}
 #adminContent .sub-tab{font-size:11px!important;padding:6px 11px!important;white-space:nowrap!important;flex-shrink:0!important}
-.page{display:none;background:var(--bg)}.page.active{display:block;background:var(--bg);padding:16px;box-sizing:border-box}
+.page{display:none;background:var(--bg)}.page.active{display:block;background:var(--bg);padding:16px;box-sizing:border-box;overflow-anchor:none}#pg-perf.active{padding-top:0;scroll-margin-top:0}
 .sub-tabs{display:flex;gap:8px;margin-bottom:16px}
 .sub-tab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;border:2px solid var(--bo);background:var(--sf);color:var(--mu);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .sub-tab:hover{border-color:var(--se);color:var(--se)}.sub-tab.active{background:var(--se);color:#fff;border-color:var(--se)}
@@ -249,6 +249,8 @@ tfoot td{padding:8px;font-weight:700;border-top:2px solid var(--pr);background:v
 .pin-err{color:var(--da);font-size:12px;font-weight:700;height:18px;margin-bottom:4px}
 .pin-cancel{font-size:12px;color:var(--mu);background:none;border:none;cursor:pointer;margin-top:4px;text-decoration:underline}
 body.admin-active .week-bar,body.admin-active .kstrip,body.admin-active .stbar{display:none!important;}
+body.perf-active #pg-perf{margin:0;width:calc(100% - 220px);position:fixed;left:220px;top:60px;right:0;bottom:0;z-index:400;overflow-y:auto;overflow-anchor:none;background:var(--bg);padding:16px!important;}
+body.perf-active .sidebar.collapsed~.content+#pg-perf,body.sidebar-collapsed.perf-active #pg-perf{left:56px;width:calc(100% - 56px);}
 body.page-pg-home .week-bar,body.page-pg-home .stbar,body.page-pg-home .kstrip{display:none!important;}
 body.admin-active .content{padding:0!important;}body.admin-active #pg-admin{margin:0;width:100%;position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--bg);}
 body:not(.page-pg-reps):not(.page-pg-chargebacks):not(.page-pg-perf) .week-bar{display:none!important;}
@@ -484,6 +486,7 @@ body.page-pg-assign .week-bar{display:none!important;}
 @media(max-width:900px){
   .layout{display:flex!important;flex-direction:column!important;height:calc(100vh - 60px)!important}
   .sidebar,.sidebar-toggle{display:none!important;width:0!important;min-width:0!important;flex:none!important}
+  body.perf-active #pg-perf{left:0;width:100%;}
   .content{flex:1!important;width:100%!important;max-width:100vw!important;padding:14px!important;padding-bottom:16px!important;background:#F8F8F8!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;height:auto!important;min-height:0!important}
   .bnav{display:flex!important;flex-shrink:0!important;min-height:56px!important}
   .page.active{background:#F8F8F8!important}
@@ -559,6 +562,9 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   <div class="sg-wrap">
     <div class="si si-solo" data-page="pg-leaderboard" onclick="goPage('pg-leaderboard',this)"><span class="ic">🏆</span><span class="si-label">Leaderboard</span></div>
   </div>
+  <div class="sg-wrap">
+    <div class="si si-solo" data-page="pg-perf" onclick="goPage('pg-perf',this)"><span class="ic">🎓</span><span class="si-label">Performance Review</span></div>
+  </div>
 
   <!-- STAFF SECTION - hidden until PIN unlock -->
   <div id="sbStaffSection">
@@ -608,9 +614,6 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     <div class="sg-wrap">
       <div class="si si-solo" data-page="pg-roster" onclick="goPage('pg-roster',this)"><span class="ic">👥</span><span class="si-label">Rep Roster</span></div>
     </div>
-    <div class="sg-wrap">
-      <div class="si si-solo" data-page="pg-perf" onclick="goPage('pg-perf',this)"><span class="ic">🎓</span><span class="si-label">Perf Review</span></div>
-    </div>
   </div>
 
   <div class="sb-divider"></div>
@@ -622,7 +625,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 <main class="content">
   <div class="stbar" id="stb"></div>
 
-  <div class="page active" id="pg-home">
+  <div class="page" id="pg-home">
 
   <!-- WELCOME -->
   <div style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B);border-radius:12px;padding:20px;margin-bottom:12px;color:#fff">
@@ -964,7 +967,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
               <th class="gr">Box/Hr</th><th class="gr">Acc/Hr</th><th class="gr">Acc Net $</th>
               <th class="gc">Box Tier</th><th class="gc">Box $</th>
               <th class="gc">Acc Tier</th><th class="gc">Acc $</th>
-              <th class="gc">PU $</th>
+              <th class="gc" id="puColHdr" title="Power-ups: Affirm $5 + HSI $5. Toggle whether PU is added to Gross (ON) or shown as info only (OFF = already paid via Arcade)">PU $ ⚡</th>
               <th class="gc">BANs</th><th class="gc">MIM Lines</th><th class="gc">MIM $</th>
               <th class="gc">Spiffs $</th><th class="gc">GROSS $</th>
               <th class="ga">Arcade</th>
@@ -2329,9 +2332,14 @@ body.admin-unlocked #sbStaffSection{display:block!important}
             <div id="aBxR"></div>
             <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px;border-bottom:2px solid var(--bo);padding-bottom:4px;margin-top:14px">🛍️ Accessory Levels</div>
             <div id="aAcR"></div>
-            <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px;border-bottom:2px solid var(--bo);padding-bottom:4px;margin-top:14px">⚡ Power Ups</div>
-            <div class="tr2"><label>Affirm $/sale:</label><input type="number" id="aTAf" value="5" min="0" step="0.5"/></div>
-            <div class="tr2"><label>HSI $/unit:</label><input type="number" id="aTHs" value="5" min="0" step="0.5"/></div>
+            <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px;border-bottom:2px solid var(--bo);padding-bottom:4px;margin-top:14px;display:flex;align-items:center;justify-content:space-between">
+              <span>⚡ Power Ups</span>
+              <button class="btn bp xs" onclick="addPowerUp()" style="font-size:10px">+ Add</button>
+            </div>
+            <div style="background:#F3E8FF;border:1px solid var(--se);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:var(--se)">
+              <strong>Active</strong> = PU earns pay &nbsp;·&nbsp; <strong>In Gross</strong> = added to rep gross (turn OFF if already paid via Arcade)
+            </div>
+            <div id="aPUList"></div>
             <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px;border-bottom:2px solid var(--bo);padding-bottom:4px;margin-top:14px">📱 MIM Payout</div>
             <div class="tr2"><label>1st account ($):</label><input type="number" id="aTM1" value="20" min="0"/></div>
             <div class="tr2"><label>2nd line ($):</label><input type="number" id="aTM2" value="5" min="0"/></div>
@@ -2735,6 +2743,10 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </table>
     </div>
     <div style="padding:0 20px 16px;font-size:11px;color:var(--mu)">Contribution = Raw Score × (Weight ÷ Total Active Weight). Click a rep on the Monthly tab to see full week history.</div>
+    <div style="padding:0 20px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bo);padding-top:12px">
+      <button class="btn bp sm" onclick="printPerfCard()">🖨 Print Card</button>
+      <button class="btn bo sm" onclick="closePerfBreakdown()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -3318,13 +3330,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   const aml=document.getElementById('adminMgrLockMonth');if(aml&&!aml.value)aml.value=_mn;
   const acl=document.getElementById('adminCoachLockMonth');if(acl&&!acl.value)acl.value=_mn;
   const abm=document.getElementById('aBsMonth');if(abm&&!abm.value)abm.value=_mn;
-  // Always start on home page if no session or if session is pg-admin/pg-history
-  const _stored=sessionStorage.getItem("wfo_page");
-  const _skipPages=['pg-admin','pg-history','pg-roster','pg-assign','pg-reps','pg-managers','pg-coaches','pg-leaderboard','pg-summary','pg-coach-payout','pg-mgr-payout','pg-chargebacks'];
-  const last=(!_stored||_skipPages.includes(_stored))?'pg-home':_stored;
-  // Set initial body page class
-  document.body.classList.add('page-'+last);
-  goPage(last,document.querySelector('[data-page="'+last+'"]'));
+  // Always start on home page on fresh load
+  goPage('pg-home', document.querySelector('[data-page="pg-home"]'));
 });
 
 // ── PIN ──
@@ -3387,7 +3394,7 @@ function goPage(id,el){
   // Staff pages require PIN on mobile (shared device protection)
   const _staffPages=['pg-reps','pg-managers','pg-coaches',
     'pg-summary','pg-coach-payout','pg-mgr-payout','pg-chargebacks','pg-history',
-    'pg-roster','pg-assign','pg-perf'];
+    'pg-roster','pg-assign'];
   if(_staffPages.includes(id)&&!_pinUnlocked){
     requirePin(()=>goPage(id,el));
     return;
@@ -3407,6 +3414,8 @@ function goPage(id,el){
   if(el)el.classList.add("active");
   else{const si=document.querySelector('[data-page="'+id+'"]');if(si)si.classList.add("active");}
   sessionStorage.setItem("wfo_page",id);
+  if(id!=="pg-admin")document.body.classList.remove("admin-active");
+  if(id!=="pg-perf")document.body.classList.remove("perf-active");
   if(id==="pg-leaderboard"){if(!_lbReps){_lbReps=reps;_lbWk=wk;}initLBPage();}
   if(id==="pg-summary"){if(!_sumReps){_sumReps=reps;_sumWk=wk;}initSumPage();}
   if(id==="pg-managers"){const _cm=document.querySelector('.content');if(_cm)_cm.scrollTop=0;renMgrOverview();requestAnimationFrame(()=>{if(_cm)_cm.scrollTop=0;});}
@@ -3423,7 +3432,7 @@ function goPage(id,el){
   }
   if(id==="pg-home")initHomePage();
   if(id==="pg-roster")renRoster();
-  if(id==="pg-reps"){
+  if(id==="pg-reps"){initPUToggle();
     const _ov=document.getElementById("reps-overview");
     if(_ov&&!_ov.classList.contains("active")){
       document.querySelectorAll("#pg-reps .sub-pane").forEach(p=>p.classList.remove("active"));
@@ -3435,7 +3444,7 @@ function goPage(id,el){
     renRepOv();upK();
   }
   if(id==="pg-employee"){initEmpView();}
-  if(id==="pg-perf"){initPerfPage();}
+  if(id==="pg-perf"){document.body.classList.add("perf-active");initPerfPage();var _pf=document.getElementById('pg-perf');if(_pf)_pf.scrollTop=0;[0,100,300].forEach(function(t){setTimeout(function(){var pf=document.getElementById('pg-perf');if(pf)pf.scrollTop=0;},t);});}
   if(id==="pg-admin"){
     document.body.classList.add("admin-active");
     if(_pinUnlocked){document.getElementById("adminGate").style.display="none";document.getElementById("adminContent").style.display="block";initAdminCenter();}
@@ -3446,6 +3455,7 @@ function goPage(id,el){
   // Force scroll reset
   const _c=document.querySelector('.content');
   if(_c)_c.scrollTop=0;
+  window.scrollTo(0,0);
   // Auto-close mobile menu on navigation
   const _mm=document.getElementById('mobileMore');
   if(_mm&&_mm.classList.contains('open')){
@@ -3521,13 +3531,36 @@ function bBd(t){const x=gBT(t);if(!x)return{l:"No Tier",c:"bno"};if(x.r===3)retu
 function gAT(p){return T.acc.find(x=>p>=x.mp&&p<=x.xp)||null;}
 function cAc(p){const x=gAT(p);return x?(p*x.p/100):0;}
 function aBd(p){const x=gAT(p);if(!x)return{l:"No Tier",c:"bno",p:0};const m={5:"bt1",7:"bt2",10:"bt3",15:"bt4",20:"btop"};return{l:`${x.p}% $${x.mp}+`,c:m[x.p]||"bt3",p:x.p};}
-function cPU(r){const a=(r.af||0)*T.af,h=(r.hs||0)*T.hs;return{a,h,t:a+h};}
+function getPUConfig(){
+  try{var s=JSON.parse(localStorage.getItem('wfo_pu_config')||'null');return s&&s.length?s:getDefaultPUs();}
+  catch(e){return getDefaultPUs();}
+}
+function getDefaultPUs(){
+  return[
+    {id:'pu_af',name:'Affirm Sale',    field:'af',rate:5, active:true,inGross:true},
+    {id:'pu_hs',name:'Home Service (HSI)',field:'hs',rate:5,active:true,inGross:true}
+  ];
+}
+function cPU(r){
+  var pus=getPUConfig().filter(function(p){return p.active;});
+  var breakdown={};var totalAll=0;var totalInGross=0;
+  pus.forEach(function(p){
+    var earned=(r[p.field]||0)*p.rate;
+    breakdown[p.id]={name:p.name,field:p.field,units:r[p.field]||0,rate:p.rate,earned:earned,inGross:p.inGross};
+    totalAll+=earned;
+    if(p.inGross)totalInGross+=earned;
+  });
+  // Legacy compat fields
+  var af=breakdown['pu_af']?breakdown['pu_af'].earned:0;
+  var h=breakdown['pu_hs']?breakdown['pu_hs'].earned:0;
+  return{a:af,h:h,t:totalInGross,total:totalAll,breakdown:breakdown};
+}
 function cMI(l){if((l||0)<=0)return{p:0};let p=0;const s=T.mi;if(l>=1)p+=s[0];for(let i=1;i<Math.min(l,s.length);i++)p+=s[i];return{p};}
 function arcT(r){return(r.al||[]).reduce((s,t)=>s+(t.a||0),0);}
 function cbT(n){return CBs.filter(c=>c.rp===n).reduce((s,c)=>s+(c.a||0),0);}
 function actSp(wd){const d=wd||(wk?new Date(wk+"T12:00:00"):new Date());return sps.filter(s=>{if(!s.on)return false;const st=new Date(s.sd+"T12:00:00"),en=s.ed?new Date(s.ed+"T12:00:00"):null;return d>=st&&(!en||d<=en);});}
 function cSp(r){const wd=wk?new Date(wk+"T12:00:00"):new Date();let tot=0,det=[];actSp(wd).forEach(sp=>{if(sp.sc==="store"&&sp.sv&&r.s!==sp.sv)return;if(sp.sc==="coach"&&sp.sv&&r.c!==sp.sv)return;let pay=0;if(sp.ty==="flat_per_rep")pay=sp.a;else if(sp.ty==="flat_per_unit")pay=sp.a;else if(sp.ty==="pct_gross"){const g=cBx(r.ta||0)+cAc(r.ap||0)+cPU(r).t+cMI(r.ml).p;pay=g*sp.a/100;}tot+=pay;det.push({n:sp.nm,p:pay});});return{tot,det};}
-function cRp(r){const bx=cBx(r.ta||0),ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const gr=bx+ac+pu.t+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,ac,pu,mi,sp,gr,arc,cb,nt};}
+function cRp(r){const bx=cBx(r.ta||0),ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,ac,pu,mi,sp,gr,arc,cb,nt};}
 
 // ── RESTORED REP TABLE CRUD FUNCTIONS ──
 
@@ -3595,7 +3628,7 @@ function renR(fS,fC,srch,fState){
       <td><strong style="color:var(--pr)">$${c.bx.toFixed(2)}</strong></td>
       <td><span class="bdg ${aT.c}">${aT.l}</span></td>
       <td><strong style="color:var(--se)">$${c.ac.toFixed(2)}</strong><div class="pb">${aT.p}% of net</div></td>
-      <td><strong>$${c.pu.t.toFixed(2)}</strong><div class="pb">Af $${c.pu.a.toFixed(0)} HSI $${c.pu.h.toFixed(0)}</div></td>
+      `+buildPUCell(r)+`
       <td class="edit-cell"><input class="ni" type="number" value="${r.mb||0}" min="0" onchange="uR(${i},'mb',+this.value)"/><span class="edit-hint">✎</span></td>
       <td class="edit-cell"><input class="ni" type="number" value="${r.ml||0}" min="0" onchange="uR(${i},'ml',+this.value)"/><span class="edit-hint">✎</span></td>
       <td><strong style="color:var(--ok)">$${c.mi.p.toFixed(2)}</strong></td>
@@ -7736,8 +7769,7 @@ function initAdminTiers(){
   if(bxEl)bxEl.innerHTML=T.box.map((t,i)=>`<div class="tr2"><label>Tier ${i+1} min totact:</label><input type="number" id="aBM${i}" value="${t.mn}" min="0" style="width:75px"/><label style="min-width:auto;margin-left:8px">$/act:</label><input type="number" id="aBR${i}" value="${t.r}" min="0" step="0.5" style="width:70px"/></div>`).join('');
   const acEl=document.getElementById('aAcR');
   if(acEl)acEl.innerHTML=T.acc.map((t,i)=>`<div class="tr2"><label>Tier ${i+1} min $:</label><input type="number" id="aAM${i}" value="${t.mp}" min="0" style="width:80px"/><label style="min-width:auto;margin-left:8px">Payout %:</label><input type="number" id="aAP${i}" value="${t.p}" min="0" max="100" step="0.5" style="width:70px"/></div>`).join('');
-  document.getElementById('aTAf').value=T.af;
-  document.getElementById('aTHs').value=T.hs;
+  renderPUList();
   T.mi.forEach((v,i)=>{const el=document.getElementById('aTM'+(i+1));if(el)el.value=v;});
   // Coach tiers
   const ct=T.coach||DT.coach;
@@ -7755,7 +7787,7 @@ function saveAdminTiers(){
   for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
   T.acc.forEach((t,i)=>{t.mp=+document.getElementById('aAM'+i)?.value||t.mp;t.p=+document.getElementById('aAP'+i)?.value||t.p;});
   for(let i=0;i<T.acc.length-1;i++)T.acc[i].xp=T.acc[i+1].mp-1;
-  T.af=+document.getElementById('aTAf').value||5;T.hs=+document.getElementById('aTHs').value||5;
+  savePUConfig();
   T.mi=T.mi.map((_,i)=>+document.getElementById('aTM'+(i+1))?.value||_);
   localStorage.setItem('wfo_tiers',JSON.stringify(T));localStorage.setItem('wfo_ts',new Date().toISOString());
   renR();tst2('Rep tiers saved!','ok');
@@ -10232,16 +10264,16 @@ function initPerfPage(){
   if(!_perfActiveWk&&wk)_perfActiveWk=wk;
   var mn=document.getElementById('perfMonthSel');
   if(mn&&!mn.value){var n=new Date();mn.value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
-  initAdminPerfGradeInputs();
   renPerfWeekly();
   updatePerfKstrip();
-  _showAtRiskBanner();
   // Show Grade Setup hint if user hasn't configured it yet
   var hint=document.getElementById('perfSetupHint');
   if(hint){
     var hasSetup=localStorage.getItem('wfo_perf_metrics');
     hint.style.display=hasSetup?'none':'flex';
   }
+  // Defer banner injection AFTER scroll resets so it can't push scroll position down
+  setTimeout(function(){_showAtRiskBanner();},350);
 }
 
 function _populateCoachDrop(selId){
@@ -10578,6 +10610,7 @@ function openPerfBreakdown(repKey){
     +'<div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:'+g.bg+';color:'+g.color+';font-family:\'Poppins\',sans-serif;font-weight:900;font-size:26px;border:3px solid '+g.color+';flex-shrink:0">'+g.letter+'</div>'
     +'<div style="flex:1"><div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:28px;color:'+g.color+';line-height:1">'+sc.toFixed(1)+'<span style="font-size:14px;font-weight:600;color:var(--mu)"> / 100</span></div>'
     +'<div style="font-size:12px;color:var(--mu);margin-top:4px">'+g.label+' \u00b7 Gross: <strong style="color:var(--pr)">$'+c.gr.toFixed(2)+'</strong> \u00b7 PPD: <strong style="color:var(--se)">'+(r.ta||0)+'</strong></div>'
+    +(r.hr?(function(){var pphr=(r.ta||0)/r.hr;var prodCol=pphr>=1.5?'var(--ok)':pphr>=1?'var(--wa)':'var(--da)';return'<div style="font-size:12px;color:var(--mu);margin-top:3px">Hrs Worked: <strong style="color:var(--se)">'+r.hr+'</strong> \u00b7 PPD/Hr: <strong style="color:'+prodCol+'">'+pphr.toFixed(2)+'</strong> <span style="font-size:10px;color:var(--mu)">(productivity)</span></div>';})():'<div style="font-size:11px;color:var(--mu);margin-top:3px;opacity:.6">No hours logged</div>')
     +'<div style="height:8px;background:var(--bo);border-radius:4px;overflow:hidden;margin-top:8px;max-width:320px"><div style="height:100%;width:'+Math.min(sc,100)+'%;background:'+g.color+';border-radius:4px;transition:width .4s"></div></div></div></div>';
 
   // Gap to next grade
@@ -10811,18 +10844,19 @@ function printPerfReport(){
     var sc=calcWeightedScore(r);var g=gradeFromScore(sc);totalScore+=sc;dist[g.letter]=(dist[g.letter]||0)+1;
     var gc=clrMap[g.letter]||'#666';
     var mCells=metrics.map(function(m){var actual=getRepField(r,m.field);var pct=m.target>0?Math.min(100,(actual/m.target)*100):0;var col=pct>=100?'#00A651':pct>=70?'#E65100':'#D32F2F';return'<td style="padding:5px 8px;text-align:center;font-size:11px;color:'+col+'">'+(isCur(m.field)?'$'+actual.toFixed(0):actual)+' <span style="font-size:9px;color:#999">('+pct.toFixed(0)+'%)</span></td>';}).join('');
-    return'<tr style="border-bottom:1px solid #E8E8E8;background:'+(i%2===0?'#fff':'#FAFAFA')+'"><td style="padding:6px 10px;font-weight:700;font-size:12px;color:#4A1A6B">'+X(dispName(r))+'</td><td style="padding:6px 8px;font-size:11px;color:#666">'+X(r.s||'\u2014')+'</td><td style="padding:6px 8px;font-size:11px;color:#666">'+X(r.c||'\u2014')+'</td><td style="padding:6px 8px;text-align:center;font-family:\'Poppins\',sans-serif;font-weight:700;color:#4A1A6B">'+sc.toFixed(1)+'</td><td style="padding:6px 8px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:'+bgMap[g.letter]+';color:'+gc+';font-family:\'Poppins\',sans-serif;font-weight:900;font-size:11px;border:2px solid '+gc+'">'+g.letter+'</span></td>'+mCells+'</tr>';
+    return'<tr style="background:'+(i%2===0?'#fff':'#FAFAFA')+'"><td style="padding:6px 10px;font-weight:700;font-size:12px;color:#4A1A6B">'+X(dispName(r))+'</td><td style="padding:6px 8px;font-size:11px;color:#666">'+X(r.s||'\u2014')+'</td><td style="padding:6px 8px;font-size:11px;color:#666">'+X(r.c||'\u2014')+'</td><td style="padding:6px 8px;text-align:center;font-family:\'Poppins\',sans-serif;font-weight:700;color:#4A1A6B">'+sc.toFixed(1)+'</td><td style="padding:6px 8px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:'+bgMap[g.letter]+';color:'+gc+';font-family:\'Poppins\',sans-serif;font-weight:900;font-size:11px;border:2px solid '+gc+'">'+g.letter+'</span></td>'+mCells+'</tr>';
   }).join('');
   var mHdrs=metrics.map(function(m){return'<th style="padding:6px 8px;text-align:center;background:#F3E8FF;color:#6E2B8B;font-size:9px;font-weight:700;text-transform:uppercase;border-bottom:2px solid #6E2B8B">'+m.label+'<br><span style="font-weight:400;opacity:.7">'+m.weight+'%</span></th>';}).join('');
   var avgSc=sorted.length?totalScore/sorted.length:0;var avgG=gradeFromScore(avgSc);
-  var distStr=['A+','A','B','C','D','F'].filter(function(l){return dist[l];}).map(function(l){return'<span style="padding:4px 12px;border-radius:20px;font-weight:700;font-size:12px;background:'+bgMap[l]+';color:'+clrMap[l]+'">'+l+': '+dist[l]+'</span>';}).join('');
-  openPF('<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:\'Nunito\',sans-serif;font-size:12px;color:#1A1A1A;padding:20px;}@media print{.np{display:none!important;}}table{width:100%;border-collapse:collapse;font-size:11px;}th{background:#FFF0F7;color:#E20074;font-family:\'Poppins\',sans-serif;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #E20074;text-align:left;}td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}</style></head><body>'
-    +'<div class="np" style="margin-bottom:14px;display:flex;gap:10px"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">\uD83D\uDDA8 Print / Save PDF</button><button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">\u2715 Close</button></div>'
+  var distStr=['A+','A','B','C','D','F'].filter(function(l){return dist[l];}).map(function(l){return'<span style="padding:4px 10px;border-radius:20px;font-weight:700;font-size:11px;background:'+bgMap[l]+';color:'+clrMap[l]+'">'+l+': '+dist[l]+'</span>';}).join(' ');
+  var body='<style>.ppr-t{width:100%;border-collapse:collapse;font-size:11px}.ppr-t th{background:#FFF0F7;color:#E20074;font-family:\'Poppins\',sans-serif;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #E20074;text-align:left}.ppr-t td{padding:6px 8px;border-bottom:1px solid #E8E8E8}</style>'
+    +'<div style="max-width:900px;margin:0 auto">'
     +'<div style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:18px 22px;border-radius:10px 10px 0 0"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em">Edgelink Inc \u2014 Work Force Ops</div><div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:18px;margin-top:2px">Weekly Performance Grade Report</div><div style="font-size:12px;opacity:.7;margin-top:2px">Week of '+wkLabel+' \u00b7 Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div></div>'
-    +'<div style="background:#F3E8FF;padding:12px 22px;border-bottom:2px solid #6E2B8B;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:16px"><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B">Reps Graded</div><div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:18px">'+sorted.length+'</div></div><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B">Team Avg Score</div><div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:18px;color:'+avgG.color+'">'+avgSc.toFixed(1)+' ('+avgG.letter+')</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+distStr+'</div></div>'
-    +'<table><thead><tr><th>Rep</th><th>Store</th><th>Coach</th><th style="text-align:center">Score</th><th style="text-align:center">Grade</th>'+mHdrs+'</tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div style="margin-top:14px;font-size:9px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:8px">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+wkLabel+'</div></body></html>',
-    'Perf Grade Report \u2014 '+wkLabel);
+    +'<div style="background:#F3E8FF;padding:12px 22px;border-bottom:2px solid #6E2B8B;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:16px"><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B">Reps Graded</div><div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:18px">'+sorted.length+'</div></div><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B">Team Avg</div><div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:18px;color:'+avgG.color+'">'+avgSc.toFixed(1)+' ('+avgG.letter+')</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+distStr+'</div></div>'
+    +'<table class="ppr-t"><thead><tr><th>Rep</th><th>Store</th><th>Coach</th><th style="text-align:center">Score</th><th style="text-align:center">Grade</th>'+mHdrs+'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div style="margin-top:14px;font-size:9px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:8px">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+wkLabel+'</div>'
+    +'</div>';
+  openPF(body,'Perf Grade Report \u2014 '+wkLabel);
 }
 
 function printPerfMonthlyReport(){
@@ -10843,16 +10877,17 @@ function printPerfMonthlyReport(){
   var dist={};entries.forEach(function(e){var l=e.mG.letter;dist[l]=(dist[l]||0)+1;});
   var avgAll=entries.reduce(function(s,e){return s+e.avgSc;},0)/entries.length;var avgG=gradeFromScore(avgAll);
   var sortedWks=[].concat(weeks).sort();
-  var wkHdrs=sortedWks.map(function(w){var d=new Date(w+'T12:00:00');return'<th style="padding:5px 8px;background:#F3E8FF;color:#6E2B8B;font-size:9px;text-transform:uppercase;border-bottom:2px solid #6E2B8B;text-align:center;white-space:nowrap">'+d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</th>';}).join('');
-  var rows=entries.map(function(e,i){var gc=clrMap[e.mG.letter];var wkCells=sortedWks.map(function(wkDate){var ew=e.entries.find(function(x){return x.wkDate===wkDate;});if(!ew)return'<td style="padding:5px 8px;text-align:center;color:#ccc">\u2014</td>';var g=gradeFromScore(ew.sc);return'<td style="padding:5px 8px;text-align:center;font-weight:700;color:'+g.color+'">'+ew.sc.toFixed(0)+' <span style="font-size:9px">('+g.letter+')</span></td>';}).join('');return'<tr style="border-bottom:1px solid #E8E8E8;background:'+(i%2===0?'#fff':'#FAFAFA')+'"><td style="padding:6px 10px;font-weight:700;color:#4A1A6B">'+X(dispName(e.r))+'</td><td style="padding:6px 8px;color:#666;font-size:11px">'+X(e.r.s||'\u2014')+'</td><td style="padding:6px 8px;color:#666;font-size:11px">'+X(e.r.c||'\u2014')+'</td><td style="padding:6px 8px;text-align:center;font-weight:700;color:#4A1A6B">'+e.avgSc.toFixed(1)+'</td><td style="padding:6px 8px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:'+e.mG.bg+';color:'+gc+';font-family:\'Poppins\',sans-serif;font-weight:900;font-size:10px;border:1.5px solid '+gc+'">'+e.mG.letter+'</span></td>'+wkCells+'</tr>';}).join('');
-  var distStr=['A+','A','B','C','D','F'].filter(function(l){return dist[l];}).map(function(l){return'<span style="padding:3px 10px;border-radius:20px;font-weight:700;font-size:11px;background:'+bgMap[l]+';color:'+clrMap[l]+'">'+l+':'+dist[l]+'</span>';}).join('');
-  openPF('<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:\'Nunito\',sans-serif;font-size:12px;padding:20px;}@media print{.np{display:none!important;}}table{width:100%;border-collapse:collapse;}th{background:#FFF0F7;color:#E20074;font-family:\'Poppins\',sans-serif;font-weight:700;font-size:9px;text-transform:uppercase;padding:6px 8px;border-bottom:2px solid #E20074;text-align:left;}td{padding:5px 8px;border-bottom:1px solid #E8E8E8;}</style></head><body>'
-    +'<div class="np" style="margin-bottom:14px;display:flex;gap:10px"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">\uD83D\uDDA8 Print / Save PDF</button><button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">\u2715 Close</button></div>'
+  var wkHdrs=sortedWks.map(function(w){var d=new Date(w+'T12:00:00');return'<th class="pp-wk">'+d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</th>';}).join('');
+  var rows=entries.map(function(e,i){var gc=clrMap[e.mG.letter];var wkCells=sortedWks.map(function(wkDate){var ew=e.entries.find(function(x){return x.wkDate===wkDate;});if(!ew)return'<td style="padding:5px 8px;text-align:center;color:#ccc">\u2014</td>';var g=gradeFromScore(ew.sc);return'<td style="padding:5px 8px;text-align:center;font-weight:700;color:'+g.color+'">'+ew.sc.toFixed(0)+' <span style="font-size:9px">('+g.letter+')</span></td>';}).join('');return'<tr style="background:'+(i%2===0?'#fff':'#FAFAFA')+'"><td style="padding:6px 10px;font-weight:700;color:#4A1A6B">'+X(dispName(e.r))+'</td><td style="padding:6px 8px;color:#666;font-size:11px">'+X(e.r.s||'\u2014')+'</td><td style="padding:6px 8px;color:#666;font-size:11px">'+X(e.r.c||'\u2014')+'</td><td style="padding:6px 8px;text-align:center;font-weight:700;color:#4A1A6B">'+e.avgSc.toFixed(1)+'</td><td style="padding:6px 8px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:'+e.mG.bg+';color:'+gc+';font-family:\'Poppins\',sans-serif;font-weight:900;font-size:10px;border:1.5px solid '+gc+'">'+e.mG.letter+'</span></td>'+wkCells+'</tr>';}).join('');
+  var distStr=['A+','A','B','C','D','F'].filter(function(l){return dist[l];}).map(function(l){return'<span style="padding:3px 10px;border-radius:20px;font-weight:700;font-size:11px;background:'+bgMap[l]+';color:'+clrMap[l]+'">'+l+':'+dist[l]+'</span>';}).join(' ');
+  var body='<style>.ppm-t{width:100%;border-collapse:collapse;font-size:11px}.ppm-t th{background:#FFF0F7;color:#E20074;font-family:\'Poppins\',sans-serif;font-weight:700;font-size:9px;text-transform:uppercase;padding:6px 8px;border-bottom:2px solid #E20074;text-align:left}.ppm-t td{padding:5px 8px;border-bottom:1px solid #E8E8E8}.pp-wk{background:#F3E8FF!important;color:#6E2B8B!important;text-align:center;white-space:nowrap}</style>'
+    +'<div style="max-width:900px;margin:0 auto">'
     +'<div style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:18px 22px;border-radius:10px 10px 0 0"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em">Edgelink Inc \u2014 Work Force Ops</div><div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:18px;margin-top:2px">Monthly Performance Grade Report</div><div style="font-size:12px;opacity:.7;margin-top:2px">'+moLabel+' \u00b7 '+weeks.length+' week'+(weeks.length!==1?'s':'')+' \u00b7 Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div></div>'
     +'<div style="background:#F3E8FF;padding:12px 22px;border-bottom:2px solid #6E2B8B;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:16px"><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B">Reps</div><div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:18px">'+entries.length+'</div></div><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B">Team Avg</div><div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:18px;color:'+avgG.color+'">'+avgAll.toFixed(1)+' ('+avgG.letter+')</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+distStr+'</div></div>'
-    +'<table><thead><tr><th>Rep</th><th>Store</th><th>Coach</th><th style="text-align:center">Avg</th><th style="text-align:center">Grade</th>'+wkHdrs+'</tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div style="margin-top:14px;font-size:9px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:8px">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+moLabel+'</div></body></html>',
-    'Monthly Perf \u2014 '+moLabel);
+    +'<table class="ppm-t"><thead><tr><th>Rep</th><th>Store</th><th>Coach</th><th style="text-align:center">Avg</th><th style="text-align:center">Grade</th>'+wkHdrs+'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div style="margin-top:14px;font-size:9px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:8px">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+moLabel+'</div>'
+    +'</div>';
+  openPF(body,'Monthly Perf \u2014 '+moLabel);
 }
 
 // Admin Grade Setup
@@ -10987,6 +11022,195 @@ function updRepLastName(ntid,val,repIdx){
   // Update in-memory reps display name
   reps.forEach(function(r){if(r.ri===ntid)r.lastName=val.trim();});
   tst2('Last name saved.','ok');
+}
+
+
+// ── POWER-UP IN GROSS TOGGLE ──
+
+function togglePUInGross(){
+  _puInGross = !_puInGross;
+  localStorage.setItem('wfo_pu_in_gross', _puInGross ? 'true' : 'false');
+  var btn = document.getElementById('puToggleBtn');
+  if(btn){
+    btn.textContent = '\u26a1 PU in Gross: ' + (_puInGross ? 'ON' : 'OFF');
+    btn.style.background = _puInGross ? '#00897B' : 'transparent';
+    btn.style.color = _puInGross ? '#fff' : '#00897B';
+    btn.title = _puInGross 
+      ? 'Power-ups included in Gross pay — click to exclude (if paid via Arcade)'
+      : 'Power-ups excluded from Gross — shown as info only (paid via Arcade)';
+  }
+  renR();
+}
+
+function initPUToggle(){
+  var btn = document.getElementById('puToggleBtn');
+  if(btn){
+    btn.textContent = '\u26a1 PU in Gross: ' + (_puInGross ? 'ON' : 'OFF');
+    btn.style.background = _puInGross ? '#00897B' : 'transparent';
+    btn.style.color = _puInGross ? '#fff' : '#00897B';
+    btn.style.borderColor = '#00897B';
+  }
+}
+
+
+// ══════════════════════════════════════════════════════
+// POWER-UP MANAGER — dynamic per-PU config
+// ══════════════════════════════════════════════════════
+
+var PU_FIELDS=[
+  ['af','Affirm Sale'],['hs','Home Service (HSI)'],
+  ['ta','Total Activations'],['na','New Acts'],['ra','React Acts'],
+  ['up','Upgrades'],['tb','Tablets'],['wt','Watches'],
+  ['ml','MIM Lines'],['mb','MM BANs'],['hr','Hours']
+];
+
+function savePUConfig(){
+  var pus=getPUConfig();
+  var rows=document.querySelectorAll('#aPUList .pu-row');
+  var updated=[];
+  rows.forEach(function(row){
+    var id=row.dataset.id;
+    var existing=pus.find(function(p){return p.id===id;})||{id:id};
+    var nameEl=row.querySelector('.pu-name-inp');
+    var fieldEl=row.querySelector('.pu-field-sel');
+    var rateEl=row.querySelector('.pu-rate-inp');
+    var activeEl=row.querySelector('.pu-active-chk');
+    var grossEl=row.querySelector('.pu-gross-chk');
+    updated.push({
+      id:id,
+      name:nameEl?nameEl.value:existing.name,
+      field:fieldEl?fieldEl.value:existing.field,
+      rate:rateEl?+rateEl.value:existing.rate,
+      active:activeEl?activeEl.checked:existing.active,
+      inGross:grossEl?grossEl.checked:existing.inGross
+    });
+  });
+  localStorage.setItem('wfo_pu_config',JSON.stringify(updated));
+  return updated;
+}
+
+function renderPUList(){
+  var el=document.getElementById('aPUList');if(!el)return;
+  var pus=getPUConfig();
+  var fieldOpts=PU_FIELDS.map(function(fv){
+    return'<option value="'+fv[0]+'">'+fv[0]+' — '+fv[1]+'</option>';
+  }).join('');
+
+  el.innerHTML=pus.map(function(p){
+    var fOpts=fieldOpts.replace('value="'+p.field+'"','value="'+p.field+'" selected');
+    return'<div class="pu-row" data-id="'+p.id+'" style="background:#FAFAFA;border:1px solid var(--bo);border-radius:9px;padding:10px 12px;margin-bottom:8px">'
+      +'<div style="display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px;align-items:center;flex-wrap:wrap">'
+      // Name
+      +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">Name</div>'
+      +'<input class="pu-name-inp" type="text" value="'+p.name+'" style="width:100%;padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:12px;font-family:\'Nunito\',sans-serif;outline:none" onfocus="this.style.borderColor=\'var(--pr)\'" onblur="this.style.borderColor=\'var(--bo)\'"/></div>'
+      // Field
+      +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">Data Field</div>'
+      +'<select class="pu-field-sel" style="padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:12px;font-family:\'Nunito\',sans-serif;outline:none">'+fOpts+'</select></div>'
+      // Rate
+      +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">$ per unit</div>'
+      +'<input class="pu-rate-inp" type="number" value="'+p.rate+'" min="0" step="0.5" style="width:70px;padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:13px;font-weight:700;text-align:center;font-family:\'Nunito\',sans-serif;outline:none"/></div>'
+      // Active toggle
+      +'<div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:5px">Active</div>'
+      +'<label style="position:relative;display:inline-block;width:36px;height:20px">'
+      +'<input class="pu-active-chk" type="checkbox" '+(p.active?'checked':'')+' style="opacity:0;width:0;height:0" onchange="updPUToggleStyle(this)">'
+      +'<span class="pu-slider" style="position:absolute;cursor:pointer;inset:0;background:'+(p.active?'var(--ok)':'#ccc')+';border-radius:20px;transition:.2s"></span>'
+      +'<span style="position:absolute;content:\'\';height:14px;width:14px;left:'+(p.active?'19px':'3px')+';bottom:3px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none"></span>'
+      +'</label></div>'
+      // In Gross toggle
+      +'<div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--se);text-transform:uppercase;margin-bottom:5px;white-space:nowrap">In Gross</div>'
+      +'<label style="position:relative;display:inline-block;width:36px;height:20px">'
+      +'<input class="pu-gross-chk" type="checkbox" '+(p.inGross?'checked':'')+' style="opacity:0;width:0;height:0" onchange="updPUToggleStyle(this)">'
+      +'<span class="pu-slider" style="position:absolute;cursor:pointer;inset:0;background:'+(p.inGross?'var(--se)':'#ccc')+';border-radius:20px;transition:.2s"></span>'
+      +'<span style="position:absolute;content:\'\';height:14px;width:14px;left:'+(p.inGross?'19px':'3px')+';bottom:3px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none"></span>'
+      +'</label>'
+      +'<div style="font-size:8px;color:var(--mu);margin-top:2px">'+(p.inGross?'adds to gross':'arcade paid')+'</div>'
+      +'</div>'
+      // Delete
+      +'<button onclick="deletePU(\''+p.id+'\')" class="btn bd xs" style="align-self:flex-end;margin-bottom:2px" title="Remove this power-up">✕</button>'
+      +'</div></div>';
+  }).join('');
+
+  if(!pus.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--mu);font-size:12px">No power-ups configured. Click + Add to create one.</div>';
+  }
+}
+
+function updPUToggleStyle(chk){
+  var row=chk.closest('.pu-row');if(!row)return;
+  var sliders=chk.parentElement.querySelectorAll('.pu-slider');
+  var knobs=chk.parentElement.querySelectorAll('span:not(.pu-slider)');
+  var isGross=chk.classList.contains('pu-gross-chk');
+  var onColor=isGross?'var(--se)':'var(--ok)';
+  sliders.forEach(function(s){s.style.background=chk.checked?onColor:'#ccc';});
+  knobs.forEach(function(k){if(k!==chk.parentElement)k.style.left=chk.checked?'19px':'3px';});
+  // Update the label below In Gross toggle
+  if(isGross){
+    var lbl=row.querySelector('.pu-gross-chk').closest('div').querySelector('div:last-child');
+    if(lbl)lbl.textContent=chk.checked?'adds to gross':'arcade paid';
+  }
+}
+
+function addPowerUp(){
+  var pus=getPUConfig();
+  pus.push({id:'pu_'+Date.now(),name:'New Power Up',field:'af',rate:5,active:true,inGross:true});
+  localStorage.setItem('wfo_pu_config',JSON.stringify(pus));
+  renderPUList();
+}
+
+function deletePU(id){
+  if(!confirm('Remove this power-up?'))return;
+  var pus=getPUConfig().filter(function(p){return p.id!==id;});
+  localStorage.setItem('wfo_pu_config',JSON.stringify(pus));
+  renderPUList();
+}
+
+function buildPUCell(r){
+  var pus=getPUConfig().filter(function(p){return p.active;});
+  if(!pus.length)return'<td style="text-align:center;color:var(--mu)">—</td>';
+  var c=cPU(r);
+  var lines=pus.map(function(p){
+    var units=r[p.field]||0;if(!units)return'';
+    var earned=units*p.rate;
+    var col=p.inGross?'inherit':'var(--mu)';
+    var arcLabel=p.inGross?'':'<span style="font-size:8px;color:var(--mu);font-style:italic"> arc</span>';
+    return'<div style="font-size:9px;color:'+col+'">'+p.name.split(' ')[0]+': '+units+'×$'+p.rate+'=<strong>$'+earned.toFixed(0)+'</strong>'+arcLabel+'</div>';
+  }).filter(Boolean).join('');
+  var grossColor=c.t>0?'#00897B':'var(--mu)';
+  var extraLine=(c.total>c.t)?('<div style="font-size:9px;color:var(--mu)">earned: $'+c.total.toFixed(2)+'</div>'):'';
+  return'<td><strong style="color:'+grossColor+'">$'+c.t.toFixed(2)+'</strong>'+extraLine+lines+'</td>';
+}
+// Remove old global toggle functions (no longer needed)
+
+
+function printPerfCard(){
+  var name  =document.getElementById('perfBdName')?.textContent||'Rep';
+  var meta  =document.getElementById('perfBdMeta')?.textContent||'';
+  var heroEl=document.getElementById('perfBdGradeHero');
+  var gapEl =document.getElementById('perfBdGapSection');
+  var rowsEl=document.getElementById('perfBdRows');
+  var footEl=document.getElementById('perfBdFoot');
+  var hdrEl =document.getElementById('perfBdHdr');
+  var hdrBg =hdrEl?hdrEl.style.background:'linear-gradient(135deg,#4A1A6B,#6E2B8B)';
+  var wkLabel=(_perfActiveWk||wk)?(function(){var d=new Date((_perfActiveWk||wk)+'T12:00:00'),e=new Date(d);e.setDate(e.getDate()+6);return'Week of '+d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' \u2013 '+e.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});})():'';
+  var css='<style>.ppc-wrap{max-width:660px;margin:0 auto;font-family:\'Nunito\',sans-serif;font-size:13px;color:#1A1A1A}.ppc-card{border:1px solid #E8E8E8;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:14px}.ppc-hdr{color:#fff;padding:18px 22px}.ppc-hero{padding:16px 20px 14px;border-bottom:2px solid #E8E8E8;background:#FAFAFA}.ppc-gap{padding:11px 14px;border-bottom:2px solid #E8E8E8;background:#FFF8E1}.ppc-body{padding:14px 20px}.ppc-t{width:100%;border-collapse:collapse;font-size:12px}.ppc-t th{background:#FFF0F7;color:#E20074;font-family:\'Poppins\',sans-serif;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #E20074;text-align:left}.ppc-t td{padding:7px 8px;border-bottom:1px solid #F0F0F0}.ppc-conf{margin-top:12px;font-size:9px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:8px}</style>';
+  var body=css
+    +'<div class="ppc-wrap"><div class="ppc-card">'
+    +'<div class="ppc-hdr" style="background:'+hdrBg+'">'
+    +'<div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:20px">'+name+'</div>'
+    +'<div style="font-size:12px;opacity:.75;margin-top:3px">'+meta+'</div>'
+    +(wkLabel?'<div style="font-size:11px;opacity:.6;margin-top:2px">'+wkLabel+'</div>':'')
+    +'</div>'
+    +'<div class="ppc-hero">'+(heroEl?heroEl.innerHTML:'')+'</div>'
+    +((gapEl&&gapEl.innerHTML)?'<div class="ppc-gap">'+gapEl.innerHTML+'</div>':'')
+    +'<div class="ppc-body"><div style="font-family:\'Poppins\',sans-serif;font-weight:700;font-size:12px;color:#6E2B8B;margin-bottom:10px">Score Breakdown by Metric</div>'
+    +'<table class="ppc-t"><thead><tr><th>Metric</th><th style="text-align:center">Actual</th><th style="text-align:center">Target</th><th style="text-align:center">Raw Score</th><th style="text-align:center;background:#F3E8FF;color:#6E2B8B">Weight</th><th style="text-align:center">Contribution</th></tr></thead>'
+    +'<tbody>'+(rowsEl?rowsEl.innerHTML:'')+'</tbody>'
+    +'<tfoot>'+(footEl?footEl.innerHTML:'')+'</tfoot></table>'
+    +'<div style="margin-top:8px;font-size:10px;color:#aaa">Contribution = Raw Score \u00d7 (Weight \u00f7 Total Active Weight)</div></div></div>'
+    +'<div class="ppc-conf">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div>'
+    +'</div>';
+  openPF(body,'Perf Card \u2014 '+name);
 }
 
 </script>
