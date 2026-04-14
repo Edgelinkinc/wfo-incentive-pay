@@ -253,9 +253,9 @@ body.perf-active #pg-perf{margin:0;width:calc(100% - 220px);position:fixed;left:
 body.perf-active .sidebar.collapsed~.content+#pg-perf,body.sidebar-collapsed.perf-active #pg-perf{left:56px;width:calc(100% - 56px);}
 body.page-pg-home .week-bar,body.page-pg-home .stbar,body.page-pg-home .kstrip{display:none!important;}
 body.admin-active .content{padding:0!important;}body.admin-active #pg-admin{margin:0;width:100%;position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--bg);}
-body:not(.page-pg-reps):not(.page-pg-chargebacks):not(.page-pg-perf) .week-bar{display:none!important;}
+body:not(.page-pg-reps):not(.page-pg-chargebacks):not(.page-pg-perf):not(.page-pg-leaderboard) .week-bar{display:none!important;}
 body.page-pg-managers .week-bar,body.page-pg-coaches .week-bar,
-body.page-pg-leaderboard .week-bar,body.page-pg-summary .week-bar,
+body.page-pg-summary .week-bar,
 body.page-pg-history .week-bar,body.page-pg-roster .week-bar,
 body.page-pg-assign .week-bar{display:none!important;}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
@@ -1364,9 +1364,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       <div class="card-hdr">
         <div class="card-title">🏆 Leaderboard</div>
         <div class="lb-tabs">
-          <button class="lb-tab active" onclick="swLB('company',this)">🌐 Company-Wide</button>
-          <button class="lb-tab" onclick="swLB('store',this)">🏪 By Store</button>
-          <button class="lb-tab" onclick="swLB('coach',this)">🎯 By Coach</button>
+          <button class="lb-tab active" onclick="swLB('company',this)" style="display:none">🌐 Company-Wide</button>
         </div>
       </div>
       <div class="card-body">
@@ -3158,7 +3156,7 @@ let _pinUnlocked=false,_pinCb=null,_pinEntry="";
 
 // ── LEADERBOARD + SUMMARY WEEK/FILTER HELPERS ──
 
-function initLBPage(){
+function initLBPage(){lbMode="company";
   // Populate coach filter
   const cf=document.getElementById('lbCoachFil');
   if(cf){
