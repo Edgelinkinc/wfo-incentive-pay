@@ -3613,7 +3613,7 @@ function goPage(id,el){
       const _ot=document.querySelector("#pg-reps .sub-tab");
       if(_ot)_ot.classList.add("active");
     }
-    renRepOv();upK();
+    renR();renRepOv();upK();
   }
   if(id==="pg-employee"){initEmpView();}
   if(id==="pg-perf"){document.body.classList.add("perf-active");initPerfPage();var _pf=document.getElementById('pg-perf');if(_pf)_pf.scrollTop=0;[0,100,300].forEach(function(t){setTimeout(function(){var pf=document.getElementById('pg-perf');if(pf)pf.scrollTop=0;},t);});}
@@ -6949,12 +6949,12 @@ function renCoachTE(){
   Object.entries(ids).forEach(([elId,key])=>{const el=document.getElementById(elId);if(el)el.value=ct[key]??DT.coach[key];});
 }
 function savT(){
-  T.box.forEach((t,i)=>{t.mn=+document.getElementById("bM"+i)?.value||t.mn;t.r=+document.getElementById("bR"+i)?.value||t.r;});
+  T.box.forEach((t,i)=>{const mv=document.getElementById("bM"+i);const rv=document.getElementById("bR"+i);if(mv)t.mn=+mv.value;if(rv)t.r=+rv.value;});
   for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
-  T.acc.forEach((t,i)=>{t.mp=+document.getElementById("aM"+i)?.value||t.mp;t.p=+document.getElementById("aP"+i)?.value||t.p;});
+  T.acc.forEach((t,i)=>{const mv=document.getElementById("aM"+i);const pv=document.getElementById("aP"+i);if(mv)t.mp=+mv.value;if(pv)t.p=+pv.value;});
   for(let i=0;i<T.acc.length-1;i++)T.acc[i].xp=T.acc[i+1].mp-1;
   T.af=+document.getElementById("tAf").value||5;T.hs=+document.getElementById("tHs").value||5;
-  T.mi=T.mi.map((_,i)=>+document.getElementById("tM"+(i+1))?.value||_);
+  T.mi=T.mi.map((_,i)=>{const el=document.getElementById("tM"+(i+1));return el?+el.value:_;});
   if(!T.mgr)T.mgr=JSON.parse(JSON.stringify(DT.mgr));
   [1,2,3].forEach(tier=>{["acts","hsi","bts","acc"].forEach(cat=>{const b=document.getElementById("mte_"+tier+"_"+cat+"_b");const u=document.getElementById("mte_"+tier+"_"+cat+"_u");if(b&&u){T.mgr[tier].cats[cat].base=+b.value||T.mgr[tier].cats[cat].base;T.mgr[tier].cats[cat].up=+u.value||T.mgr[tier].cats[cat].up;}});T.mgr[tier].baseMax=Object.values(T.mgr[tier].cats).reduce((s,c)=>s+c.base,0);T.mgr[tier].upMax=Object.values(T.mgr[tier].cats).reduce((s,c)=>s+c.up,0);});
   if(!T.coach)T.coach=JSON.parse(JSON.stringify(DT.coach));
