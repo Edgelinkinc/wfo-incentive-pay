@@ -6951,10 +6951,17 @@ function renCoachTE(){
 
 // ── MASTER TIER SAVE — reads whichever editor has the values ──
 function masterSaveTiers(){
-  // Box tiers - try overlay IDs first, then admin IDs
+  // Detect which editor is active: overlay (adov.open) or admin center
+  var useOverlay = document.getElementById('adov')&&document.getElementById('adov').classList.contains('open');
+
+  // Box tiers
   T.box.forEach(function(t,i){
-    var mn_el = document.getElementById('bM'+i) || document.getElementById('aBM'+i);
-    var r_el  = document.getElementById('bR'+i) || document.getElementById('aBR'+i);
+    var mn_el = useOverlay
+      ? (document.getElementById('bM'+i)  || document.getElementById('aBM'+i))
+      : (document.getElementById('aBM'+i) || document.getElementById('bM'+i));
+    var r_el = useOverlay
+      ? (document.getElementById('bR'+i)  || document.getElementById('aBR'+i))
+      : (document.getElementById('aBR'+i) || document.getElementById('bR'+i));
     if(mn_el && mn_el.value !== '') t.mn = +mn_el.value;
     if(r_el  && r_el.value  !== '') t.r  = +r_el.value;
   });
@@ -6964,8 +6971,12 @@ function masterSaveTiers(){
 
   // Acc tiers
   T.acc.forEach(function(t,i){
-    var mp_el = document.getElementById('aM'+i) || document.getElementById('aAM'+i);
-    var p_el  = document.getElementById('aP'+i) || document.getElementById('aAP'+i);
+    var mp_el = useOverlay
+      ? (document.getElementById('aM'+i)  || document.getElementById('aAM'+i))
+      : (document.getElementById('aAM'+i) || document.getElementById('aM'+i));
+    var p_el = useOverlay
+      ? (document.getElementById('aP'+i)  || document.getElementById('aAP'+i))
+      : (document.getElementById('aAP'+i) || document.getElementById('aP'+i));
     if(mp_el && mp_el.value !== '') t.mp = +mp_el.value;
     if(p_el  && p_el.value  !== '') t.p  = +p_el.value;
   });
@@ -6974,7 +6985,9 @@ function masterSaveTiers(){
 
   // MIM tiers
   T.mi = T.mi.map(function(_,i){
-    var el = document.getElementById('tM'+(i+1)) || document.getElementById('aTM'+(i+1));
+    var el = useOverlay
+      ? (document.getElementById('tM'+(i+1))  || document.getElementById('aTM'+(i+1)))
+      : (document.getElementById('aTM'+(i+1)) || document.getElementById('tM'+(i+1)));
     return (el && el.value !== '') ? +el.value : _;
   });
 
