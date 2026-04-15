@@ -6948,7 +6948,70 @@ function renCoachTE(){
   const ids={cAt100:"at100",cAt115:"at115",cAt125:"at125",cAtPen:"atPen",cAc50:"ac50",cAc60:"ac60",cAc70:"ac70",cAcElbDrop:"acElbDrop",cSh1:"sh1",cSh2:"sh2",cKick1:"kick1",cKick2:"kick2",cMimRate:"mimRate"};
   Object.entries(ids).forEach(([elId,key])=>{const el=document.getElementById(elId);if(el)el.value=ct[key]??DT.coach[key];});
 }
-function savT(){
+
+// ── MASTER TIER SAVE — reads whichever editor has the values ──
+function masterSaveTiers(){
+  // Box tiers - try overlay IDs first, then admin IDs
+  T.box.forEach(function(t,i){
+    var mn_el = document.getElementById('bM'+i) || document.getElementById('aBM'+i);
+    var r_el  = document.getElementById('bR'+i) || document.getElementById('aBR'+i);
+    if(mn_el && mn_el.value !== '') t.mn = +mn_el.value;
+    if(r_el  && r_el.value  !== '') t.r  = +r_el.value;
+  });
+  for(var i=0;i<T.box.length-1;i++) T.box[i].mx = T.box[i+1].mn - 1;
+  // Last tier — ensure mx is huge
+  if(T.box.length) T.box[T.box.length-1].mx = 9999;
+
+  // Acc tiers
+  T.acc.forEach(function(t,i){
+    var mp_el = document.getElementById('aM'+i) || document.getElementById('aAM'+i);
+    var p_el  = document.getElementById('aP'+i) || document.getElementById('aAP'+i);
+    if(mp_el && mp_el.value !== '') t.mp = +mp_el.value;
+    if(p_el  && p_el.value  !== '') t.p  = +p_el.value;
+  });
+  for(var j=0;j<T.acc.length-1;j++) T.acc[j].xp = T.acc[j+1].mp - 1;
+  if(T.acc.length) T.acc[T.acc.length-1].xp = 999999;
+
+  // MIM tiers
+  T.mi = T.mi.map(function(_,i){
+    var el = document.getElementById('tM'+(i+1)) || document.getElementById('aTM'+(i+1));
+    return (el && el.value !== '') ? +el.value : _;
+  });
+
+  // PU config
+  if(typeof savePUConfig === 'function') savePUConfig();
+
+  // Coach tiers (overlay IDs)
+  if(!T.coach) T.coach = JSON.parse(JSON.stringify(DT.coach));
+  var cids = {cAt100:'at100',cAt115:'at115',cAt125:'at125',cAtPen:'atPen',
+    cAc50:'ac50',cAc60:'ac60',cAc70:'ac70',cAcElbDrop:'acElbDrop',
+    cSh1:'sh1',cSh2:'sh2',cKick1:'kick1',cKick2:'kick2',cMimRate:'mimRate'};
+  Object.entries(cids).forEach(function(kv){
+    var el = document.getElementById(kv[0]) || document.getElementById('a'+kv[0].charAt(0).toUpperCase()+kv[0].slice(1));
+    if(el) T.coach[kv[1]] = +el.value || DT.coach[kv[1]];
+  });
+
+  // Persist
+  localStorage.setItem('wfo_tiers', JSON.stringify(T));
+  localStorage.setItem('wfo_ts', new Date().toISOString());
+
+  // Force full re-render of everything that uses T
+  renR();
+  upK();
+  if(typeof renRepOv === 'function') renRepOv();
+  if(typeof renMimTables === 'function') renMimTables();
+  // Re-render the inline flyer if visible
+  var flyerEl = document.getElementById('repFlyerInline');
+  if(flyerEl && flyerEl.innerHTML) {
+    if(typeof renRepFlyerTo === 'function') renRepFlyerTo(flyerEl);
+  }
+  // Delayed second render to catch any async state
+  setTimeout(function(){renR();upK();}, 100);
+
+  tst2('\u2705 Tiers saved \u2014 '+T.box.map(function(b){return b.r;}).join('/$')+'  per act', 'ok');
+}
+
+function savT(){masterSaveTiers();if(document.getElementById("aSv"))document.getElementById("aSv").textContent="Last saved: "+new Date().toLocaleString();return;// legacy below
   T.box.forEach((t,i)=>{const mv=document.getElementById("bM"+i);const rv=document.getElementById("bR"+i);if(mv)t.mn=+mv.value;if(rv)t.r=+rv.value;});
   for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
   T.acc.forEach((t,i)=>{const mv=document.getElementById("aM"+i);const pv=document.getElementById("aP"+i);if(mv)t.mp=+mv.value;if(pv)t.p=+pv.value;});
@@ -7963,7 +8026,7 @@ function initAdminTiers(){
   const mgrEl=document.getElementById('aAdminMgrTiers');
   if(mgrEl)mgrEl.innerHTML=[1,2,3].map(tier=>`<div style="margin-bottom:16px"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:6px">${tn[tier]}</div>${Object.keys(cn).map(cat=>`<div class="tr2"><label>${cn[cat]}:</label><span style="font-size:11px;color:var(--mu);min-width:50px">Base $</span><input type="number" id="amte_${tier}_${cat}_b" value="${mgr[tier]?.cats[cat]?.base||DT.mgr[tier].cats[cat].base}" min="0" step="0.25" style="width:85px"/><span style="font-size:11px;color:var(--mu);min-width:55px">Up $</span><input type="number" id="amte_${tier}_${cat}_u" value="${mgr[tier]?.cats[cat]?.up||DT.mgr[tier].cats[cat].up}" min="0" step="0.25" style="width:85px"/></div>`).join('')}</div>`).join('<hr style="border:1px solid var(--bo);margin:10px 0"/>');
 }
-function saveAdminTiers(){
+function saveAdminTiers(){masterSaveTiers();return;// legacy below
   T.box.forEach((t,i)=>{const mv=document.getElementById('aBM'+i);const rv=document.getElementById('aBR'+i);if(mv)t.mn=+mv.value;if(rv)t.r=+rv.value;});
   for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
   T.acc.forEach((t,i)=>{const mv=document.getElementById('aAM'+i);const pv=document.getElementById('aAP'+i);if(mv)t.mp=+mv.value;if(pv)t.p=+pv.value;});
