@@ -5522,10 +5522,21 @@ function loadEmpBonusFromData(repVal){
   const cbSection=document.getElementById('empCbSection');
   const cbList=document.getElementById('empCbList');
   if(cbSection)cbSection.style.display=myCBs.length?'block':'none';
-  if(cbList)cbList.innerHTML=myCBs.map(cb=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(211,47,47,.2);font-size:12px">
-    <span>${cb.tp}${cb.rf?' — '+cb.rf:''}</span>
-    <strong style="color:var(--da)">-$${cb.a.toFixed(2)}</strong>
-  </div>`).join('');
+  if(cbList)cbList.innerHTML=myCBs.map(cb=>{
+    const cbDtFmt=cb.dt?(new Date(cb.dt+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})):'';
+    const submittedFmt=cb.at||'';
+    return `<div style="padding:8px 0;border-bottom:1px solid rgba(211,47,47,.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700">${cb.tp}${cb.rf?' — '+cb.rf:''}</span>
+        <strong style="color:var(--da);font-size:12px">-$${cb.a.toFixed(2)}</strong>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:3px;flex-wrap:wrap">
+        ${cbDtFmt?`<span style="font-size:10px;color:#E20074">📅 CB Date: ${cbDtFmt}</span>`:''}
+        ${submittedFmt?`<span style="font-size:10px;color:#999">🕐 Submitted: ${submittedFmt}</span>`:''}
+        ${cb.nt?`<span style="font-size:10px;color:#666;font-style:italic">${cb.nt}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function empWeekNav(dir){
@@ -7177,7 +7188,26 @@ ${c.sp.tot>0?`<div style="grid-column:1/-1;border:1px solid #E8E8E8;border-radiu
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Payout Summary<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
 <div style="border:1px solid #E8E8E8;border-radius:11px;overflow:hidden;margin-bottom:20px">
 <div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF0F7"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Gross Incentive Pay</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:18px;color:#E20074">$${c.gr.toFixed(2)}</div></div>
-${c.cb>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF8F8"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Chargebacks</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${c.cb.toFixed(2)}</div></div>${repCBs.map(cb=>`<div style="display:flex;justify-content:space-between;padding:7px 17px 7px 32px;border-bottom:1px solid #F0F0F0;background:#FAFAFA"><div style="font-size:11px;color:#999">↳ ${X(cb.tp)}${cb.rf?" - "+cb.rf:""}</div><div style="font-size:11px;color:#D32F2F;font-weight:700">-$${cb.a.toFixed(2)}</div></div>`).join("")}`:""}
+${c.cb>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF8F8"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Chargebacks</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${c.cb.toFixed(2)}</div></div>${repCBs.map(cb=>{
+    const fmt=dt=>{try{const d=new Date(dt+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return '';}};
+    const cbDtStr=cb.dt?fmt(cb.dt):'';
+    const submStr=cb.at||'';
+    return `<div style="padding:8px 17px 8px 32px;border-bottom:1px solid #F0F0F0;background:#FAFAFA">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <span style="font-size:12px;color:#C62828;font-weight:700">${X(cb.tp)}</span>
+          ${cb.rf?`<span style="font-size:11px;color:#999"> — Ref: ${X(cb.rf)}</span>`:''}
+          ${cb.nt?`<div style="font-size:10px;color:#888;margin-top:2px;font-style:italic">${X(cb.nt)}</div>`:''}
+          <div style="display:flex;gap:12px;margin-top:3px;flex-wrap:wrap">
+            ${cbDtStr?`<span style="font-size:10px;color:#E20074;font-weight:700">📅 CB Date: ${cbDtStr}</span>`:''}
+            ${submStr?`<span style="font-size:10px;color:#999">🕐 Submitted: ${submStr}</span>`:''}
+            ${cb.by?`<span style="font-size:10px;color:#999">By: ${X(cb.by)}</span>`:''}
+          </div>
+        </div>
+        <div style="font-size:13px;color:#D32F2F;font-weight:800;white-space:nowrap;margin-left:12px">-$${cb.a.toFixed(2)}</div>
+      </div>
+    </div>`;
+  }).join("")}`:""}
 ${c.arc>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF8F8"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">MIM Arcade Credit</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${c.arc.toFixed(2)}</div></div>`:""}
 <div style="display:flex;justify-content:space-between;padding:13px 17px;background:linear-gradient(135deg,${c.nt<0?"#B71C1C,#D32F2F":"#4A1A6B,#6E2B8B"})"><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px;color:#fff">${c.nt<0?"⚠":"✓"} EDGELINK NET OWED</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:20px;color:#fff">$${c.nt.toFixed(2)}</div></div>
 </div></div>
@@ -9932,10 +9962,21 @@ function loadEmpBonus(){
   const cbSection=document.getElementById('empCbSection');
   const cbList=document.getElementById('empCbList');
   if(cbSection)cbSection.style.display=myCBs.length?'block':'none';
-  if(cbList)cbList.innerHTML=myCBs.map(cb=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(211,47,47,.2);font-size:12px">
-    <span>${cb.tp}${cb.rf?' — '+cb.rf:''}</span>
-    <strong style="color:var(--da)">-$${cb.a.toFixed(2)}</strong>
-  </div>`).join('');
+  if(cbList)cbList.innerHTML=myCBs.map(cb=>{
+    const cbDtFmt=cb.dt?(new Date(cb.dt+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})):'';
+    const submittedFmt=cb.at||'';
+    return `<div style="padding:8px 0;border-bottom:1px solid rgba(211,47,47,.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700">${cb.tp}${cb.rf?' — '+cb.rf:''}</span>
+        <strong style="color:var(--da);font-size:12px">-$${cb.a.toFixed(2)}</strong>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:3px;flex-wrap:wrap">
+        ${cbDtFmt?`<span style="font-size:10px;color:#E20074">📅 CB Date: ${cbDtFmt}</span>`:''}
+        ${submittedFmt?`<span style="font-size:10px;color:#999">🕐 Submitted: ${submittedFmt}</span>`:''}
+        ${cb.nt?`<span style="font-size:10px;color:#666;font-style:italic">${cb.nt}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function printEmpBonus(){
