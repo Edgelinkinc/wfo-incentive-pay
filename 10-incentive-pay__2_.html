@@ -3068,6 +3068,32 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   </div>
 </div><!-- /perfGradeModal -->
 
+
+<!-- EDIT CHARGEBACK MODAL -->
+<div id="cbEditModal" style="display:none;position:fixed;inset:0;background:rgba(74,26,107,.8);z-index:950;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:22px;max-width:440px;width:92%">
+    <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#6E2B8B;margin-bottom:14px">✎ Edit Chargeback</div>
+    <input type="hidden" id="cbEditId"/>
+    <div class="cb-pills" style="margin-bottom:10px" id="cbEditPills">
+      <div class="cpp" data-t="Deposit Shortage" onclick="setCBEditType(this)">💵 Deposit Shortage</div>
+      <div class="cpp" data-t="XBM" onclick="setCBEditType(this)">📦 XBM</div>
+      <div class="cpp" data-t="RMA" onclick="setCBEditType(this)">↩️ RMA</div>
+      <div class="cpp" data-t="MIM Cancellation" onclick="setCBEditType(this)">📱 MIM Cancellation</div>
+      <div class="cpp cu" data-t="Custom" onclick="setCBEditType(this)">+ Custom</div>
+    </div>
+    <input type="text" id="cbEditCT" placeholder="Custom type…" style="display:none;margin-bottom:10px;padding:7px 9px;border:2px solid var(--se);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;width:100%;box-sizing:border-box;outline:none"/>
+    <div class="fg" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="fi"><label>Amount ($)</label><input type="number" id="cbEditA" min="0" step="0.01"/></div>
+      <div class="fi"><label>Reference #</label><input type="text" id="cbEditRf"/></div>
+    </div>
+    <div class="fi" style="margin-bottom:14px"><label>Notes</label><textarea id="cbEditNt" style="height:60px;resize:vertical"></textarea></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn bp" style="flex:1" onclick="saveCBEdit()">💾 Save Changes</button>
+      <button class="btn bo" onclick="document.getElementById('cbEditModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </main>
 <!-- MOBILE MORE MENU -->
   <div class="mobile-more" id="mobileMore" style="display:none">
@@ -3782,7 +3808,7 @@ function cPU(r){
 }
 function cMI(l){if((l||0)<=0)return{p:0};let p=0;const s=T.mi;if(l>=1)p+=s[0];for(let i=1;i<Math.min(l,s.length);i++)p+=s[i];return{p};}
 function arcT(r){return(r.al||[]).reduce((s,t)=>s+(t.a||0),0);}
-function cbT(n){return CBs.filter(c=>c.rp===n).reduce((s,c)=>s+(c.a||0),0);}
+function cbT(n){return CBs.filter(c=>c.rp===n&&!c.voided).reduce((s,c)=>s+(c.a||0),0);}
 function actSp(wd){const d=wd||(wk?new Date(wk+"T12:00:00"):new Date());return sps.filter(s=>{if(!s.on)return false;const st=new Date(s.sd+"T12:00:00"),en=s.ed?new Date(s.ed+"T12:00:00"):null;return d>=st&&(!en||d<=en);});}
 function cSp(r){const wd=wk?new Date(wk+"T12:00:00"):new Date();let tot=0,det=[];actSp(wd).forEach(sp=>{if(sp.sc==="store"&&sp.sv&&r.s!==sp.sv)return;if(sp.sc==="coach"&&sp.sv&&r.c!==sp.sv)return;let pay=0;if(sp.ty==="flat_per_rep")pay=sp.a;else if(sp.ty==="flat_per_unit")pay=sp.a;else if(sp.ty==="pct_gross"){const g=cBx(r.ta||0)+cAc(r.ap||0)+cPU(r).t+cMI(r.ml).p;pay=g*sp.a/100;}tot+=pay;det.push({n:sp.nm,p:pay});});return{tot,det};}
 function cRp(r){const bx=cBx(r.ta||0),ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,ac,pu,mi,sp,gr,arc,cb,nt};}
@@ -8242,7 +8268,7 @@ function renAdminSysInfo(){
     <div><strong>Reps loaded:</strong> ${reps.length}</div>
     <div><strong>Week:</strong> ${document.getElementById('wkb')?.textContent||'—'}</div>
     <div><strong>Rep Gross:</strong> $${tG.toFixed(2)}</div>
-    <div><strong>Chargebacks:</strong> ${CBs.length} ($${CBs.reduce((s,c)=>s+c.a,0).toFixed(2)})</div>
+    <div><strong>Chargebacks:</strong> ${CBs.length} ($${CBs.filter(c=>!c.voided).reduce((s,c)=>s+c.a,0).toFixed(2)})</div>
     <div><strong>Active Spiffs:</strong> ${actSp().length}</div>
     <div><strong>Store Assignments:</strong> ${Object.keys(assigns).length}</div>
     <div><strong>Paid Weeks History:</strong> ${hist.length}</div>
@@ -9319,7 +9345,19 @@ function renCBL(){
   } else if(qBanner){qBanner.remove();}
 
   if(!CBs.length){tb.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--mu);font-style:italic">No chargebacks for this week</td></tr>`;upK();return;}
-  tb.innerHTML=CBs.map(c=>`<tr><td style="font-weight:700">${X(c.rp)}</td><td style="font-size:11px;color:var(--mu)">${X(c.st)}</td><td><span class="bdg bfl">${X(c.tp)}</span></td><td style="font-family:'Poppins',sans-serif;font-weight:800;color:var(--da)">$${c.a.toFixed(2)}</td><td style="font-size:11px">${X(c.by)}</td><td style="font-size:11px;color:var(--mu)">${X(c.rf)||"—"}</td><td style="font-size:11px;color:var(--mu);max-width:150px">${X(c.nt)||"—"}</td><td style="font-size:11px;color:var(--mu)">${c.at}</td><td>${wkLocked?'<span class="bdg bfl">Locked</span>':`<button class="btn bd xs" onclick="requirePin(()=>rmCB(${c.id}))">x</button>`}</td></tr>`).join("");
+  tb.innerHTML=CBs.map(c=>{
+    const voided=c.voided;
+    const rowStyle=voided?'opacity:.5;text-decoration:line-through;background:#FFF8F8':'';
+    const actions=wkLocked
+      ?'<span class="bdg bfl">Locked</span>'
+      :'<div style="display:flex;gap:4px">'
+        +`<button class="btn bp xs" onclick="requirePin(()=>editCB(${c.id}))" title="Edit">✎</button>`
+        +`<button class="btn bd xs" onclick="requirePin(()=>voidCB(${c.id}))" title="${voided?'Un-void':'Void — keep record but remove from pay'}">${voided?'↩':'⊘'}</button>`
+        +`<button class="btn bd xs" onclick="requirePin(()=>rmCB(${c.id}))" title="Delete permanently">✕</button>`
+        +'</div>';
+    const voidBadge=voided?'<span class="bdg" style="background:#999;color:#fff;margin-left:4px">VOIDED</span>':'';
+    return `<tr style="${rowStyle}"><td style="font-weight:700">${X(c.rp)}</td><td style="font-size:11px;color:var(--mu)">${X(c.st)}</td><td><span class="bdg bfl">${X(c.tp)}</span>${voidBadge}</td><td style="font-family:'Poppins',sans-serif;font-weight:800;color:var(--da)">$${c.a.toFixed(2)}</td><td style="font-size:11px">${X(c.by)}</td><td style="font-size:11px;color:var(--mu)">${X(c.rf)||'—'}</td><td style="font-size:11px;color:var(--mu);max-width:150px">${X(c.nt)||'—'}${c.voidReason?'<br><em style="color:#E20074">Void: '+X(c.voidReason)+'</em>':''}</td><td style="font-size:11px;color:var(--mu)">${c.at}</td><td>${actions}</td></tr>`;
+  }).join('');
   upK();
 }
 
@@ -12202,6 +12240,78 @@ function clearCBRepSearch(){
   document.getElementById('cbR').value='';
   document.getElementById('cbRSearch').value='';
   filterCBRepSelect('');
+}
+
+
+// ── CHARGEBACK EDIT / VOID / DELETE ──
+
+function rmCB(id){
+  if(!confirm('Delete this chargeback permanently?'))return;
+  CBs=CBs.filter(c=>c.id!==id);
+  saveCurrentWeek();renCBL();renR();tst2('Chargeback deleted.','ok');
+}
+
+function voidCB(id){
+  const c=CBs.find(x=>x.id===id);if(!c)return;
+  if(c.voided){
+    // Un-void
+    c.voided=false;c.voidReason='';
+    saveCurrentWeek();renCBL();renR();tst2('Chargeback restored.','ok');
+    return;
+  }
+  const reason=prompt('Reason for voiding this chargeback (optional):','Not valid');
+  if(reason===null)return; // cancelled
+  c.voided=true;c.voidReason=reason||'';
+  saveCurrentWeek();renCBL();renR();tst2('Chargeback voided — removed from pay calculations.','ok');
+}
+
+function editCB(id){
+  const c=CBs.find(x=>x.id===id);if(!c)return;
+  document.getElementById('cbEditId').value=id;
+  document.getElementById('cbEditA').value=c.a;
+  document.getElementById('cbEditRf').value=c.rf||'';
+  document.getElementById('cbEditNt').value=c.nt||'';
+  // Set type pills
+  const pills=document.querySelectorAll('#cbEditPills .cpp');
+  const stdTypes=['Deposit Shortage','XBM','RMA','MIM Cancellation'];
+  const isCustom=!stdTypes.includes(c.tp);
+  pills.forEach(p=>{
+    p.classList.remove('sel');
+    if(p.dataset.t===c.tp)p.classList.add('sel');
+    if(isCustom&&p.dataset.t==='Custom')p.classList.add('sel');
+  });
+  const ct=document.getElementById('cbEditCT');
+  if(isCustom){ct.style.display='block';ct.value=c.tp;}
+  else{ct.style.display='none';ct.value='';}
+  document.getElementById('cbEditModal').style.display='flex';
+}
+
+function setCBEditType(el){
+  document.querySelectorAll('#cbEditPills .cpp').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  const ct=document.getElementById('cbEditCT');
+  if(el.dataset.t==='Custom'){ct.style.display='block';}
+  else{ct.style.display='none';ct.value='';}
+}
+
+function saveCBEdit(){
+  const id=+document.getElementById('cbEditId').value;
+  const c=CBs.find(x=>x.id===id);if(!c)return;
+  const selPill=document.querySelector('#cbEditPills .cpp.sel');
+  if(!selPill){tst2('Select a type.','er');return;}
+  const tp=selPill.dataset.t==='Custom'
+    ?document.getElementById('cbEditCT').value.trim()
+    :selPill.dataset.t;
+  if(!tp){tst2('Enter custom type.','er');return;}
+  const a=+document.getElementById('cbEditA').value;
+  if(a<=0){tst2('Enter a valid amount.','er');return;}
+  c.tp=tp;c.a=a;
+  c.rf=document.getElementById('cbEditRf').value.trim();
+  c.nt=document.getElementById('cbEditNt').value.trim();
+  c.edited=new Date().toLocaleString();
+  saveCurrentWeek();
+  document.getElementById('cbEditModal').style.display='none';
+  renCBL();renR();tst2('Chargeback updated.','ok');
 }
 
 </script>
