@@ -817,6 +817,17 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   </div>
 
     <!-- ANNOUNCEMENTS -->
+  <!-- THIS WEEK'S UPDATES -->
+  <div style="background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;border:2px solid var(--pr)">
+    <div style="background:linear-gradient(135deg,var(--pr),var(--se));padding:11px 16px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#fff">📝 This Week's Updates</span>
+      <button onclick="requirePin(()=>openWeeklyNote())" class="home-admin-btn" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer">✎ Edit Note</button>
+    </div>
+    <div id="weeklyUpdates" style="padding:14px 16px">
+      <div style="color:#999;font-size:13px;text-align:center;padding:8px 0">Loading…</div>
+    </div>
+  </div>
+
   <div style="background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;border:1px solid #E8E8E8">
     <div style="background:#E20074;padding:11px 16px;display:flex;align-items:center;justify-content:space-between">
       <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#fff">📢 Announcements</span>
@@ -850,6 +861,23 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   </div>
 
   <!-- MODALS -->
+
+  <!-- WEEKLY NOTE MODAL -->
+  <div id="weeklyNoteModal" style="display:none;position:fixed;inset:0;background:rgba(74,26,107,.8);z-index:950;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:22px;max-width:520px;width:92%;max-height:90vh;overflow-y:auto">
+      <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;color:#6E2B8B;margin-bottom:6px">📝 This Week's Note</div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:14px">This note appears on the home screen for everyone. Tier changes are added automatically — add any extra context here.</div>
+      <div class="fi" style="margin-bottom:14px">
+        <label>Note for this week</label>
+        <textarea id="weeklyNoteText" placeholder="e.g. Box tier rates updated effective this week. HSI power up renamed to Home Internet." style="height:100px;resize:vertical"></textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn bp" style="flex:1" onclick="saveWeeklyNote()">💾 Save Note</button>
+        <button class="btn bo" onclick="document.getElementById('weeklyNoteModal').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="announcementModal" style="display:none;position:fixed;inset:0;background:rgba(74,26,107,.8);z-index:950;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:16px;padding:22px;max-width:460px;width:92%;max-height:90vh;overflow-y:auto">
       <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;color:#6E2B8B;margin-bottom:14px">📢 Post Announcement</div>
@@ -1979,6 +2007,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <button class="sub-tab" onclick="swAdmin('datastatus',this)">🔗 Data Status</button>
         <button class="sub-tab" onclick="swAdmin('history',this)">📋 History</button>
         <button class="sub-tab" onclick="swAdmin('actions',this)">⚠️ Pending Actions</button>
+        <button class="sub-tab" onclick="swAdmin('changelog',this)">📋 Change Log</button>
         <button class="sub-tab" onclick="openPerfGradeModal()" style="white-space:nowrap">🎓 Grade Setup</button>
       </div>
 
@@ -2756,6 +2785,21 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         </div>
       </div>
 
+      <div class="sub-pane" id="admin-changelog">
+        <div class="card">
+          <div class="card-hdr" style="background:linear-gradient(135deg,#1B1F23,#2D333B)">
+            <div class="card-title">📋 Tier & Config Change Log</div>
+            <button class="btn bghost sm" onclick="renderChangeLog()">↺ Refresh</button>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <button class="btn bd sm" onclick="if(confirm('Clear all change log entries?')){localStorage.removeItem('wfo_change_log');renderChangeLog();tst2('Change log cleared','ok')}">🗑 Clear Log</button>
+              <span style="font-size:11px;color:var(--mu);align-self:center">Last 100 changes recorded automatically</span>
+            </div>
+            <div id="changeLogList"><div style="color:var(--mu);font-size:13px">Loading…</div></div>
+          </div>
+        </div>
+      </div>
 </div><!-- /adminContent -->
   </div><!-- /pg-admin -->
 
@@ -6951,6 +6995,9 @@ function renCoachTE(){
 
 // ── MASTER TIER SAVE — reads whichever editor has the values ──
 function masterSaveTiers(){
+  // Snapshot T before changes for diff logging
+  var _oldT = JSON.parse(JSON.stringify(T));
+  var _oldPU = getPUConfig().slice();
   // Detect which editor is active: overlay (adov.open) or admin center
   var useOverlay = document.getElementById('adov')&&document.getElementById('adov').classList.contains('open');
 
@@ -6991,8 +7038,9 @@ function masterSaveTiers(){
     return (el && el.value !== '') ? +el.value : _;
   });
 
-  // PU config
-  if(typeof savePUConfig === 'function') savePUConfig();
+  // PU config — only save if the PU list is actually rendered (admin center open)
+  var puRows = document.querySelectorAll('#aPUList .pu-row');
+  if(puRows.length > 0 && typeof savePUConfig === 'function') savePUConfig();
 
   // Coach tiers (overlay IDs)
   if(!T.coach) T.coach = JSON.parse(JSON.stringify(DT.coach));
@@ -7007,6 +7055,11 @@ function masterSaveTiers(){
   // Persist
   localStorage.setItem('wfo_tiers', JSON.stringify(T));
   localStorage.setItem('wfo_ts', new Date().toISOString());
+  // Log changes
+  var _tierChanges = diffTiers(_oldT, T);
+  var _puChanges = diffPUConfig(_oldPU, getPUConfig());
+  var _allChanges = _tierChanges.concat(_puChanges);
+  if(_allChanges.length){logTierChange(_allChanges);renWeeklyUpdates();}
 
   // Force full re-render of everything that uses T
   renR();
@@ -7878,6 +7931,7 @@ function swAdmin(tab,btn){
   if(tab==='datastatus'){refreshDataStatus();initDataStatus();}
   if(tab==='history'){renWkHist();}
   if(tab==='actions'){renPendingActions();refreshHomeStatus();}
+  if(tab==='changelog'){renderChangeLog();}
   if(tab==='backsheet'){loadELBMapToUI();const mn=document.getElementById('aBsMonth');if(mn&&!mn.value){const n=new Date();mn.value=n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'));}loadAdminBsMonth();}
 }
 
@@ -9911,6 +9965,7 @@ function printEmpBonus(){
 // ══════════════════════════════════════════════════════
 
 function initHomePage(){
+  renWeeklyUpdates();
   try{
     const el=document.getElementById('homeDateTime');
     const _updDT=()=>{const n=new Date();if(el)el.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+' · '+n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});};
@@ -11328,6 +11383,7 @@ var PU_FIELDS=[
 function savePUConfig(){
   var pus=getPUConfig();
   var rows=document.querySelectorAll('#aPUList .pu-row');
+  if(!rows.length) return pus; // Don't wipe config if list isn't rendered
   var updated=[];
   rows.forEach(function(row){
     var id=row.dataset.id;
@@ -11346,7 +11402,7 @@ function savePUConfig(){
       inGross:grossEl?grossEl.checked:existing.inGross
     });
   });
-  localStorage.setItem('wfo_pu_config',JSON.stringify(updated));
+  if(updated.length) localStorage.setItem('wfo_pu_config',JSON.stringify(updated));
   return updated;
 }
 
@@ -11902,6 +11958,207 @@ if(typeof swAdmin==='function'){
     _ghOrigSwAdmin(tab,btn);
     if(tab==='actions')setTimeout(ghInitTokenUI,100);
   };
+}
+
+
+// ══════════════════════════════════════════════════════
+// TIER CHANGE LOG
+// ══════════════════════════════════════════════════════
+
+function logTierChange(changes){
+  var log = [];
+  try{ log = JSON.parse(localStorage.getItem('wfo_change_log')||'[]'); }catch(e){}
+  var entry = {
+    ts: new Date().toISOString(),
+    changes: changes
+  };
+  log.unshift(entry); // newest first
+  if(log.length > 100) log = log.slice(0,100);
+  localStorage.setItem('wfo_change_log', JSON.stringify(log));
+}
+
+function diffTiers(oldT, newT){
+  var changes = [];
+  // Box tiers
+  (newT.box||[]).forEach(function(t,i){
+    var o = (oldT.box||[])[i]||{};
+    if(o.mn !== t.mn) changes.push({section:'Box Tier '+(i+1), field:'Min Activations', from:o.mn, to:t.mn});
+    if(o.r  !== t.r)  changes.push({section:'Box Tier '+(i+1), field:'Rate ($/act)',    from:'$'+o.r,  to:'$'+t.r});
+  });
+  // Acc tiers
+  (newT.acc||[]).forEach(function(t,i){
+    var o = (oldT.acc||[])[i]||{};
+    if(o.mp !== t.mp) changes.push({section:'Acc Tier '+(i+1), field:'Min Profit $', from:'$'+o.mp, to:'$'+t.mp});
+    if(o.p  !== t.p)  changes.push({section:'Acc Tier '+(i+1), field:'Payout %',     from:o.p+'%',  to:t.p+'%'});
+  });
+  // MIM
+  (newT.mi||[]).forEach(function(v,i){
+    var o = (oldT.mi||[])[i];
+    if(o !== v) changes.push({section:'MIM Line '+(i+1), field:'Amount', from:'$'+o, to:'$'+v});
+  });
+  return changes;
+}
+
+function diffPUConfig(oldPUs, newPUs){
+  var changes = [];
+  newPUs.forEach(function(p){
+    var o = oldPUs.find(function(x){return x.id===p.id;})||{};
+    if(o.name !== p.name)     changes.push({section:'Power Up: '+p.name, field:'Name',    from:o.name||'—',   to:p.name});
+    if(o.rate !== p.rate)     changes.push({section:'Power Up: '+p.name, field:'Rate',    from:'$'+(o.rate||0), to:'$'+p.rate});
+    if(o.active !== p.active) changes.push({section:'Power Up: '+p.name, field:'Active',  from:o.active?'On':'Off', to:p.active?'On':'Off'});
+    if(o.inGross !== p.inGross) changes.push({section:'Power Up: '+p.name, field:'In Gross', from:o.inGross?'Yes':'No', to:p.inGross?'Yes':'No'});
+  });
+  // Added PUs
+  newPUs.forEach(function(p){
+    if(!oldPUs.find(function(x){return x.id===p.id;}))
+      changes.push({section:'Power Up', field:'Added', from:'—', to:p.name});
+  });
+  // Removed PUs
+  oldPUs.forEach(function(p){
+    if(!newPUs.find(function(x){return x.id===p.id;}))
+      changes.push({section:'Power Up', field:'Removed', from:p.name, to:'—'});
+  });
+  return changes;
+}
+
+function renderChangeLog(){
+  var el = document.getElementById('changeLogList');
+  if(!el) return;
+  var log = [];
+  try{ log = JSON.parse(localStorage.getItem('wfo_change_log')||'[]'); }catch(e){}
+  if(!log.length){
+    el.innerHTML = '<div style="color:var(--mu);font-size:13px;padding:20px;text-align:center">No changes recorded yet.<br><span style="font-size:11px">Changes are logged automatically when you save tiers.</span></div>';
+    return;
+  }
+  el.innerHTML = log.map(function(entry){
+    var dt = new Date(entry.ts);
+    var dateStr = dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    var timeStr = dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    var rows = (entry.changes||[]).map(function(c){
+      return '<tr style="border-bottom:1px solid var(--bo)">'
+        +'<td style="padding:5px 10px;font-size:11px;color:var(--se);font-weight:700">'+c.section+'</td>'
+        +'<td style="padding:5px 10px;font-size:11px;color:var(--mu)">'+c.field+'</td>'
+        +'<td style="padding:5px 10px;font-size:11px;color:var(--da);text-decoration:line-through">'+c.from+'</td>'
+        +'<td style="padding:5px 10px;font-size:11px;color:var(--ok);font-weight:700">'+c.to+'</td>'
+        +'</tr>';
+    }).join('');
+    return '<div style="border:1px solid var(--bo);border-radius:10px;overflow:hidden;margin-bottom:12px">'
+      +'<div style="background:var(--thb);padding:8px 12px;display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-family:\'Poppins\',sans-serif;font-weight:700;font-size:12px;color:var(--se)">'+dateStr+'</span>'
+      +'<span style="font-size:11px;color:var(--mu)">'+timeStr+' \u00b7 '+(entry.changes||[]).length+' change'+(entry.changes.length!==1?'s':'')+'</span>'
+      +'</div>'
+      +(rows ? '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:var(--thb)">'
+        +'<th style="padding:5px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase">Section</th>'
+        +'<th style="padding:5px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase">Field</th>'
+        +'<th style="padding:5px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase">Was</th>'
+        +'<th style="padding:5px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--tht);text-transform:uppercase">Now</th>'
+        +'</tr></thead><tbody>'+rows+'</tbody></table>'
+      : '<div style="padding:8px 12px;font-size:11px;color:var(--mu)">No value changes detected</div>')
+      +'</div>';
+  }).join('');
+}
+
+
+// ══════════════════════════════════════════════════════
+// THIS WEEK'S UPDATES — home page summary
+// ══════════════════════════════════════════════════════
+
+function getWeekStart(){
+  var now=new Date();
+  var day=now.getDay(); // 0=Sun
+  var diff=now.getDate()-day+(day===0?-6:1); // Monday
+  var mon=new Date(now.setDate(diff));
+  mon.setHours(0,0,0,0);
+  return mon;
+}
+
+function getWeeklyNote(){
+  try{return JSON.parse(localStorage.getItem('wfo_weekly_note')||'null');}catch(e){return null;}
+}
+function saveWeeklyNote(){
+  var txt=document.getElementById('weeklyNoteText')?.value.trim()||'';
+  var note={text:txt, savedAt:new Date().toISOString(), week:getWeekStart().toISOString()};
+  localStorage.setItem('wfo_weekly_note',JSON.stringify(note));
+  document.getElementById('weeklyNoteModal').style.display='none';
+  renWeeklyUpdates();
+  tst2('Weekly note saved!','ok');
+}
+function openWeeklyNote(){
+  var note=getWeeklyNote();
+  var inp=document.getElementById('weeklyNoteText');
+  if(inp) inp.value=note?note.text:'';
+  document.getElementById('weeklyNoteModal').style.display='flex';
+}
+
+function renWeeklyUpdates(){
+  var el=document.getElementById('weeklyUpdates');
+  if(!el)return;
+
+  // Get tier changes from this week
+  var weekStart=getWeekStart();
+  var log=[];
+  try{log=JSON.parse(localStorage.getItem('wfo_change_log')||'[]');}catch(e){}
+  var thisWeek=log.filter(function(e){return new Date(e.ts)>=weekStart;});
+
+  // Get admin note
+  var note=getWeeklyNote();
+  var noteIsThisWeek=note&&note.week&&new Date(note.week)>=weekStart;
+
+  // Build content
+  var html='';
+
+  // Admin note section
+  if(noteIsThisWeek && note.text){
+    html+='<div style="background:linear-gradient(135deg,#F3E8FF,#FFF0F7);border:1px solid var(--se);border-radius:8px;padding:11px 14px;margin-bottom:12px">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--se);margin-bottom:4px;letter-spacing:.06em">📌 Admin Note</div>'
+      +'<div style="font-size:13px;color:#1A1A1A;line-height:1.5">'+note.text.replace(/\n/g,'<br>')+'</div>'
+      +'<div style="font-size:10px;color:var(--mu);margin-top:6px">Posted '+new Date(note.savedAt).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'</div>'
+      +'</div>';
+  }
+
+  // Auto-changes section
+  if(thisWeek.length){
+    // Flatten all changes and deduplicate by section+field
+    var seen={};
+    var changes=[];
+    thisWeek.forEach(function(entry){
+      (entry.changes||[]).forEach(function(c){
+        var key=c.section+'|'+c.field;
+        if(!seen[key]){
+          seen[key]=true;
+          changes.push({c:c, ts:entry.ts});
+        } else {
+          // Update to latest value
+          changes.forEach(function(x){if(x.c.section===c.section&&x.c.field===c.field){x.c.to=c.to;x.ts=entry.ts;}});
+        }
+      });
+    });
+
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--se);margin-bottom:8px;letter-spacing:.06em">⚡ Tier Changes This Week</div>';
+    html+='<div style="display:flex;flex-direction:column;gap:6px">';
+    changes.forEach(function(x){
+      var c=x.c;
+      html+='<div style="display:flex;align-items:center;gap:8px;background:#FAFAFA;border-radius:7px;padding:7px 10px;border:1px solid #F0F0F0">'
+        +'<span style="font-size:11px;font-weight:700;color:var(--se);min-width:120px">'+c.section+'</span>'
+        +'<span style="font-size:11px;color:var(--mu)">'+c.field+'</span>'
+        +'<span style="font-size:11px;color:var(--da);text-decoration:line-through;margin-left:auto">'+c.from+'</span>'
+        +'<span style="font-size:11px">→</span>'
+        +'<span style="font-size:12px;font-weight:800;color:var(--ok)">'+c.to+'</span>'
+        +'</div>';
+    });
+    html+='</div>';
+    html+='<div style="font-size:10px;color:var(--mu);margin-top:8px">Last updated '+new Date(thisWeek[0].ts).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</div>';
+  }
+
+  if(!html){
+    html='<div style="color:#999;font-size:13px;text-align:center;padding:12px 0">'
+      +'<div style="font-size:20px;margin-bottom:4px">✅</div>'
+      +'No changes this week yet.'
+      +'<div style="font-size:11px;margin-top:4px">Changes appear here automatically when tiers are updated.</div>'
+      +'</div>';
+  }
+
+  el.innerHTML=html;
 }
 
 </script>
