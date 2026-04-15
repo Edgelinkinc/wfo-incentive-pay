@@ -9500,7 +9500,7 @@ function renRepFlyerTo(target){
     <div class="flyer-body">
       <div class="flyer-section"><div class="flyer-sec-hdr">📦 Box Level Ups — Per Activation</div><div class="flyer-sec-sub">Paid on EVERY activation once tier threshold is hit</div><div class="flyer-tiers">${boxHTML}</div></div>
       <div class="flyer-section"><div class="flyer-sec-hdr">🛍️ Accessory Levels — Weekly % of Net Profit</div><div class="flyer-sec-sub">Exact payout = your tier % × your accessory net profit</div><div class="flyer-tiers">${accHTML}</div></div>
-      <div class="flyer-section"><div class="flyer-sec-hdr">⚡ Power Ups — Stack on Everything</div><div class="flyer-powerups"><div class="flyer-pu"><span class="pu-ic">💳</span><div><div class="pu-name">Affirm Sale</div><div class="pu-detail">+$${T.af} per sale</div></div><div class="pu-amt">+$${T.af}</div></div><div class="flyer-pu"><span class="pu-ic">📶</span><div><div class="pu-name">WiFi / Home Internet</div><div class="pu-detail">+$${T.hs} per unit</div></div><div class="pu-amt">+$${T.hs}</div></div></div></div>
+      <div class="flyer-section"><div class="flyer-sec-hdr">⚡ Power Ups — Stack on Everything</div><div class="flyer-powerups">${(function(){var pus=getPUConfig().filter(function(p){return p.active;});if(!pus.length)return'<div style="color:var(--mu);font-size:12px">No active power ups</div>';var icons=['💳','📶','⭐','🔥','💡','🎯'];return pus.map(function(p,i){return'<div class="flyer-pu"><span class="pu-ic">'+icons[i%icons.length]+'</span><div><div class="pu-name">'+p.name+'</div><div class="pu-detail">+$'+p.rate+' per unit</div></div><div class="pu-amt">+$'+p.rate+'</div></div>';}).join('');})()}</div></div>
       <div class="flyer-section"><div class="flyer-sec-hdr">📱 MIM Payout — Minimum 6 MM BANs to qualify</div>${mimHTML}<div style="font-size:11px;color:var(--da);margin-top:6px;font-weight:700">⚠ Must hit 6 MM BANs minimum — paid via Arcade by your coach</div></div>
     </div>
     <div class="flyer-footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops</div>
@@ -9539,9 +9539,13 @@ function renRepFlyer(){
 
   // Power ups
   const puEl=document.getElementById('repPowerUps');
-  if(puEl)puEl.innerHTML=`
-    <div class="flyer-pu"><span class="pu-ic">💳</span><div><div class="pu-name">Affirm Sale</div><div class="pu-detail">+$${T.af} per sale — stacks on Box + Accessory bonus</div></div><div class="pu-amt">+$${T.af}</div></div>
-    <div class="flyer-pu"><span class="pu-ic">📶</span><div><div class="pu-name">WiFi / Home Internet Unit</div><div class="pu-detail">+$${T.hs} per unit — stacks on Box + Accessory bonus</div></div><div class="pu-amt">+$${T.hs}</div></div>`;
+  if(puEl){
+    const pus=getPUConfig().filter(p=>p.active);
+    const icons=['💳','📶','⭐','🔥','💡','🎯'];
+    puEl.innerHTML=pus.length
+      ? pus.map((p,i)=>`<div class="flyer-pu"><span class="pu-ic">${icons[i%icons.length]}</span><div><div class="pu-name">${p.name}</div><div class="pu-detail">+$${p.rate} per unit — stacks on Box + Accessory bonus</div></div><div class="pu-amt">+$${p.rate}</div></div>`).join('')
+      : '<div style="color:var(--mu);font-size:12px">No active power ups</div>';
+  }
 
   // MIM
   const mimEl=document.getElementById('repMimTiers');
