@@ -1500,14 +1500,15 @@ body.admin-unlocked #sbStaffSection{display:block!important}
           <select id="cbR" size="1" style="width:100%"><option value="">Select Rep…</option></select>
         </div>
         <div class="fi"><label>Amount ($)</label><input type="number" id="cbA" placeholder="0.00" min="0" step="0.01"/></div>
+        <div class="fi"><label>Chargeback Date <span style="font-size:10px;color:var(--mu)">(when it occurred)</span></label><input type="date" id="cbDt"/></div>
         <div class="fi"><label>Entered By</label><input type="text" id="cbB" placeholder="Your name"/></div>
         <div class="fi"><label>Reference #</label><input type="text" id="cbRf" placeholder="Optional"/></div>
         <div class="fi fl"><label>Notes</label><textarea id="cbNt" placeholder="Describe the reason…"></textarea></div>
       </div>
       <button class="btn bd" onclick="requirePin(addCB)">⚠️ Post Chargeback</button>
       <div style="margin-top:18px"><div class="tw" style="border:1px solid var(--bo);border-radius:8px;overflow:hidden">
-        <table><thead><tr><th>Rep</th><th>Store</th><th>Type</th><th style="color:var(--da)">Amount</th><th>By</th><th>Ref</th><th>Notes</th><th>Logged</th><th></th></tr></thead>
-        <tbody id="cb-body"><tr><td colspan="9" style="text-align:center;padding:24px;color:var(--mu);font-style:italic">No chargebacks logged</td></tr></tbody></table>
+        <table><thead><tr><th>Rep</th><th>Store</th><th>Type</th><th style="color:var(--da)">Amount</th><th>By</th><th>Ref</th><th>Notes</th><th style="color:var(--se)">CB Date</th><th style="color:var(--mu)">Submitted</th><th></th></tr></thead>
+        <tbody id="cb-body"><tr><td colspan="10" style="text-align:center;padding:24px;color:var(--mu);font-style:italic">No chargebacks logged</td></tr></tbody></table>
       </div></div>
     </div></div>
   </div>
@@ -3084,6 +3085,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     <input type="text" id="cbEditCT" placeholder="Custom type…" style="display:none;margin-bottom:10px;padding:7px 9px;border:2px solid var(--se);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;width:100%;box-sizing:border-box;outline:none"/>
     <div class="fg" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div class="fi"><label>Amount ($)</label><input type="number" id="cbEditA" min="0" step="0.01"/></div>
+      <div class="fi"><label>CB Date</label><input type="date" id="cbEditDt"/></div>
       <div class="fi"><label>Reference #</label><input type="text" id="cbEditRf"/></div>
     </div>
     <div class="fi" style="margin-bottom:14px"><label>Notes</label><textarea id="cbEditNt" style="height:60px;resize:vertical"></textarea></div>
@@ -9309,12 +9311,13 @@ function addCB(){
   const rp=document.getElementById("cbR").value,a=+document.getElementById("cbA").value||0;
   const by=document.getElementById("cbB").value.trim(),rf=document.getElementById("cbRf").value.trim();
   const nt=document.getElementById("cbNt").value.trim();
+  const dt=document.getElementById("cbDt").value||""; // chargeback date (when it occurred)
   if(!tp){tst2("Select a type.","er");return;}
   if(!rp){tst2("Select a rep.","er");return;}
   if(a<=0){tst2("Enter amount.","er");return;}
   if(!by){tst2("Enter your name.","er");return;}
   const r=reps.find(x=>x.n===rp);
-  const cb={id:Date.now(),rp,st:r?.s||"",tp,a,by,rf,nt,at:new Date().toLocaleString()};
+  const cb={id:Date.now(),rp,st:r?.s||"",tp,a,by,rf,nt,dt,at:new Date().toLocaleString()};
   // Always add to current week's CBs (next open pay = current open week)
   if(wkLocked){
     // Current week locked — add to queue for next open week
@@ -9325,7 +9328,7 @@ function addCB(){
     saveCurrentWeek();
     tst2("CB posted — "+tp+" $"+a.toFixed(2)+" for "+rp+" (Week of "+document.getElementById('wkb').textContent+")","ok");
   }
-  ["cbA","cbB","cbRf","cbNt"].forEach(id=>document.getElementById(id).value="");
+  ["cbA","cbB","cbRf","cbNt","cbDt"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("cbR").value="";
   var s=document.getElementById("cbRSearch");if(s)s.value="";
   document.getElementById("cbCT").style.display="none";
@@ -9356,7 +9359,8 @@ function renCBL(){
         +`<button class="btn bd xs" onclick="requirePin(()=>rmCB(${c.id}))" title="Delete permanently">✕</button>`
         +'</div>';
     const voidBadge=voided?'<span class="bdg" style="background:#999;color:#fff;margin-left:4px">VOIDED</span>':'';
-    return `<tr style="${rowStyle}"><td style="font-weight:700">${X(c.rp)}</td><td style="font-size:11px;color:var(--mu)">${X(c.st)}</td><td><span class="bdg bfl">${X(c.tp)}</span>${voidBadge}</td><td style="font-family:'Poppins',sans-serif;font-weight:800;color:var(--da)">$${c.a.toFixed(2)}</td><td style="font-size:11px">${X(c.by)}</td><td style="font-size:11px;color:var(--mu)">${X(c.rf)||'—'}</td><td style="font-size:11px;color:var(--mu);max-width:150px">${X(c.nt)||'—'}${c.voidReason?'<br><em style="color:#E20074">Void: '+X(c.voidReason)+'</em>':''}</td><td style="font-size:11px;color:var(--mu)">${c.at}</td><td>${actions}</td></tr>`;
+    const cbDateFmt=c.dt?(new Date(c.dt+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})):'<span style="color:#ccc">—</span>';
+    return `<tr style="${rowStyle}"><td style="font-weight:700">${X(c.rp)}</td><td style="font-size:11px;color:var(--mu)">${X(c.st)}</td><td><span class="bdg bfl">${X(c.tp)}</span>${voidBadge}</td><td style="font-family:'Poppins',sans-serif;font-weight:800;color:var(--da)">$${c.a.toFixed(2)}</td><td style="font-size:11px">${X(c.by)}</td><td style="font-size:11px;color:var(--mu)">${X(c.rf)||'—'}</td><td style="font-size:11px;color:var(--mu);max-width:150px">${X(c.nt)||'—'}${c.voidReason?'<br><em style="color:#E20074">Void: '+X(c.voidReason)+'</em>':''}</td><td style="font-size:11px;color:var(--se);font-weight:700">${cbDateFmt}</td><td style="font-size:11px;color:var(--mu)">${c.at}</td><td>${actions}</td></tr>`;
   }).join('');
   upK();
 }
@@ -12271,6 +12275,7 @@ function editCB(id){
   document.getElementById('cbEditA').value=c.a;
   document.getElementById('cbEditRf').value=c.rf||'';
   document.getElementById('cbEditNt').value=c.nt||'';
+  document.getElementById('cbEditDt').value=c.dt||'';
   // Set type pills
   const pills=document.querySelectorAll('#cbEditPills .cpp');
   const stdTypes=['Deposit Shortage','XBM','RMA','MIM Cancellation'];
@@ -12308,6 +12313,7 @@ function saveCBEdit(){
   c.tp=tp;c.a=a;
   c.rf=document.getElementById('cbEditRf').value.trim();
   c.nt=document.getElementById('cbEditNt').value.trim();
+  c.dt=document.getElementById('cbEditDt').value||'';
   c.edited=new Date().toLocaleString();
   saveCurrentWeek();
   document.getElementById('cbEditModal').style.display='none';
