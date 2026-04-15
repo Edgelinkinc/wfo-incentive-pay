@@ -1492,16 +1492,12 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </div>
       <input type="text" id="cbCT" placeholder="Enter custom type…" style="display:none;margin-bottom:10px;padding:7px 9px;border:2px solid var(--se);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;width:260px;outline:none"/>
       <div class="fg" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:10px">
-        <div class="fi" style="position:relative">
+        <div class="fi">
           <label>Rep</label>
-          <input type="text" id="cbRSearch" placeholder="Type name or NTID…" autocomplete="off"
-            oninput="filterCBReps(this.value)"
-            onfocus="showCBRepList()"
-            onblur="setTimeout(()=>hideCBRepList(),200)"
-            style="width:100%"/>
-          <input type="hidden" id="cbR"/>
-          <div id="cbRList" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid var(--se);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
-          <div id="cbRSelected" style="display:none;font-size:11px;color:var(--ok);font-weight:700;margin-top:3px"></div>
+          <input type="text" id="cbRSearch" placeholder="Filter by name or NTID…" autocomplete="off"
+            oninput="filterCBRepSelect(this.value)"
+            style="width:100%;margin-bottom:4px;padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-family:'Nunito',sans-serif;font-size:12px;outline:none"/>
+          <select id="cbR" size="1" style="width:100%"><option value="">Select Rep…</option></select>
         </div>
         <div class="fi"><label>Amount ($)</label><input type="number" id="cbA" placeholder="0.00" min="0" step="0.01"/></div>
         <div class="fi"><label>Entered By</label><input type="text" id="cbB" placeholder="Your name"/></div>
@@ -3747,13 +3743,8 @@ function popDD(){
   syncCR();
 }
 function syncCR(){
-  const el=document.getElementById("cbR");if(!el)return;
-  const pv=el.value;
-  el.innerHTML="<option value=''>Select Rep…</option>";
-  const sorted=[...reps].sort((a,b)=>dispName(a).localeCompare(dispName(b)));
-  sorted.forEach(r=>{
-    el.innerHTML+=`<option value="${r.n}"${r.n===pv?" selected":""}>${repLabel(r)}</option>`;
-  });
+  var q=document.getElementById("cbRSearch")?.value||"";
+  filterCBRepSelect(q);
 }
 function initMgrStoreDD(){const s=document.getElementById("mgrStore");if(!s)return;s.innerHTML="<option value=''>Select Store...</option>";SR.forEach(r=>s.innerHTML+=`<option value="${r.s}">${r.s} (${r.me} - ${r.mgr==="TBD"?"Mgr TBD":r.mgr})</option>`);}
 function initCoachDD(){const s=document.getElementById("coachSel");if(!s)return;s.innerHTML="<option value=''>Select Coach...</option>";COACHES.sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`);}
@@ -9309,7 +9300,8 @@ function addCB(){
     tst2("CB posted — "+tp+" $"+a.toFixed(2)+" for "+rp+" (Week of "+document.getElementById('wkb').textContent+")","ok");
   }
   ["cbA","cbB","cbRf","cbNt"].forEach(id=>document.getElementById(id).value="");
-  clearCBRepSearch();
+  document.getElementById("cbR").value="";
+  var s=document.getElementById("cbRSearch");if(s)s.value="";
   document.getElementById("cbCT").style.display="none";
   document.querySelectorAll(".cpp").forEach(p=>p.classList.remove("sel"));cbST="";
   renCBL();renR();
@@ -12190,52 +12182,26 @@ function repLabel(r){
 
 
 // ── CHARGEBACK REP SEARCH ──
-function filterCBReps(q){
-  showCBRepList();
-  var list=document.getElementById('cbRList');
-  if(!list)return;
+function filterCBRepSelect(q){
+  var sel=document.getElementById('cbR');
+  if(!sel)return;
   var term=(q||'').toLowerCase().trim();
-  var matches=reps.filter(function(r){
-    return !term
-      || dispName(r).toLowerCase().includes(term)
-      || (r.ri||'').toLowerCase().includes(term)
-      || (r.s||'').toLowerCase().includes(term);
-  }).sort(function(a,b){return dispName(a).localeCompare(dispName(b));});
-  if(!matches.length){
-    list.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--mu)">No reps found</div>';
-    return;
-  }
-  list.innerHTML=matches.slice(0,30).map(function(r){
-    return '<div onclick="selectCBRep(\''+r.n.replace(/'/g,"\\'")+'\')" style="padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid #F0F0F0;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background=\'#F3E8FF\'" onmouseout="this.style.background=\'\'">'
-      +'<span style="font-weight:700;color:var(--se)">'+dispName(r)+'</span>'
-      +'<span style="font-size:10px;color:var(--mu)">'+((r.ri||'')+' \u00b7 '+(r.s||'')).replace(/^ \u00b7 /,'').replace(/ \u00b7 $/,'')+'</span>'
-      +'</div>';
-  }).join('');
-}
-function showCBRepList(){
-  var list=document.getElementById('cbRList');
-  if(!list)return;
-  if(!list.innerHTML)filterCBReps('');
-  list.style.display='block';
-}
-function hideCBRepList(){
-  var list=document.getElementById('cbRList');
-  if(list)list.style.display='none';
-}
-function selectCBRep(name){
-  var r=reps.find(function(x){return x.n===name;});
-  if(!r)return;
-  document.getElementById('cbR').value=name;
-  document.getElementById('cbRSearch').value=repLabel(r);
-  var sel=document.getElementById('cbRSelected');
-  if(sel){sel.textContent='\u2713 '+r.s;sel.style.display='block';}
-  hideCBRepList();
+  var prev=sel.value;
+  sel.innerHTML='<option value="">Select Rep\u2026</option>';
+  var sorted=[...reps].sort(function(a,b){return dispName(a).localeCompare(dispName(b));});
+  sorted.forEach(function(r){
+    if(term && !dispName(r).toLowerCase().includes(term) && !(r.ri||'').toLowerCase().includes(term)) return;
+    var opt=document.createElement('option');
+    opt.value=r.n;
+    opt.textContent=repLabel(r);
+    if(r.n===prev)opt.selected=true;
+    sel.appendChild(opt);
+  });
 }
 function clearCBRepSearch(){
-  var s=document.getElementById('cbRSearch');var h=document.getElementById('cbR');
-  var sel=document.getElementById('cbRSelected');
-  if(s)s.value='';if(h)h.value='';
-  if(sel){sel.textContent='';sel.style.display='none';}
+  document.getElementById('cbR').value='';
+  document.getElementById('cbRSearch').value='';
+  filterCBRepSelect('');
 }
 
 </script>
