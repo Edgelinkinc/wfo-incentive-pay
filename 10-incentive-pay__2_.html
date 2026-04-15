@@ -6927,7 +6927,7 @@ function clearCoach(){["coachSel","coachMonth","coachDoors","coachActPct","coach
 
 // ── ADMIN / TIERS ──
 function openAdm(tab){renTE();renMgrTE();renCoachTE();renSL();document.getElementById("adov").classList.add("open");swA(tab,document.querySelector('.ad-tab[onclick*="'+tab+'"]'));}
-function closeA(){document.getElementById("adov").classList.remove("open");}
+function closeA(){document.getElementById("adov").classList.remove("open");renR();upK();}
 function swA(id,btn){document.querySelectorAll(".ad-pane").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".ad-tab").forEach(b=>b.classList.remove("active"));const p=document.getElementById("at-"+id);if(p)p.classList.add("active");if(btn)btn.classList.add("active");}
 function renTE(){
   document.getElementById("bxR").innerHTML=T.box.map((t,i)=>`<div class="tr2"><label>Tier ${i+1} min totact:</label><input type="number" id="bM${i}" value="${t.mn}" min="0" style="width:75px"/><label style="min-width:auto;margin-left:8px">$/act:</label><input type="number" id="bR${i}" value="${t.r}" min="0" step="0.5" style="width:70px"/></div>`).join("");
@@ -7964,14 +7964,14 @@ function initAdminTiers(){
   if(mgrEl)mgrEl.innerHTML=[1,2,3].map(tier=>`<div style="margin-bottom:16px"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:6px">${tn[tier]}</div>${Object.keys(cn).map(cat=>`<div class="tr2"><label>${cn[cat]}:</label><span style="font-size:11px;color:var(--mu);min-width:50px">Base $</span><input type="number" id="amte_${tier}_${cat}_b" value="${mgr[tier]?.cats[cat]?.base||DT.mgr[tier].cats[cat].base}" min="0" step="0.25" style="width:85px"/><span style="font-size:11px;color:var(--mu);min-width:55px">Up $</span><input type="number" id="amte_${tier}_${cat}_u" value="${mgr[tier]?.cats[cat]?.up||DT.mgr[tier].cats[cat].up}" min="0" step="0.25" style="width:85px"/></div>`).join('')}</div>`).join('<hr style="border:1px solid var(--bo);margin:10px 0"/>');
 }
 function saveAdminTiers(){
-  T.box.forEach((t,i)=>{t.mn=+document.getElementById('aBM'+i)?.value||t.mn;t.r=+document.getElementById('aBR'+i)?.value||t.r;});
+  T.box.forEach((t,i)=>{const mv=document.getElementById('aBM'+i);const rv=document.getElementById('aBR'+i);if(mv)t.mn=+mv.value;if(rv)t.r=+rv.value;});
   for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
-  T.acc.forEach((t,i)=>{t.mp=+document.getElementById('aAM'+i)?.value||t.mp;t.p=+document.getElementById('aAP'+i)?.value||t.p;});
+  T.acc.forEach((t,i)=>{const mv=document.getElementById('aAM'+i);const pv=document.getElementById('aAP'+i);if(mv)t.mp=+mv.value;if(pv)t.p=+pv.value;});
   for(let i=0;i<T.acc.length-1;i++)T.acc[i].xp=T.acc[i+1].mp-1;
   savePUConfig();
-  T.mi=T.mi.map((_,i)=>+document.getElementById('aTM'+(i+1))?.value||_);
+  T.mi=T.mi.map((_,i)=>{const el=document.getElementById('aTM'+(i+1));return el?+el.value:_;});
   localStorage.setItem('wfo_tiers',JSON.stringify(T));localStorage.setItem('wfo_ts',new Date().toISOString());
-  renR();tst2('Rep tiers saved!','ok');
+  renR();upK();tst2('Rep tiers saved!','ok');
 }
 function saveAdminCoachTiers(){
   if(!T.coach)T.coach=JSON.parse(JSON.stringify(DT.coach));
