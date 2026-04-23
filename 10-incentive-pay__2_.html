@@ -4167,59 +4167,116 @@ function generateCoachSlipPDF(coachName){
 }
 
 
-function generateMgrSlipPDF(storeName){
+
+// ── UNIFIED MANAGER SLIP BUILDER — used by all three print paths ──
+function buildUnifiedMgrSlip(storeName, mn){
+  const store=SR.find(function(s){return s.s===storeName;});
+  if(!store)return '';
   const srBs=getSR_BS();
-  const mn=document.getElementById('mgrSheetMonthIn')?.value||'';
-  const store=SR.find(s=>s.s===storeName);
-  if(!store)return;
   const sd=mgrSheetData[storeName]||{};
-  const elb=getELBData()?.data?.[storeName]||{};
-  const bs=getBacksheet(store.tier, storeName);
-  const period=mn?formatPeriod(mn):'—';
+  const period=mn?formatPeriod(mn):mn||'—';
+  const mgrName=srBs[storeName]?.mgr||store.mgr||'—';
+  const bs=mn?getBs(mn):null;
+  const cats=bs?bs.categories:[
+    {id:'acts',name:'New Voice Activations',t1base:300,t1up:375,t2base:225,t2up:281.25,t3base:150,t3up:187.5,baseThresh:100,upThresh:125},
+    {id:'hsi', name:'HSI Sales',            t1base:100,t1up:125,t2base:75, t2up:93.75, t3base:50, t3up:62.5, baseThresh:100,upThresh:125},
+    {id:'bts', name:'Tablet (BTS) Sales',   t1base:100,t1up:125,t2base:75, t2up:93.75, t3base:50, t3up:62.5, baseThresh:100,upThresh:125},
+    {id:'acc', name:'Accessories Target',   t1base:300,t1up:375,t2base:225,t2up:281.25,t3base:150,t3up:187.5,baseThresh:100,upThresh:125}
+  ];
+  const tier=srBs[storeName]?.tier||store.tier||2;
+  const bKey=tier===1?'t1base':tier===2?'t2base':'t3base';
+  const uKey=tier===1?'t1up':tier===2?'t2up':'t3up';
+  const q=bs?.qualifiers||{elbCutoff:3368,attachCutoff:60,attachPenalty:25};
+  const storeTgts=bs?.targets?.[storeName]||{};
 
-  // Calc payout
-  const res=calcMgrBonus(storeName,sd);
+  const elb=+sd.elb||0;
+  const attach=+sd.attach||0;
+  const elbFail=elb>0&&elb>=q.elbCutoff;
+  const attachFail=attach>0&&attach<q.attachCutoff;
 
-  const html=`<!DOCTYPE html><html><head><title>Manager Pay Slip — ${storeName}</title>
-  
-</head><body>
-  <div class="no-print" style="margin-bottom:12px">
-    <button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button>
-    <button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;margin-left:8px">✕ Close</button>
-  </div>
-  <div class="header">
-    <h1>EDGELINK INC — WORK FORCE OPS</h1>
-    <h2>Manager Bonus Pay Slip · ${storeName}</h2>
-  </div>
-  <div class="meta">
-    <div class="meta-item"><label>Store</label><span>${storeName}</span></div>
-    <div class="meta-item"><label>Manager</label><span>${srBs[storeName]?.mgr||store.mgr||'—'}</span></div>
-    <div class="meta-item"><label>Tier</label><span>Tier ${store.tier}</span></div>
-    <div class="meta-item"><label>Period</label><span>${period}</span></div>
-    <div class="meta-item"><label>ELB Rank</label><span>${sd.elb||'—'}</span></div>
-    <div class="meta-item"><label>Protection</label><span>${sd.attach?sd.attach.toFixed(1)+'%':'—'}</span></div>
-    <div class="meta-item"><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
-  </div>
-  <table class="cat-table">
-    <thead><tr><th>Category</th><th>Target</th><th>Actual</th><th>% to Goal</th><th>Base Pay</th><th>Upside (125%)</th><th>Earned</th></tr></thead>
-    <tbody>
-      ${res.catRows||'<tr><td colspan="7" style="text-align:center;color:#666;padding:20px">No data loaded</td></tr>'}
-    </tbody>
-  </table>
-  ${res.notes?`<div style="background:#FFF8E1;border:1px solid #FFB300;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:#8a6000">${res.notes}</div>`:''}
-  <div class="totals">
-    <div class="tot-item"><label>Acts</label><span>$${(res.actsEarned||0).toFixed(2)}</span></div>
-    <div class="tot-item"><label>BTS</label><span>$${(res.btsEarned||0).toFixed(2)}</span></div>
-    <div class="tot-item"><label>HSI</label><span>$${(res.hsiEarned||0).toFixed(2)}</span></div>
-    <div class="tot-item"><label>Accessories</label><span>$${(res.accEarned||0).toFixed(2)}</span></div>
-    <div class="tot-item" style="margin-left:auto"><label>Total Payout</label><span style="font-size:24px;font-weight:900;color:#E20074">$${(res.total||0).toFixed(2)}</span></div>
-  </div>
-  <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${period}</div>
-  </body></html>`;
+  var totalBonus=0;
+  var rows='';
+  cats.forEach(function(cat){
+    const tgt=storeTgts[cat.id]||0;
+    const act=+sd[cat.id]||0;
+    const pct=tgt>0?(act/tgt)*100:0;
+    var bonus=0;
+    if(!elbFail&&act>0&&tgt>0){
+      if(pct>=cat.upThresh)bonus=cat[uKey];
+      else if(pct>=cat.baseThresh)bonus=cat[bKey];
+      if(attachFail&&bonus>0)bonus=bonus*(1-q.attachPenalty/100);
+    }
+    totalBonus+=bonus;
+    const clr=pct>=(cat.baseThresh||100)?'#00A651':pct>=(cat.baseThresh*0.85||85)?'#E65100':'#D32F2F';
+    const pctStr=tgt>0?pct.toFixed(1)+'%':'—';
+    rows+='<tr>'
+      +'<td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;font-weight:600;font-size:12px">'+cat.name+'</td>'
+      +'<td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:center;font-size:12px">'+(tgt||'—')+'</td>'
+      +'<td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:center;font-size:12px">'+(act||'—')+'</td>'
+      +'<td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:center;font-family:\'Poppins\',sans-serif;font-weight:700;color:'+clr+'">'+pctStr+'</td>'
+      +'<td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:right;font-family:\'Poppins\',sans-serif;font-weight:800;color:'+(bonus>0?'#E20074':'#999')+'">$'+bonus.toFixed(2)+'</td>'
+      +'</tr>';
+  });
 
-  const w=window.open('','_blank','width=900,height=700');
-  w.document.write(html);
-  w.document.close();
+  const tierMax=cats.reduce(function(s,c){return s+(c[uKey]||0);},0);
+  const pctMax=tierMax>0?((totalBonus/tierMax)*100).toFixed(1):'0';
+
+  var warnings='';
+  if(elbFail)warnings+='<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#C62828">\uD83D\uDEAB ELB rank '+elb+' \u2265 '+q.elbCutoff+' \u2014 $0 payout (disqualifier)</div>';
+  if(attachFail)warnings+='<div style="background:#FFF8E1;border:1px solid #FFB300;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a6000">\u26A0 Metro Protection attach '+attach.toFixed(1)+'% < '+q.attachCutoff+'% \u2014 '+q.attachPenalty+'% penalty applied</div>';
+
+  return '<div style="max-width:720px;margin:0 auto;padding:0 24px 40px;font-family:\'Nunito\',sans-serif">'
+    // Header
+    +'<div style="background:linear-gradient(135deg,#E20074,#6E2B8B,#4A1A6B);border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:20px">'
+    +'<div style="display:flex;align-items:flex-end;justify-content:space-between">'
+    +'<div><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:26px">'+mgrName+'</div>'
+    +'<div style="font-size:12px;opacity:.75;margin-top:4px">'+storeName+' \u00b7 Tier '+tier+' \u2014 Max $'+(tier===1?'1,000':tier===2?'750':'500')+' \u00b7 '+period+'</div></div>'
+    +'<div style="text-align:right"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Bonus Earned</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:40px;line-height:1">$'+totalBonus.toFixed(2)+'</div>'
+    +'<div style="font-size:10px;opacity:.7;margin-top:4px">'+pctMax+'% of max</div></div></div>'
+    +'<div style="height:6px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;margin-top:14px"><div style="height:100%;width:'+Math.min(+pctMax,100)+'%;background:#fff;border-radius:3px;transition:width .4s"></div></div>'
+    +'</div>'
+    // Meta
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">'
+    +['<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">ELB Rank</div><div style="font-weight:700;font-size:13px">'+(elb||'\u2014')+'</div></div>',
+      '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Attach %</div><div style="font-weight:700;font-size:13px;color:'+(attachFail?'#D32F2F':'#1A1A1A')+'">'+(attach?attach.toFixed(1)+'%':'\u2014')+'</div></div>',
+      '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Period</div><div style="font-weight:700;font-size:13px">'+period+'</div></div>',
+      '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Generated</div><div style="font-weight:700;font-size:11px">'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div></div>'
+    ].join('')+'</div>'
+    // Warnings
+    +warnings
+    // Category table
+    +'<table style="width:100%;border-collapse:collapse;border:1px solid #E8E8E8;border-radius:12px;overflow:hidden;margin-bottom:20px">'
+    +'<thead><tr style="background:#FFF0F7">'
+    +'<th style="padding:9px 14px;text-align:left;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Category</th>'
+    +'<th style="padding:9px 14px;text-align:center;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Target</th>'
+    +'<th style="padding:9px 14px;text-align:center;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Actual</th>'
+    +'<th style="padding:9px 14px;text-align:center;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">% to Goal</th>'
+    +'<th style="padding:9px 14px;text-align:right;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Earned</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody>'
+    +'<tr style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B)">'
+    +'<td colspan="4" style="padding:12px 14px;font-family:\'Poppins\',sans-serif;font-weight:800;font-size:13px;color:#fff">TOTAL MANAGER BONUS</td>'
+    +'<td style="padding:12px 14px;font-family:\'Poppins\',sans-serif;font-weight:900;font-size:18px;color:#fff;text-align:right">$'+totalBonus.toFixed(2)+'</td>'
+    +'</tr></table>'
+    // Signature lines
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:12px">'
+    +'<div><div style="border-top:2px solid #1A1A1A;margin-top:44px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">Manager Signature</span><span style="font-size:11px;color:#999">Date</span></div></div>'
+    +'<div><div style="border-top:2px solid #1A1A1A;margin-top:44px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">HR / Owner Approval</span><span style="font-size:11px;color:#999">Date</span></div></div>'
+    +'</div>'
+    +'<div style="font-size:9px;color:#ccc;text-align:center;text-transform:uppercase;letter-spacing:.05em">Confidential \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
+    +'</div>';
+}
+
+function generateMgrSlipPDF(storeName){
+  const mn=document.getElementById('mgrSheetMonthIn')?.value||'';
+  const body=buildUnifiedMgrSlip(storeName,mn);
+  if(!body){tst2('No data for '+storeName,'wn');return;}
+  const css='<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff}@media print{.no-print{display:none!important}}</style>';
+  const printBar='<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#4A1A6B;color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;z-index:9999"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">\uD83D\uDDA8 Print / Save PDF</button><button onclick="window.close()" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">\u2715 Close</button></div><div style="height:52px"></div>';
+  const html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Manager Slip \u2014 '+storeName+'</title>'+css+'</head><body>'+printBar+body+'</body></html>';
+  const w=window.open('','_blank','width=800,height=700');
+  if(w){w.document.write(html);w.document.close();}
 }
 
 
@@ -6921,38 +6978,13 @@ function printBacksheet(){
   openPF(body,'Manager Backsheet — '+month);
 }
 function exportMgrPDF(){
-  const sv=document.getElementById('mgrStore')?.value,mn=document.getElementById('mgrMonth')?.value,nm=document.getElementById('mgrName')?.value;
-  const entry=SR.find(r=>r.s===sv),tier=entry?.tier||2;
-  const calc=mgrCalcs[sv]||{totalBonus:0,dqs:[],cats:[]};
-  const bs=mn?getBs(mn):null;
-  const cats=bs?bs.categories:calc.cats||[];
-  const q=bs?.qualifiers||{elbCutoff:3368,attachCutoff:60,attachPenalty:25};
-  const bk=tier===1?'t1up':tier===2?'t2up':'t3up';
-  const tierMax=cats.reduce((s,c)=>s+(c[bk]||0),0);
-  const pctMax=tierMax>0?((calc.totalBonus/tierMax)*100).toFixed(1):0;
-  let rows='';
-  cats.forEach(cat=>{
-    const tgt=+document.getElementById('tgt_'+cat.id)?.value||0;
-    const act=+document.getElementById('act_'+cat.id)?.value||0;
-    const pct=tgt>0?(act/tgt)*100:0;
-    const bKey=tier===1?'t1base':tier===2?'t2base':'t3base';
-    const uKey=tier===1?'t1up':tier===2?'t2up':'t3up';
-    let bonus=pct>=(cat.upThresh||125)?cat[uKey]:pct>=(cat.baseThresh||100)?cat[bKey]:0;
-    if(calc.dqs.some(d=>d.includes('disqualifier')))bonus=0;
-    else if(calc.dqs.some(d=>d.includes('penalty'))&&bonus>0)bonus=bonus*(1-q.attachPenalty/100);
-    const clr=pct>=(cat.baseThresh||100)?'#00A651':pct>=(cat.baseThresh*0.85||85)?'#FFB300':'#D32F2F';
-    rows+=`<tr><td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;font-weight:600">${cat.name}</td><td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:center">${tgt||'—'}</td><td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:center">${act||'—'}</td><td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:center;font-weight:700;color:${clr}">${tgt>0?pct.toFixed(1)+'%':'—'}</td><td style="padding:10px 14px;border-bottom:1px solid #F0F0F0;text-align:right;font-family:'Poppins',sans-serif;font-weight:800;color:#E20074;font-size:14px">$${bonus.toFixed(2)}</td></tr>`;
-  });
-  const body=`<div style="max-width:720px;margin:0 auto;padding:0 24px 40px">
-    <div style="background:linear-gradient(135deg,#E20074,#6E2B8B,#4A1A6B);border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:20px"><div style="display:flex;align-items:flex-end;justify-content:space-between"><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px">${nm||'Manager'}</div><div style="font-size:12px;opacity:.75;margin-top:4px">${sv||'Store'} · ${entry?.me||''} Tier ${tier} · ${mn||''}</div></div><div style="text-align:right"><div style="font-size:10px;opacity:.6;text-transform:uppercase;margin-bottom:3px">Bonus Earned</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:38px;line-height:1">$${calc.totalBonus.toFixed(2)}</div><div style="font-size:10px;opacity:.7;margin-top:3px">${pctMax}% of max</div></div></div><div style="height:6px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;margin-top:14px"><div style="height:100%;width:${Math.min(+pctMax,100)}%;background:#fff;border-radius:3px"></div></div></div>
-    ${calc.dqs.length?`<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:12px 16px;margin-bottom:16px">${calc.dqs.map(d=>`<div style="color:#C62828;font-size:12px;margin-bottom:2px">⚠ ${d}</div>`).join('')}</div>`:''}
-    <table style="width:100%;border-collapse:collapse;border:1px solid #E8E8E8;border-radius:12px;overflow:hidden;margin-bottom:20px"><thead><tr style="background:#FFF0F7"><th style="padding:9px 14px;text-align:left;font-size:10px;font-family:'Poppins',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Category</th><th style="padding:9px 14px;text-align:center;font-size:10px;font-family:'Poppins',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Target</th><th style="padding:9px 14px;text-align:center;font-size:10px;font-family:'Poppins',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Actual</th><th style="padding:9px 14px;text-align:center;font-size:10px;font-family:'Poppins',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">% to Goal</th><th style="padding:9px 14px;text-align:right;font-size:10px;font-family:'Poppins',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Earned</th></tr></thead><tbody>${rows}</tbody><tr style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B)"><td colspan="4" style="padding:12px 14px;font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#fff">TOTAL MANAGER BONUS</td><td style="padding:12px 14px;font-family:'Poppins',sans-serif;font-weight:900;font-size:18px;color:#fff;text-align:right">$${calc.totalBonus.toFixed(2)}</td></tr></table>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;padding-top:18px;border-top:1px solid #E8E8E8;margin-bottom:12px"><div><div style="border-top:2px solid #1A1A1A;margin-top:44px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">Manager Signature</span><span style="font-size:11px;color:#999">Date</span></div></div><div><div style="border-top:2px solid #1A1A1A;margin-top:44px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">HR / Owner Approval</span><span style="font-size:11px;color:#999">Date</span></div></div></div>
-    <div style="font-size:9px;color:#ccc;text-align:center;text-transform:uppercase">Confidential — Edgelink Inc · ${mn||''} · ${new Date().toLocaleString()}</div>
-  </div>`;
-  openPF(body,'Manager Bonus — '+(sv||'Store'));
+  const sv=document.getElementById('mgrStore')?.value;
+  const mn=document.getElementById('mgrMonth')?.value||document.getElementById('mgrSheetMonthIn')?.value||'';
+  if(!sv){tst2('Select a store first.','wn');return;}
+  const body=buildUnifiedMgrSlip(sv,mn);
+  if(!body){tst2('No data for this store.','wn');return;}
+  openPF(body,'Manager Bonus — '+sv);
 }
-
 // ── COACH CALCULATOR ──
 function calcCoach(){
   const _cc=document.getElementById("coachSel");if(!_cc)return;
@@ -12607,37 +12639,7 @@ function printAllMgrSlips(){
 }
 
 function buildMgrSlipBody(storeName,mn,period){
-  const store=SR.find(function(s){return s.s===storeName;});
-  if(!store)return null;
-  const srBs=getSR_BS();
-  const sd=mgrSheetData[storeName]||{};
-  const res=calcMgrBonus(storeName,sd);
-  const mgrName=srBs[storeName]?.mgr||store.mgr||'—';
-
-  return '<div class="slip-page">'
-    +'<div class="slip-hdr"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
-    +'<h1>'+mgrName+'</h1>'
-    +'<p>'+storeName+' \u00b7 Tier '+store.tier+' \u00b7 '+period+'</p></div>'
-    +'<div class="slip-meta">'
-    +'<div class="slip-meta-item"><label>Store</label><span>'+storeName+'</span></div>'
-    +'<div class="slip-meta-item"><label>Pay Tier</label><span>Tier '+store.tier+' \u2014 Max $'+(store.tier===1?'1,000':store.tier===2?'750':'500')+'</span></div>'
-    +'<div class="slip-meta-item"><label>Period</label><span>'+period+'</span></div>'
-    +'<div class="slip-meta-item"><label>ELB Rank</label><span>'+(sd.elb||'\u2014')+'</span></div>'
-    +'<div class="slip-meta-item"><label>Protection %</label><span>'+(sd.attach?(+sd.attach).toFixed(1)+'%':'\u2014')+'</span></div>'
-    +'<div class="slip-meta-item"><label>Generated</label><span>'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span></div>'
-    +'</div>'
-    +(res.notes&&res.notes.length?'<div class="warn-box">'+res.notes.join('<br>')+'</div>':'')
-    +'<table><thead><tr><th>Category</th><th>Target</th><th>Actual</th><th>% to Goal</th><th>Base</th><th>Upside (125%+)</th><th>Earned</th></tr></thead><tbody>'
-    +(res.catRows||'<tr><td colspan="7" style="text-align:center;color:#999">No data</td></tr>')
-    +'</tbody></table>'
-    +'<div class="total-bar"><div><div class="label">Total Manager Bonus</div><div class="amount">$'+(res.total||0).toFixed(2)+'</div></div>'
-    +'<div style="text-align:right;font-size:11px;opacity:.7">'+storeName+'<br>'+period+'</div></div>'
-    +'<div class="sig-line">'
-    +'<div class="sig-block"><span>Manager Signature</span><em>Date</em></div>'
-    +'<div class="sig-block"><span>HR / Owner Approval</span><em>Date</em></div>'
-    +'</div>'
-    +'<div style="margin-top:12px;font-size:9px;color:#bbb;text-align:center">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
-    +'</div>';
+  return buildUnifiedMgrSlip(storeName,mn);
 }
 
 function buildCombinedMgrSlip(mgrName,storeNames,mn,period){
