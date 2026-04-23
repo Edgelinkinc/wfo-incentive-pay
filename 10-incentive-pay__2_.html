@@ -674,7 +674,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   </div>
   <div class="tb-right">
     <button id="spSyncBtn" onclick="spSync()" title="Sync with SharePoint" style="display:none;padding:5px 12px;border-radius:20px;border:2px solid #0078D4;background:transparent;color:#0078D4;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">☁ SharePoint</button>
-    <button id="spLoginBtn" onclick="spSignIn()" title="Sign in to sync with SharePoint" style="padding:5px 12px;border-radius:20px;border:2px solid #0078D4;background:#0078D4;color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔑 Sign In</button>
+    <button id="spLoginBtn" onclick="spSignIn()" title="Sign in to sync with SharePoint" style="display:none;padding:5px 12px;border-radius:20px;border:2px solid #0078D4;background:#0078D4;color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔑 Sign In</button>
     <span class="tb-updated" id="lu">—</span>
     <div id="pinStatus" class="btn bw sm" onclick="goPage('pg-admin',document.querySelector('[data-page=\'pg-admin\']'))" style="font-size:11px;font-weight:700;cursor:pointer">🔐 Admin</div>
   </div>
@@ -2770,6 +2770,11 @@ body.admin-unlocked #sbStaffSection{display:block!important}
                 <button class="btn bp sm" onclick="ghSaveToken()">Save Token</button>
               </div>
               <div id="ghTokenStatus" style="font-size:11px;color:var(--mu);margin-top:5px">—</div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                <button class="btn bo sm" onclick="ghExportConfig()" title="Download your token as a file to use on another device">⬇ Export Config</button>
+                <label class="btn bo sm" style="cursor:pointer;margin:0" title="Import a previously exported config file">⬆ Import Config<input type="file" accept=".json" style="display:none" onchange="ghImportConfig(this)"/></label>
+                <span style="font-size:10px;color:var(--mu);align-self:center">Use Export/Import to move your token between devices</span>
+              </div>
             </div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
               <button class="btn bp" onclick="ghPublish()" id="ghPublishBtn" style="background:#1B1F23;border-color:#1B1F23">📢 Publish Now</button>
@@ -6707,7 +6712,8 @@ function onMgrStore(){
   document.getElementById('mgrName').value=entry.mgr==='TBD'?'':entry.mgr;
   const tier=entry.tier,labels={1:'Tier 1 · Max $1,000',2:'Tier 2 · Max $750',3:'Tier 3 · Max $500'};
   document.getElementById('mgrTierBadge').textContent=entry.me+' — '+labels[tier];
-  renderCatRows();calcMgr();
+  renderCatRows();
+  calcMgr(); // recalculate with pre-filled actuals
 }
 function onMgrMonth(){updBsBanner();renderCatRows();calcMgr();}
 function renderCatRows(){
@@ -6722,9 +6728,12 @@ function renderCatRows(){
     {id:'acc',name:'Accessories Target',baseThresh:100,upThresh:125,t1base:300,t1up:375,t2base:225,t2up:281.25,t3base:150,t3up:187.5}
   ];
   const storeTgts=bs?.targets?.[sv]||{};
+  // Pull actuals from mgrSheetData (populated by ELB/RTBDI uploads)
+  const sd=mgrSheetData[sv]||{};
   const el=document.getElementById('catRows');if(!el)return;
   el.innerHTML=cats.map((cat,idx)=>{
     const tgt=storeTgts[cat.id]||'';
+    const act=sd[cat.id]||''; // ← pre-fill from mgrSheetData
     const bKey=tier===1?'t1base':tier===2?'t2base':'t3base';
     const uKey=tier===1?'t1up':tier===2?'t2up':'t3up';
     return`<div id="cr_${cat.id}" class="cat-row" style="background:${idx%2===0?'#fff':'#FAFAFA'}">
@@ -6734,11 +6743,16 @@ function renderCatRows(){
         <div class="cat-bar-wrap"><div class="cat-bar" id="pb_${cat.id}" style="width:0%;background:var(--ok)"></div></div>
       </div>
       <div style="padding:9px 13px"><input type="number" class="cat-inp" id="tgt_${cat.id}" value="${tgt}" placeholder="Target" min="0" step="0.01" onchange="calcMgr()"/></div>
-      <div style="padding:9px 13px"><input type="number" class="cat-inp" id="act_${cat.id}" placeholder="Actual" min="0" step="0.01" onchange="calcMgr()"/></div>
+      <div style="padding:9px 13px"><input type="number" class="cat-inp" id="act_${cat.id}" value="${act}" placeholder="Actual" min="0" step="0.01" onchange="calcMgr()"/></div>
       <div style="padding:11px 13px;text-align:center"><span id="pct_${cat.id}" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:var(--mu)">—</span></div>
       <div style="padding:11px 13px;text-align:center"><span id="bon_${cat.id}" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:var(--mu)">—</span></div>
     </div>`;
   }).join('');
+  // Pre-fill ELB and Attach from mgrSheetData
+  const elbEl=document.getElementById('mgrELB');
+  const attEl=document.getElementById('mgrAttach');
+  if(elbEl&&sd.elb)elbEl.value=sd.elb;
+  if(attEl&&sd.attach)attEl.value=sd.attach;
 }
 function calcMgr(){
   const sv=document.getElementById('mgrStore')?.value;
@@ -7284,7 +7298,15 @@ function confirmWeekAndClose(){
   tst2('Week confirmed — data saved to week of '+document.getElementById('wkb').textContent,'ok');
 }
 // ── SHEET STATUS ──
+function updSPButtons(){
+  var show=_pinUnlocked;
+  var lb=document.getElementById('spLoginBtn');
+  var sb=document.getElementById('spSyncBtn');
+  if(lb)lb.style.display=show&&!_spAccount?'':'none';
+  if(sb)sb.style.display=show&&_spAccount?'':'none';
+}
 function updSheetStatus(){
+  if(typeof updSPButtons==="function")updSPButtons();
   const ps=document.getElementById("pinStatus");
   const isAdmin=_pinUnlocked,isLocked=wkLocked;
   if(ps){
@@ -11683,11 +11705,19 @@ function spUpdateUI(signedIn){
   if(syncBtn)  syncBtn.style.display  = signedIn ? '' : 'none';
   if(signedIn && _spAccount){
     if(syncBtn) syncBtn.textContent = '\u2601 ' + (_spAccount.name||_spAccount.username||'Synced');
+
   }
 }
 
 function spSignIn(){
-  if(!_msalApp){tst2('Auth not ready. Refresh and try again.','er');return;}
+  if(!_msalApp){
+    tst2('Loading auth… trying again in 2 seconds.','ok');
+    setTimeout(function(){
+      if(_msalApp)_msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
+      else tst2('Auth failed to load. Please refresh the page.','er');
+    },2000);
+    return;
+  }
   _msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
 }
 
@@ -11899,8 +11929,13 @@ function ghSaveToken(){
   localStorage.setItem('wfo_gh_token',inp.value.trim());
   inp.value='';
   var st=document.getElementById('ghTokenStatus');
-  if(st){st.textContent='✅ Token saved to your browser.';st.style.color='var(--ok)';}
-  tst2('GitHub token saved!','ok');
+  if(st){st.textContent='✅ Token saved.';st.style.color='var(--ok)';}
+  if(_spAccount){
+    spSaveConfig();
+    tst2('GitHub token saved — backed up to SharePoint ☁','ok');
+  } else {
+    tst2('GitHub token saved to browser. Click ☁ Sign In to back it up to SharePoint.','ok');
+  }
 }
 
 function ghInitTokenUI(){
@@ -11908,8 +11943,9 @@ function ghInitTokenUI(){
   var st=document.getElementById('ghTokenStatus');
   var lastPub=localStorage.getItem('wfo_gh_last_published');
   if(st){
-    if(token){st.textContent='✅ Token is set. Leave blank to keep current.';st.style.color='var(--ok)';}
-    else{st.textContent='⚠ No token set — paste yours above.';st.style.color='var(--wa)';}
+    if(token){st.textContent='✅ Token is set'+(_spAccount?' — backed up to SharePoint ☁':' — browser only (sign in to SharePoint to back up)')+'. Leave blank to keep current.';st.style.color='var(--ok)';}
+    else if(_spAccount){st.textContent='⚠ No token yet — loading from SharePoint…';st.style.color='var(--wa)';setTimeout(spLoadConfig,500);}
+    else{st.textContent='⚠ No token — paste above or click ☁ Sign In to load from SharePoint.';st.style.color='var(--wa)';}
   }
   var lp=document.getElementById('ghLastPublished');
   if(lp)lp.textContent=lastPub||'Never';
@@ -12359,6 +12395,83 @@ function saveCBEdit(){
   saveCurrentWeek();
   document.getElementById('cbEditModal').style.display='none';
   renCBL();renR();tst2('Chargeback updated.','ok');
+}
+
+
+// ── SHAREPOINT CONFIG STORE — persists GitHub token across devices ──
+var _spConfigFile = 'wfo_config.json';
+
+function spSaveConfig(){
+  if(!_spAccount){return;} // not signed in, skip silently
+  spGetToken().then(function(token){
+    var config = {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      gh_token: localStorage.getItem('wfo_gh_token')||''
+    };
+    return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify(config)
+    });
+  }).then(function(r){
+    if(r&&r.ok) console.log('[WFO] Config saved to SharePoint');
+  }).catch(function(e){console.log('[WFO] Config save failed:',e);});
+}
+
+function spLoadConfig(){
+  if(!_spAccount){return;}
+  spGetToken().then(function(token){
+    return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
+      headers:{'Authorization':'Bearer '+token}
+    });
+  }).then(function(r){
+    if(r.status===404){return null;} // first time — no config yet
+    if(r.ok)return r.json();
+    return null;
+  }).then(function(config){
+    if(!config||config.version!==1)return;
+    // Restore GitHub token
+    if(config.gh_token){
+      localStorage.setItem('wfo_gh_token',config.gh_token);
+      // Update UI
+      var st=document.getElementById('ghTokenStatus');
+      if(st){st.textContent='\u2705 Token loaded from SharePoint.';st.style.color='var(--ok)';}
+      tst2('\u2601 GitHub token loaded from SharePoint \u2014 ready to Publish','ok');
+    }
+  }).catch(function(e){console.log('[WFO] Config load failed:',e);});
+}
+
+
+// ── ADMIN CONFIG EXPORT / IMPORT ──
+function ghExportConfig(){
+  var token=localStorage.getItem('wfo_gh_token')||'';
+  if(!token){tst2('No token saved yet — paste and save your token first.','wn');return;}
+  var config={version:1,exported:new Date().toISOString(),gh_token:token};
+  var blob=new Blob([JSON.stringify(config)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='wfo_admin_config.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  tst2('Config exported — save this file somewhere safe (not in the repo!).','ok');
+}
+
+function ghImportConfig(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var config=JSON.parse(e.target.result);
+      if(config.version!==1||!config.gh_token){tst2('Invalid config file.','er');return;}
+      localStorage.setItem('wfo_gh_token',config.gh_token);
+      var st=document.getElementById('ghTokenStatus');
+      if(st){st.textContent='\u2705 Token imported successfully.';st.style.color='var(--ok)';}
+      tst2('\u2705 Config imported — GitHub token is ready!','ok');
+      input.value='';
+    }catch(err){tst2('Could not read config file: '+err.message,'er');}
+  };
+  reader.readAsText(file);
 }
 
 </script>
