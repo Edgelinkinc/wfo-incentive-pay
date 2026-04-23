@@ -4171,7 +4171,7 @@ function generateCoachSlipPDF(coachName){
 // ── UNIFIED MANAGER SLIP BUILDER — used by all three print paths ──
 function buildUnifiedMgrSlip(storeName, mn){
   const store=SR.find(function(s){return s.s===storeName;});
-  if(!store)return '';
+  if(!store){console.error('buildUnifiedMgrSlip: store not found',storeName);return null;}
   const srBs=getSR_BS();
   const sd=mgrSheetData[storeName]||{};
   const period=mn?formatPeriod(mn):mn||'—';
@@ -4269,14 +4269,15 @@ function buildUnifiedMgrSlip(storeName, mn){
 }
 
 function generateMgrSlipPDF(storeName){
-  const mn=document.getElementById('mgrSheetMonthIn')?.value||'';
+  const mn=document.getElementById('mgrSheetMonthIn')?.value||document.getElementById('mgrMonth')?.value||'';
   const body=buildUnifiedMgrSlip(storeName,mn);
-  if(!body){tst2('No data for '+storeName,'wn');return;}
-  const css='<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff}@media print{.no-print{display:none!important}}</style>';
-  const printBar='<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#4A1A6B;color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;z-index:9999"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">\uD83D\uDDA8 Print / Save PDF</button><button onclick="window.close()" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">\u2715 Close</button></div><div style="height:52px"></div>';
+  if(!body){tst2('Could not build slip for '+storeName+'. Check store data.','wn');return;}
+  const css='<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;padding:20px}@media print{.no-print{display:none!important}}</style>';
+  const printBar='<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#4A1A6B;color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;z-index:9999"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">\uD83D\uDDA8 Print / Save PDF</button><span style="font-size:12px;opacity:.8">'+storeName+(mn?' \u00b7 '+mn:'')+'</span><button onclick="window.close()" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">\u2715 Close</button></div><div style="height:52px"></div>';
   const html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Manager Slip \u2014 '+storeName+'</title>'+css+'</head><body>'+printBar+body+'</body></html>';
-  const w=window.open('','_blank','width=800,height=700');
+  const w=window.open('','_blank','width=820,height=750');
   if(w){w.document.write(html);w.document.close();}
+  else{tst2('Pop-up blocked. Allow pop-ups for this site and try again.','er');}
 }
 
 
@@ -6981,9 +6982,20 @@ function exportMgrPDF(){
   const sv=document.getElementById('mgrStore')?.value;
   const mn=document.getElementById('mgrMonth')?.value||document.getElementById('mgrSheetMonthIn')?.value||'';
   if(!sv){tst2('Select a store first.','wn');return;}
+  // Sync calculator inputs → mgrSheetData so unified builder sees them
+  if(!mgrSheetData[sv])mgrSheetData[sv]={};
+  const sd=mgrSheetData[sv];
+  ['acts','hsi','bts','acc'].forEach(function(id){
+    const el=document.getElementById('act_'+id);
+    if(el&&el.value!=='')sd[id]=+el.value;
+  });
+  const elbEl=document.getElementById('mgrELB');
+  const attEl=document.getElementById('mgrAttach');
+  if(elbEl&&elbEl.value!=='')sd.elb=+elbEl.value;
+  if(attEl&&attEl.value!=='')sd.attach=+attEl.value;
   const body=buildUnifiedMgrSlip(sv,mn);
   if(!body){tst2('No data for this store.','wn');return;}
-  openPF(body,'Manager Bonus — '+sv);
+  openPF(body,'Manager Bonus \u2014 '+sv);
 }
 // ── COACH CALCULATOR ──
 function calcCoach(){
