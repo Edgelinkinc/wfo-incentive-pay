@@ -5306,6 +5306,10 @@ function renMgrPayout(){
   const stores=SR.filter(s=>s.mgr===mgr);
   const elbCutoff=T.elbDQ||DT.elbDQ||3368;
 
+  // Ensure mgrSheetData is current — populate from uploads if not already done
+  if(typeof applyELBToMgrSheet==='function')applyELBToMgrSheet();
+  if(typeof applyRTBDIToMgrSheet==='function')applyRTBDIToMgrSheet();
+
   // Load mgr sheet data for bonus month
   let bsd={};
   try{bsd=JSON.parse(localStorage.getItem(getMgrSheetKey(bonusMn))||'{}');}catch{}
@@ -5326,7 +5330,7 @@ function renMgrPayout(){
       if(ed.mgrActActual!==undefined)bsd[s.s].acts=ed.mgrActActual;
       if(ed.mgrBtsActual!==undefined)bsd[s.s].bts=ed.mgrBtsActual;
       if(ed.mgrHsiActual!==undefined)bsd[s.s].hsi=ed.mgrHsiActual;
-      if(ed.mgrProtPct!==undefined)bsd[s.s].protection=ed.mgrProtPct;
+      if(ed.mgrProtPct!==undefined)bsd[s.s].attach=ed.mgrProtPct;
     });
   }
   if(rtbdiPeriodMp===bonusMn){
