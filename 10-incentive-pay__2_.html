@@ -4192,7 +4192,7 @@ function generateMgrSlipPDF(storeName){
   <div class="meta">
     <div class="meta-item"><label>Store</label><span>${storeName}</span></div>
     <div class="meta-item"><label>Manager</label><span>${srBs[storeName]?.mgr||store.mgr||'—'}</span></div>
-    <div class="meta-item"><label>Tier</label><span>Tier ${store.tier} (${store.me})</span></div>
+    <div class="meta-item"><label>Tier</label><span>Tier ${store.tier}</span></div>
     <div class="meta-item"><label>Period</label><span>${period}</span></div>
     <div class="meta-item"><label>ELB Rank</label><span>${sd.elb||'—'}</span></div>
     <div class="meta-item"><label>Protection</label><span>${sd.attach?sd.attach.toFixed(1)+'%':'—'}</span></div>
@@ -5065,7 +5065,7 @@ function renCoachPayout(){
     const elbOk=+sd.elbRank>0&&+sd.elbRank<(T.elbDQ||DT.elbDQ||3368);
     return`<tr style="border-bottom:1px solid var(--bo);background:${si%2===0?'#fff':'#FAFAFA'}">
       <td style="padding:7px 12px;font-weight:700;color:var(--se);white-space:nowrap">${X(store.s)}</td>
-      <td style="padding:7px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':'bno'}" style="font-size:9px">${store.me}</span></td>
+      <td style="padding:7px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':'bno'}" style="font-size:9px">Tier ${store.tier}</span></td>
       <td style="padding:7px 8px;text-align:center;font-weight:700;color:${+sd.actPct>=100?'var(--ok)':'var(--da)'}">${sd.actPct?sd.actPct.toFixed(1)+'%':'—'}</td>
       <td style="padding:7px 8px;text-align:right">${sd.accTotal?'$'+(+sd.accTotal).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>
       <td style="padding:7px 8px;text-align:center">${sd.totalBoxes||'—'}</td>
@@ -5289,7 +5289,7 @@ function renMgrPayout(){
     const attach=+sd.attach||0;
     return`<tr style="border-bottom:1px solid var(--bo);background:${si%2===0?'#fff':'#FAFAFA'}">
       <td style="padding:7px 12px;font-weight:700;color:var(--se);white-space:nowrap">${X(store.s)}</td>
-      <td style="padding:7px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':'bno'}" style="font-size:9px">${store.me||'—'}</span></td>
+      <td style="padding:7px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':'bno'}" style="font-size:9px">Tier ${store.tier}</span></td>
       <td style="padding:7px 8px;text-align:center;color:${elbOk?'var(--ok)':'var(--da)'};font-weight:700">${elbRank||'—'}</td>
       <td style="padding:7px 8px;text-align:center;color:${attach>=60?'var(--ok)':'var(--da)'}">${attach?attach.toFixed(1)+'%':'—'}</td>
       <td style="padding:7px 8px;text-align:right">${sd.acts||'—'}</td>
@@ -6007,7 +6007,7 @@ function buildMgrSlipFullHTML(storeName){
   <div class="meta">
     <div><label>Store</label><span>${storeName}</span></div>
     <div><label>Manager</label><span>${mgrName}</span></div>
-    <div><label>Tier</label><span>Tier ${store.tier} (${store.me})</span></div>
+    <div><label>Tier</label><span>Tier ${store.tier}</span></div>
     <div><label>Period</label><span>${period}</span></div>
     <div><label>ELB Rank</label><span>${sd.elb||'—'}</span></div>
     <div><label>Protection</label><span>${sd.attach?sd.attach.toFixed(1)+'%':'—'}</span></div>
@@ -6635,7 +6635,7 @@ function renderBsGrid(bs){
     return`<tr style="border-bottom:1px solid var(--bo);background:${si%2===0?'#fff':'#FAFAFA'}">
       <td style="padding:6px 12px;font-weight:700;color:var(--se);font-size:11px;white-space:nowrap;position:sticky;left:0;background:inherit">${X(store.s)}</td>
       <td style="padding:6px 10px;font-size:10px;color:var(--mu);white-space:nowrap">${X(store.mgr==='TBD'?'—':store.mgr)}</td>
-      <td style="padding:6px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">${store.me}</span></td>
+      <td style="padding:6px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">Tier ${store.tier}</span></td>
       ${bs.categories.map(cat=>`<td style="padding:4px 6px;text-align:center"><input type="number" min="0" step="0.01" value="${tgts[cat.id]||''}" placeholder="0" style="width:80px;padding:5px 7px;border:1px solid var(--bo);border-radius:6px;font-size:11px;font-family:'Nunito',sans-serif;outline:none;text-align:center" onchange="setBsTgt('${store.s}','${cat.id}',+this.value)" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/></td>`).join('')}
     </tr>`;
   }).join('');
@@ -6711,7 +6711,7 @@ function onMgrStore(){
   const sv=document.getElementById('mgrStore').value,entry=SR.find(r=>r.s===sv);if(!entry)return;
   document.getElementById('mgrName').value=entry.mgr==='TBD'?'':entry.mgr;
   const tier=entry.tier,labels={1:'Tier 1 · Max $1,000',2:'Tier 2 · Max $750',3:'Tier 3 · Max $500'};
-  document.getElementById('mgrTierBadge').textContent=entry.me+' — '+labels[tier];
+  document.getElementById('mgrTierBadge').textContent='Tier '+tier+' — '+labels[tier];
   renderCatRows();
   calcMgr(); // recalculate with pre-filled actuals
 }
@@ -6863,7 +6863,7 @@ function renMgrOverview(){
     const cls=rec?(hasDQ?'ov-dq':'ov-ok'):'ov-pend';
     return`<div class="ov-card ${cls}" onclick="loadStoreCalc('${store.s.replace(/'/g,"\\'")}')">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span class="bdg" style="background:#F3E8FF;color:${tierClr[store.tier]}">${store.me} T${store.tier}</span>
+        <span class="bdg" style="background:#F3E8FF;color:${tierClr[store.tier]}">Tier ${store.tier}</span>
         ${rec?`<span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px;color:${hasDQ?'var(--da)':'var(--ok)'}">$${rec.total.toFixed(2)}</span>`:`<span style="font-size:10px;color:var(--mu)">Not calc</span>`}
       </div>
       <div class="ov-name">${store.s}</div>
@@ -6911,7 +6911,7 @@ function printBacksheet(){
       <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#6E2B8B;margin-bottom:10px">🎯 Monthly Targets — All Stores</div>
       <table style="width:100%;border-collapse:collapse;border:1px solid #E8E8E8;border-radius:10px;overflow:hidden;font-size:10px">
         <thead><tr style="background:#FFF0F7"><th style="padding:7px 10px;text-align:left;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Store</th><th style="padding:7px 8px;text-align:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Tier</th>${bs.categories.map(cat=>`<th style="padding:7px 10px;text-align:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">${cat.name}</th>`).join('')}</tr></thead>
-        <tbody>${SR.map((store,si)=>{const tgts=bs.targets[store.s]||{};return`<tr style="border-bottom:1px solid #F0F0F0;background:${si%2===0?'#fff':'#FAFAFA'}"><td style="padding:6px 10px;font-weight:600;font-size:10px">${store.s}</td><td style="padding:6px 8px;text-align:center;font-size:10px">${store.me}</td>${bs.categories.map(cat=>`<td style="padding:6px 10px;text-align:center;font-weight:700;color:#4A1A6B">${tgts[cat.id]||'—'}</td>`).join('')}</tr>`;}).join('')}</tbody>
+        <tbody>${SR.map((store,si)=>{const tgts=bs.targets[store.s]||{};return`<tr style="border-bottom:1px solid #F0F0F0;background:${si%2===0?'#fff':'#FAFAFA'}"><td style="padding:6px 10px;font-weight:600;font-size:10px">${store.s}</td><td style="padding:6px 8px;text-align:center;font-size:10px">Tier ${store.tier}</td>${bs.categories.map(cat=>`<td style="padding:6px 10px;text-align:center;font-weight:700;color:#4A1A6B">${tgts[cat.id]||'—'}</td>`).join('')}</tr>`;}).join('')}</tbody>
       </table>
     </div>
     <div style="margin-top:18px;font-size:9px;color:#ccc;text-align:center;text-transform:uppercase">Confidential — Edgelink Inc Internal Use Only — ${month} — ${new Date().toLocaleString()}</div>
@@ -7513,7 +7513,7 @@ function renMgrSheet(){
     const rowBg=si%2===0?'#fff':'#FAFAFA';
     return`<tr style="border-bottom:1px solid var(--bo);background:${rowBg}">
       <td style="padding:5px 10px;font-weight:700;color:var(--se);font-size:11px;white-space:nowrap;position:sticky;left:0;background:${rowBg}">${X(store.s)}</td>
-      <td style="padding:5px 8px;text-align:center"><span class="bdg ${tier===1?'bok2':tier===2?'bt1':'bt2'}">${store.me}</span></td>
+      <td style="padding:5px 8px;text-align:center"><span class="bdg ${tier===1?'bok2':tier===2?'bt1':'bt2'}">Tier ${store.tier}</span></td>
       <td style="padding:5px 10px;font-size:10px;color:var(--mu);white-space:nowrap">${X(store.mgr==='TBD'?'—':store.mgr)}</td>
       <td style="padding:4px 6px;text-align:center;background:#FFFDF0"><input type="number" min="1" placeholder="Rank" value="${sd.elb||''}" style="width:68px;padding:4px 6px;border:1px solid var(--bo);border-radius:5px;font-size:11px;font-family:'Nunito',sans-serif;outline:none;text-align:center;background:${elbFail?'#FFEBEE':'#fff'}" onchange="setMgrSheet('${store.s}','elb',this.value)" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/></td>
       <td style="padding:4px 6px;text-align:center;background:#FFFDF0"><input type="number" min="0" max="100" step="0.1" placeholder="%" value="${sd.attach||''}" style="width:60px;padding:4px 6px;border:1px solid var(--bo);border-radius:5px;font-size:11px;font-family:'Nunito',sans-serif;outline:none;text-align:center;background:${attachFail?'#FFEBEE':'#fff'}" onchange="setMgrSheet('${store.s}','attach',this.value)" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/></td>
@@ -7608,7 +7608,7 @@ function expMgrSheet(){
     let bonus=0;
     cats.forEach(cat=>{const tgt=bs?.targets?.[store.s]?.[cat.id]||0,act=+sd[cat.id]||0;if(!tgt||!act||elbFail)return;const pct=(act/tgt)*100;let b=pct>=(cat.upThresh||125)?cat[uKey]:pct>=(cat.baseThresh||100)?cat[bKey]:0;if(attachFail)b*=(1-q.attachPenalty/100);bonus+=b;});
     const status=elbFail?'ELB DQ':attachFail?'Attach Penalty':bonus>0?'OK':'$0';
-    return[store.s,store.mgr,store.me,elb||'',attach||'',...cats.map(c=>bs?.targets?.[store.s]?.[c.id]||''),...cats.map(c=>sd[c.id]||''),bonus.toFixed(2),status];
+    return[store.s,store.mgr,'Tier '+store.tier,elb||'',attach||'',...cats.map(c=>bs?.targets?.[store.s]?.[c.id]||''),...cats.map(c=>sd[c.id]||''),bonus.toFixed(2),status];
   });
   dlC([hd,...rows],'WFO_ManagerActuals_'+mn+'.csv');tst2('Exported.','ok');
 }
@@ -7840,6 +7840,15 @@ function renRoster(){
         ${r.inCSV?`<span class="bdg bok2" style="font-size:8px">✓ In CSV</span>`:`<span class="bdg bno" style="font-size:8px">Not uploaded</span>`}
       </td>
       <td style="padding:7px 10px;font-family:monospace;font-size:12px;color:var(--mu)">${X(r.ntid||'—')}</td>
+      <td style="padding:5px 10px;min-width:110px">
+        <select style="width:100%;padding:6px 9px;border:2px solid var(--bo);border-radius:7px;font-family:'Nunito',sans-serif;font-size:12px;outline:none"
+          onchange="requirePin(()=>updStoreTier('${store.s}',+this.value))"
+          onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'">
+          <option value="1"${(d[store.s]?.tier||store.tier)===1?' selected':''}>Tier 1 — Max $1,000</option>
+          <option value="2"${(d[store.s]?.tier||store.tier)===2?' selected':''}>Tier 2 — Max $750</option>
+          <option value="3"${(d[store.s]?.tier||store.tier)===3?' selected':''}>Tier 3 — Max $500</option>
+        </select>
+      </td>
       <td style="padding:7px 10px;text-align:center"><span class="bdg bt2">${r.state||'—'}</span></td>
       <td style="padding:5px 8px">
         <select style="width:100%;padding:5px 7px;border:1px solid var(--bo);border-radius:6px;font-family:'Nunito',sans-serif;font-size:11px;outline:none" onchange="requirePin(()=>updRosterCoach('${r.ntid}',this.value))" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'">
@@ -8237,7 +8246,7 @@ function renAdminBsGrid(bs){
   hdr.innerHTML=`<th style="padding:7px 10px;text-align:left;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr);white-space:nowrap;position:sticky;left:0;background:var(--thb)">Store</th><th style="padding:7px 8px;text-align:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Tier</th><th style="padding:7px 10px;text-align:left;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr)">Mgr</th>`+bs.categories.map(cat=>`<th style="padding:7px 10px;text-align:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;color:var(--tht);text-transform:uppercase;border-bottom:2px solid var(--pr);white-space:nowrap">${X(cat.name)}</th>`).join('');
   body.innerHTML=SR.map((store,si)=>{
     const tgts=bs.targets[store.s]||{};
-    return`<tr style="border-bottom:1px solid var(--bo);background:${si%2===0?'#fff':'#FAFAFA'}"><td style="padding:5px 10px;font-weight:700;color:var(--se);font-size:11px;white-space:nowrap;position:sticky;left:0;background:inherit">${X(store.s)}</td><td style="padding:5px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">${store.me}</span></td><td style="padding:5px 10px;font-size:10px;color:var(--mu);white-space:nowrap">${X(store.mgr==='TBD'?'—':store.mgr)}</td>${bs.categories.map(cat=>`<td style="padding:3px 6px;text-align:center"><input type="number" min="0" step="0.01" value="${tgts[cat.id]||''}" placeholder="0" style="width:80px;padding:4px 7px;border:1px solid var(--bo);border-radius:6px;font-size:11px;font-family:'Nunito',sans-serif;outline:none;text-align:center" onchange="setAdminBsTgt('${store.s}','${cat.id}',+this.value)" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/></td>`).join('')}</tr>`;
+    return`<tr style="border-bottom:1px solid var(--bo);background:${si%2===0?'#fff':'#FAFAFA'}"><td style="padding:5px 10px;font-weight:700;color:var(--se);font-size:11px;white-space:nowrap;position:sticky;left:0;background:inherit">${X(store.s)}</td><td style="padding:5px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">Tier ${store.tier}</span></td><td style="padding:5px 10px;font-size:10px;color:var(--mu);white-space:nowrap">${X(store.mgr==='TBD'?'—':store.mgr)}</td>${bs.categories.map(cat=>`<td style="padding:3px 6px;text-align:center"><input type="number" min="0" step="0.01" value="${tgts[cat.id]||''}" placeholder="0" style="width:80px;padding:4px 7px;border:1px solid var(--bo);border-radius:6px;font-size:11px;font-family:'Nunito',sans-serif;outline:none;text-align:center" onchange="setAdminBsTgt('${store.s}','${cat.id}',+this.value)" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/></td>`).join('')}</tr>`;
   }).join('');
 }
 function updAdminBsCat(id,field,val){
@@ -8388,6 +8397,8 @@ function updateStoreCoach(storeName,newCoach,changedBy){
 function renStoreRoster(){
   const body=document.getElementById('storeRosterBody');if(!body)return;
   const d=getSR_BS();
+  // Apply any saved tier overrides to SR
+  SR.forEach(s=>{if(d[s.s]?.tier)s.tier=d[s.s].tier;});
   const srch=(document.getElementById('srSearch')?.value||'').toLowerCase();
   const fState=document.getElementById('srFState')?.value||'';
   const fCoach=document.getElementById('srFCoach')?.value||'';
@@ -8418,7 +8429,7 @@ function renStoreRoster(){
       <td style="padding:7px 12px;font-weight:700;color:var(--se);font-size:12px;white-space:nowrap">
         ${X(store.s)}
         <div style="display:flex;gap:4px;margin-top:3px">
-          <span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">${store.me}</span>
+          <span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">Tier ${store.tier}</span>
           <span class="bdg bt2">${store.s.split('-')[0]}</span>
         </div>
       </td>
@@ -8648,7 +8659,7 @@ function renCoachSheet(){
             const disabled=!_pinUnlocked||wkLocked;
             return`<tr style="border-bottom:1px solid var(--bo);background:${si%2===0?'#fff':'#FAFAFA'}">
               <td style="padding:5px 12px;font-weight:700;font-size:11px;white-space:nowrap;color:var(--se)">${store.s}</td>
-              <td style="padding:5px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">${store.me}</span></td>
+              <td style="padding:5px 8px;text-align:center"><span class="bdg ${store.tier===1?'bok2':store.tier===2?'bt1':'bt2'}">Tier ${store.tier}</span></td>
               <td style="padding:5px 10px;font-size:10px;color:var(--mu);white-space:nowrap">${X(storeMgr==='TBD'?'—':storeMgr)}</td>
               <td style="padding:4px 6px;text-align:center;background:#FFFDF0">
                 <input type="number" value="${sd.actPct||''}" placeholder="%" min="0" step="0.1" style="${inpStyle};background:${+sd.actPct>=100?'#F0FBF4':+sd.actPct>0?'#FFF5F5':'#fff'}" onchange="setCoachSheet('${store.s}','actPct',this.value)" onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bo)'"/>
@@ -8732,7 +8743,7 @@ function expCoachSheet(){
     stores.forEach(store=>{
       const sd=coachSheetData[store.s]||{};
       const res=calcStoreCoachBonus(store.s,sd);
-      rows.push([coach,store.s,store.me,srBs[store.s]?.mgr||store.mgr,sd.actPct||'',sd.accTotal||'',res.accPerBox>0?res.accPerBox.toFixed(2):'',sd.shrinkPct||'',sd.elbRank||'',sd.totalBoxes||'',res.actBonus.toFixed(2),res.accBonus.toFixed(2),res.total.toFixed(2),res.guardrails.join('; ')]);
+      rows.push([coach,store.s,'Tier '+store.tier,srBs[store.s]?.mgr||store.mgr,sd.actPct||'',sd.accTotal||'',res.accPerBox>0?res.accPerBox.toFixed(2):'',sd.shrinkPct||'',sd.elbRank||'',sd.totalBoxes||'',res.actBonus.toFixed(2),res.accBonus.toFixed(2),res.total.toFixed(2),res.guardrails.join('; ')]);
     });
   });
   dlC([hd,...rows],'WFO_CoachActuals_'+mn+'.csv');tst2('Exported.','ok');
@@ -12472,6 +12483,21 @@ function ghImportConfig(input){
     }catch(err){tst2('Could not read config file: '+err.message,'er');}
   };
   reader.readAsText(file);
+}
+
+
+// ── STORE TIER OVERRIDE ──
+function updStoreTier(store, tier){
+  const d=getSR_BS();
+  if(!d[store])d[store]={};
+  d[store].tier=tier;
+  saveSR_BS(d);
+  // Update the in-memory SR array so all calculations use new tier immediately
+  const sr=SR.find(s=>s.s===store);
+  if(sr)sr.tier=tier;
+  renStoreRoster();
+  if(typeof renMgrSheet==='function')renMgrSheet();
+  tst2('Tier updated for '+store+' — Tier '+tier,'ok');
 }
 
 </script>
