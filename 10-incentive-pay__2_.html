@@ -2114,7 +2114,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn bok" id="adminMgrBtn" onclick="adminToggleMgrLock()">🔒 Lock Manager Period</button>
                 <button class="btn bo sm" onclick="expMgrSheet()">⬇ Export CSV</button>
-              <button class="btn bo sm" onclick="generateAllMgrSlips()">🖨 All Pay Slips</button>
+              <button class="btn bo sm" onclick="printAllMgrSlips()">🖨 All Pay Slips</button>
               <button class="btn bp" onclick="downloadAllMgrSlipsZIP()">⬇ All Manager Slips ZIP</button>
               </div>
             </div>
@@ -2432,7 +2432,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
             <div style="font-size:11px;color:var(--mu);margin-bottom:12px">Currently OFF for all tiers. Enable per tier and set rate ($/BAN) when activated. Uses MIM report Orders column.</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
               <div style="background:#fff;border:1px solid var(--bo);border-radius:8px;padding:12px">
-                <div style="font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px">Tier 1 — High Volume</div>
+                <div style="font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px">Tier 1 — Max $1,000</div>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                   <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
                     <input type="checkbox" id="aBsT1MimEn" onchange="onAdminMimToggle()" style="width:16px;height:16px;accent-color:var(--pr)"/>
@@ -2445,7 +2445,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
                 </div>
               </div>
               <div style="background:#fff;border:1px solid var(--bo);border-radius:8px;padding:12px">
-                <div style="font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px">Tier 2 — 2ME</div>
+                <div style="font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px">Tier 2 — Max $750</div>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                   <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
                     <input type="checkbox" id="aBsT2MimEn" onchange="onAdminMimToggle()" style="width:16px;height:16px;accent-color:var(--pr)"/>
@@ -2458,7 +2458,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
                 </div>
               </div>
               <div style="background:#fff;border:1px solid var(--bo);border-radius:8px;padding:12px">
-                <div style="font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px">Tier 3 — 1ME</div>
+                <div style="font-weight:700;font-size:12px;color:var(--se);margin-bottom:8px">Tier 3 — Max $500</div>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                   <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
                     <input type="checkbox" id="aBsT3MimEn" onchange="onAdminMimToggle()" style="width:16px;height:16px;accent-color:var(--pr)"/>
@@ -7047,7 +7047,7 @@ function renTE(){
 function renMgrTE(){
   const el=document.getElementById("mgrTierEdit");if(!el)return;
   const mgr=T.mgr||DT.mgr;
-  const tn={1:"Tier 1 (High Volume $1,000 max)",2:"Tier 2 (2ME $750 max)",3:"Tier 3 (1ME $500 max)"};
+  const tn={1:"Tier 1 — Max $1,000",2:"Tier 2 — Max $750",3:"Tier 3 — Max $500"};
   const cn={acts:"New Voice Acts",hsi:"HSI Sales",bts:"Tablet (BTS)",acc:"Accessories"};
   el.innerHTML=[1,2,3].map(tier=>`<div style="margin-bottom:18px"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:6px">${tn[tier]}</div><p style="font-size:11px;color:var(--da);margin-bottom:7px;font-weight:600">0 if under 100% — no partial payout</p>${Object.keys(cn).map(cat=>`<div class="tr2"><label>${cn[cat]}:</label><span style="font-size:11px;color:var(--mu);min-width:50px">Base $</span><input type="number" id="mte_${tier}_${cat}_b" value="${mgr[tier]?.cats[cat]?.base||DT.mgr[tier].cats[cat].base}" min="0" step="0.25" style="width:85px"/><span style="font-size:11px;color:var(--mu);min-width:60px">125% $</span><input type="number" id="mte_${tier}_${cat}_u" value="${mgr[tier]?.cats[cat]?.up||DT.mgr[tier].cats[cat].up}" min="0" step="0.25" style="width:85px"/></div>`).join("")}</div>`).join('<hr style="border:1px solid var(--bo);margin:12px 0"/>');
 }
@@ -8188,7 +8188,7 @@ function initAdminTiers(){
   Object.entries(cids).forEach(([elId,key])=>{const el=document.getElementById(elId);if(el)el.value=ct[key]??DT.coach[key];});
   // Manager tiers
   const mgr=T.mgr||DT.mgr;
-  const tn={1:'Tier 1 (High Volume)',2:'Tier 2 (2ME)',3:'Tier 3 (1ME)'};
+  const tn={1:'Tier 1 — Max $1,000',2:'Tier 2',3:'Tier 3'};
   const cn={acts:'New Voice Acts',hsi:'HSI',bts:'BTS',acc:'Accessories'};
   const mgrEl=document.getElementById('aAdminMgrTiers');
   if(mgrEl)mgrEl.innerHTML=[1,2,3].map(tier=>`<div style="margin-bottom:16px"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:6px">${tn[tier]}</div>${Object.keys(cn).map(cat=>`<div class="tr2"><label>${cn[cat]}:</label><span style="font-size:11px;color:var(--mu);min-width:50px">Base $</span><input type="number" id="amte_${tier}_${cat}_b" value="${mgr[tier]?.cats[cat]?.base||DT.mgr[tier].cats[cat].base}" min="0" step="0.25" style="width:85px"/><span style="font-size:11px;color:var(--mu);min-width:55px">Up $</span><input type="number" id="amte_${tier}_${cat}_u" value="${mgr[tier]?.cats[cat]?.up||DT.mgr[tier].cats[cat].up}" min="0" step="0.25" style="width:85px"/></div>`).join('')}</div>`).join('<hr style="border:1px solid var(--bo);margin:10px 0"/>');
@@ -9604,7 +9604,7 @@ function swMgrTierFlyerTo(tier, target){
   if(!target) return;
   const mgr=T.mgr||DT.mgr;
   const cats={acts:'New Voice Activations',hsi:'HSI / Home Internet',bts:'Tablet (BTS) Sales',acc:'Accessories Target'};
-  const tierLabels={1:'Tier 1 — High Volume',2:'Tier 2 — 2ME',3:'Tier 3 — 1ME'};
+  const tierLabels={1:'Tier 1 — Max $1,000',2:'Tier 2 — Max $750',3:'Tier 3 — Max $500'};
   const tierColors={1:'#00A651',2:'#6E2B8B',3:'#E20074'};
   const n=new Date();
   const mo=n.toLocaleDateString('en-US',{month:'long',year:'numeric'});
@@ -9824,7 +9824,7 @@ function swMgrTierFlyer(tier, btn){
 
   const mgr=T.mgr||DT.mgr;
   const cats={acts:'New Voice Activations',hsi:'HSI / Home Internet',bts:'Tablet (BTS) Sales',acc:'Accessories Target'};
-  const tierLabels={1:'Tier 1 — High Volume',2:'Tier 2 — 2ME',3:'Tier 3 — 1ME'};
+  const tierLabels={1:'Tier 1 — Max $1,000',2:'Tier 2 — Max $750',3:'Tier 3 — Max $500'};
   const tierColors={1:'#00A651',2:'#6E2B8B',3:'#E20074'};
   const tierEmojis={1:'🥇',2:'🥈',3:'🥉'};
   const n=new Date();
@@ -12510,6 +12510,178 @@ function updStoreTier(store, tier){
   renStoreRoster();
   if(typeof renMgrSheet==='function')renMgrSheet();
   tst2('Tier updated for '+store+' — Tier '+tier,'ok');
+}
+
+
+// ══════════════════════════════════════════════════════
+// PRINT ALL MANAGER SLIPS
+// ══════════════════════════════════════════════════════
+
+function printAllMgrSlips(){
+  const mn=document.getElementById('mgrSheetMonthIn')?.value||'';
+  if(!mn){tst2('Select a month first on the Actuals tab.','wn');return;}
+  const period=formatPeriod(mn)||mn;
+
+  // Get all managers with stores
+  const srBs=getSR_BS();
+  const storesWithData=SR.filter(s=>mgrSheetData[s.s]&&Object.keys(mgrSheetData[s.s]).some(k=>mgrSheetData[s.s][k]));
+  const allStores=SR.filter(s=>(srBs[s.s]?.mgr||s.mgr)&&(srBs[s.s]?.mgr||s.mgr)!=='TBD');
+
+  // Find managers with multiple stores
+  const mgrMap={};
+  allStores.forEach(function(store){
+    const mgr=srBs[store.s]?.mgr||store.mgr;
+    if(!mgrMap[mgr])mgrMap[mgr]=[];
+    mgrMap[mgr].push(store.s);
+  });
+  const multiStoreMgrs=Object.keys(mgrMap).filter(function(m){return mgrMap[m].length>1;});
+
+  // Always combine multi-store managers on one slip
+  var combineMulti=true;
+
+  // Build all slips
+  var slips=[];
+
+  if(combineMulti){
+    // One slip per manager — combine stores
+    Object.keys(mgrMap).forEach(function(mgrName){
+      var stores=mgrMap[mgrName];
+      if(stores.length===1){
+        var slip=buildMgrSlipBody(stores[0],mn,period);
+        if(slip)slips.push(slip);
+      } else {
+        var combinedSlip=buildCombinedMgrSlip(mgrName,stores,mn,period);
+        if(combinedSlip)slips.push(combinedSlip);
+      }
+    });
+  } else {
+    // One slip per store
+    allStores.forEach(function(store){
+      var slip=buildMgrSlipBody(store.s,mn,period);
+      if(slip)slips.push(slip);
+    });
+  }
+
+  if(!slips.length){tst2('No manager data to print. Load the Actuals tab first.','wn');return;}
+
+  // Wrap in page-break CSS and open
+  var css='<style>'
+    +'body{font-family:\'Nunito\',sans-serif;font-size:12px;color:#1A1A1A;margin:0;padding:0}'
+    +'.slip-page{page-break-after:always;padding:28px 32px;max-width:750px;margin:0 auto;box-sizing:border-box}'
+    +'.slip-page:last-child{page-break-after:auto}'
+    +'.slip-hdr{background:linear-gradient(135deg,#E20074,#6E2B8B,#4A1A6B);color:#fff;border-radius:12px;padding:20px 24px;margin-bottom:16px}'
+    +'.slip-hdr h1{font-family:\'Poppins\',sans-serif;font-weight:900;font-size:22px;margin:0 0 4px 0}'
+    +'.slip-hdr p{margin:0;opacity:.75;font-size:11px}'
+    +'.slip-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}'
+    +'.slip-meta-item{background:#F8F8F8;border-radius:8px;padding:8px 12px}'
+    +'.slip-meta-item label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px}'
+    +'.slip-meta-item span{font-weight:700;color:#1A1A1A;font-size:12px}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px}'
+    +'th{background:#4A1A6B;color:#fff;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase}'
+    +'td{padding:7px 10px;border-bottom:1px solid #F0F0F0;font-size:11px}'
+    +'.hit{color:#00A651;font-weight:700} .miss{color:#D32F2F;font-weight:700}'
+    +'.total-bar{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;border-radius:8px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}'
+    +'.total-bar .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;opacity:.7}'
+    +'.total-bar .amount{font-family:\'Poppins\',sans-serif;font-weight:900;font-size:28px}'
+    +'.store-section{border:1px solid #E8E8E8;border-radius:8px;overflow:hidden;margin-bottom:14px}'
+    +'.store-section-hdr{background:#F3E8FF;padding:8px 12px;font-weight:700;color:#6E2B8B;font-size:12px}'
+    +'.sig-line{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px;padding-top:16px;border-top:1px solid #E8E8E8}'
+    +'.sig-block{border-top:2px solid #1A1A1A;padding-top:6px;display:flex;justify-content:space-between}'
+    +'.sig-block span{font-size:10px;font-weight:700;color:#555}'
+    +'.sig-block em{font-size:10px;color:#aaa}'
+    +'.warn-box{background:#FFF8E1;border:1px solid #FFB300;border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#8a6000}'
+    +'@media print{.no-print{display:none!important}.slip-page{padding:18px 20px}}'
+    +'</style>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">';
+
+  var printBar='<div class="no-print" style="position:fixed;top:0;left:0;right:0;background:#4A1A6B;color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;z-index:9999">'
+    +'<button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">\uD83D\uDDA8 Print / Save PDF</button>'
+    +'<span style="font-size:12px;opacity:.8">'+slips.length+' slip'+(slips.length>1?'s':'')+' \u00b7 '+period+'</span>'
+    +'<button onclick="window.close()" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">\u2715 Close</button>'
+    +'</div><div style="height:52px"></div>';
+
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Manager Slips \u2014 '+period+'</title>'+css+'</head><body>'+printBar+slips.join('')+'</body></html>';
+  var w=window.open('','_blank','width=900,height=750');
+  if(w){w.document.write(html);w.document.close();}
+  else tst2('Pop-up blocked. Allow pop-ups and try again.','er');
+}
+
+function buildMgrSlipBody(storeName,mn,period){
+  const store=SR.find(function(s){return s.s===storeName;});
+  if(!store)return null;
+  const srBs=getSR_BS();
+  const sd=mgrSheetData[storeName]||{};
+  const res=calcMgrBonus(storeName,sd);
+  const mgrName=srBs[storeName]?.mgr||store.mgr||'—';
+
+  return '<div class="slip-page">'
+    +'<div class="slip-hdr"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
+    +'<h1>'+mgrName+'</h1>'
+    +'<p>'+storeName+' \u00b7 Tier '+store.tier+' \u00b7 '+period+'</p></div>'
+    +'<div class="slip-meta">'
+    +'<div class="slip-meta-item"><label>Store</label><span>'+storeName+'</span></div>'
+    +'<div class="slip-meta-item"><label>Pay Tier</label><span>Tier '+store.tier+' \u2014 Max $'+(store.tier===1?'1,000':store.tier===2?'750':'500')+'</span></div>'
+    +'<div class="slip-meta-item"><label>Period</label><span>'+period+'</span></div>'
+    +'<div class="slip-meta-item"><label>ELB Rank</label><span>'+(sd.elb||'\u2014')+'</span></div>'
+    +'<div class="slip-meta-item"><label>Protection %</label><span>'+(sd.attach?(+sd.attach).toFixed(1)+'%':'\u2014')+'</span></div>'
+    +'<div class="slip-meta-item"><label>Generated</label><span>'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span></div>'
+    +'</div>'
+    +(res.notes&&res.notes.length?'<div class="warn-box">'+res.notes.join('<br>')+'</div>':'')
+    +'<table><thead><tr><th>Category</th><th>Target</th><th>Actual</th><th>% to Goal</th><th>Base</th><th>Upside (125%+)</th><th>Earned</th></tr></thead><tbody>'
+    +(res.catRows||'<tr><td colspan="7" style="text-align:center;color:#999">No data</td></tr>')
+    +'</tbody></table>'
+    +'<div class="total-bar"><div><div class="label">Total Manager Bonus</div><div class="amount">$'+(res.total||0).toFixed(2)+'</div></div>'
+    +'<div style="text-align:right;font-size:11px;opacity:.7">'+storeName+'<br>'+period+'</div></div>'
+    +'<div class="sig-line">'
+    +'<div class="sig-block"><span>Manager Signature</span><em>Date</em></div>'
+    +'<div class="sig-block"><span>HR / Owner Approval</span><em>Date</em></div>'
+    +'</div>'
+    +'<div style="margin-top:12px;font-size:9px;color:#bbb;text-align:center">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
+    +'</div>';
+}
+
+function buildCombinedMgrSlip(mgrName,storeNames,mn,period){
+  var grandTotal=0;
+  var storeBlocks='';
+  var tierBadges=[];
+
+  storeNames.forEach(function(storeName){
+    var store=SR.find(function(s){return s.s===storeName;});
+    if(!store)return;
+    var sd=mgrSheetData[storeName]||{};
+    var res=calcMgrBonus(storeName,sd);
+    grandTotal+=res.total||0;
+    if(tierBadges.indexOf('Tier '+store.tier)<0)tierBadges.push('Tier '+store.tier);
+
+    storeBlocks+='<div class="store-section">'
+      +'<div class="store-section-hdr">'+storeName+' \u00b7 Tier '+store.tier
+      +(sd.elb?' \u00b7 ELB: '+sd.elb:'')
+      +(sd.attach?' \u00b7 Attach: '+(+sd.attach).toFixed(1)+'%':'')
+      +'<span style="float:right;font-weight:900;color:#6E2B8B">$'+(res.total||0).toFixed(2)+'</span></div>'
+      +(res.notes&&res.notes.length?'<div class="warn-box" style="margin:6px 10px;font-size:10px">'+res.notes.join(' \u00b7 ')+'</div>':'')
+      +'<table style="margin:0"><thead><tr><th>Category</th><th>Target</th><th>Actual</th><th>%</th><th>Earned</th></tr></thead><tbody>'
+      +(res.catRows||'<tr><td colspan="5" style="text-align:center;color:#999">No data</td></tr>')
+      +'</tbody></table></div>';
+  });
+
+  return '<div class="slip-page">'
+    +'<div class="slip-hdr"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
+    +'<h1>'+mgrName+'</h1>'
+    +'<p>'+storeNames.length+' Stores \u00b7 '+tierBadges.join(', ')+' \u00b7 '+period+'</p></div>'
+    +'<div class="slip-meta">'
+    +'<div class="slip-meta-item"><label>Stores</label><span>'+storeNames.join(', ')+'</span></div>'
+    +'<div class="slip-meta-item"><label>Period</label><span>'+period+'</span></div>'
+    +'<div class="slip-meta-item"><label>Generated</label><span>'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span></div>'
+    +'</div>'
+    +storeBlocks
+    +'<div class="total-bar"><div><div class="label">Total Combined Bonus</div><div class="amount">$'+grandTotal.toFixed(2)+'</div></div>'
+    +'<div style="text-align:right;font-size:11px;opacity:.7">'+mgrName+'<br>'+storeNames.length+' stores \u00b7 '+period+'</div></div>'
+    +'<div class="sig-line">'
+    +'<div class="sig-block"><span>Manager Signature</span><em>Date</em></div>'
+    +'<div class="sig-block"><span>HR / Owner Approval</span><em>Date</em></div>'
+    +'</div>'
+    +'<div style="margin-top:12px;font-size:9px;color:#bbb;text-align:center">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
+    +'</div>';
 }
 
 </script>
