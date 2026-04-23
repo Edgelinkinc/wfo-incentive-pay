@@ -5345,7 +5345,9 @@ function renMgrPayout(){
 
   let totalBonus=0;
   const storeRows=stores.map((store,si)=>{
-    const sd=bsd[store.s]||{};
+    // mgrSheetData is authoritative (populated by ELB/RTBDI uploads on Actuals tab)
+    // bsd is fallback for manually-entered values not yet uploaded
+    const sd=Object.assign({},bsd[store.s]||{},mgrSheetData[store.s]||{});
     const res=calcMgrBonus(store.s,sd,bonusMn);
     totalBonus+=res.bonusOnly||res.total;
     const elbRank=+sd.elb||0;
@@ -5389,7 +5391,7 @@ function renMgrPayout(){
   let totalMim=0;
   const mimRows=stores.map((store,si)=>{
     const mimCfg=getMgrMimForStore(store.s,mimMn);
-    const sd=bsd[store.s]||{};
+    const sd=Object.assign({},bsd[store.s]||{},mgrSheetData[store.s]||{});
     const bans=+sd.mimOrders||0;
     const payout=mimCfg.enabled&&bans>0?bans*mimCfg.rate:0;
     totalMim+=payout;
