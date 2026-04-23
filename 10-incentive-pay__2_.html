@@ -2185,6 +2185,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
                 <th style="min-width:200px">Store</th>
                 <th style="min-width:220px">Manager</th>
                 <th style="min-width:200px">Coach</th>
+                <th style="min-width:130px;color:var(--pr)">Pay Tier ✎</th>
                 <th style="min-width:200px">Last Change</th>
                 <th>Log</th>
               </tr></thead>
@@ -3233,39 +3234,40 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 <script>
 const SR=[
   {s:"AR-COLONEL GLENN",id:"10217203",me:"1ME",tier:3,mgr:"Karmina Mendoza",c:"TBD"},
-  {s:"AR-RADIO GEYER",id:"10217139",me:"2ME",tier:2,mgr:"Karmina Mendoza",c:"TBD"},
+  {s:"AR-RADIO GEYER",id:"10217139",me:"2ME",tier:1,mgr:"Karmina Mendoza",c:"TBD"},
   {s:"CT-BUCKLAND HILLS MALL",id:"10223493",me:"2ME",tier:2,mgr:"Nereida Rodriquez",c:"TBD"},
-  {s:"CT-NEW LONDON",id:"10203888",me:"2ME",tier:2,mgr:"Josh Landry",c:"TBD"},
-  {s:"CT-NORWICH",id:"10203393",me:"1ME",tier:3,mgr:"Josh Landry",c:"TBD"},
-  {s:"MA-SOUTH SHORE MALL",id:"10203668",me:"2ME",tier:2,mgr:"TBD",c:"Rose Perez"},
-  {s:"MA-CAPE COD MALL",id:"10202357",me:"2ME",tier:2,mgr:"Stephanie O Quinn",c:"Ambulai Sheku"},
+  {s:"CT-NEW LONDON",id:"10203888",me:"2ME",tier:1,mgr:"Josh Landry",c:"TBD"},
+  {s:"CT-NORWICH",id:"10203393",me:"1ME",tier:2,mgr:"Josh Landry",c:"TBD"},
+  {s:"MA-SOUTH SHORE MALL",id:"10203668",me:"2ME",tier:1,mgr:"TBD",c:"Rose Perez"},
+  {s:"MA-CAPE COD MALL",id:"10202357",me:"2ME",tier:1,mgr:"Stephanie O Quinn",c:"Ambulai Sheku"},
   {s:"MA-COGGESHALL",id:"10205455",me:"2ME",tier:2,mgr:"Napoleao Dacruz",c:"Manny"},
-  {s:"MA-EXCHANGE ST",id:"10226580",me:"1ME",tier:3,mgr:"Jazmine Heredia",c:"Joel Montero"},
-  {s:"MA-FALLRIVER",id:"10229039",me:"2ME",tier:2,mgr:"TBD",c:"Manny"},
-  {s:"MA-HOLYOKE",id:"10276859",me:"2ME",tier:2,mgr:"Carlos Davila",c:"Joel Montero"},
-  {s:"MA-KELLEY SQUARE",id:"10222690",me:"2ME",tier:2,mgr:"Alex Correa",c:"Rose Perez"},
+  {s:"MA-EXCHANGE ST",id:"10226580",me:"1ME",tier:2,mgr:"Jazmine Heredia",c:"Joel Montero"},
+  {s:"MA-FALLRIVER",id:"10229039",me:"2ME",tier:3,mgr:"TBD",c:"Manny"},
+  {s:"MA-HOLYOKE",id:"10276859",me:"2ME",tier:1,mgr:"Carlos Davila",c:"Joel Montero"},
+  {s:"MA-KELLEY SQUARE",id:"10222690",me:"2ME",tier:1,mgr:"Alex Correa",c:"Rose Perez"},
   {s:"MA-LOCUST STREET",id:"10226935",me:"1ME",tier:3,mgr:"Alicia Montero",c:"Joel Montero"},
+  {s:"MA-ORANGE STREET",id:"",me:"1ME",tier:3,mgr:"TBD",c:"TBD"},
   {s:"MA-ROCKDALE",id:"10214946",me:"2ME",tier:2,mgr:"Lori Ruiz",c:"Manny"},
-  {s:"MA-STATE STREET",id:"10224924",me:"1ME",tier:3,mgr:"Jessica Ratamar",c:"Joel Montero"},
+  {s:"MA-STATE STREET",id:"10224924",me:"1ME",tier:2,mgr:"Jessica Ratamar",c:"Joel Montero"},
   {s:"MA-WESTERN AVE",id:"10216464",me:"2ME",tier:2,mgr:"Amina Fellah",c:"Rose Perez"},
-  {s:"RI-751 BROAD",id:"10225631",me:"1ME",tier:3,mgr:"Keysha Bettencourt",c:"Rose Perez"},
-  {s:"RI-BALD HILL",id:"10216463",me:"2ME",tier:2,mgr:"Allia Abodaher",c:"TBD"},
+  {s:"RI-751 BROAD",id:"10225631",me:"1ME",tier:2,mgr:"Keysha Bettencourt",c:"Rose Perez"},
+  {s:"RI-BALD HILL",id:"10216463",me:"2ME",tier:1,mgr:"Allia Abodaher",c:"TBD"},
   {s:"RI-BROAD ST",id:"10216460",me:"2ME",tier:2,mgr:"TBD",c:"Rose Perez"},
   {s:"RI-BROADWAY",id:"10199314",me:"1ME",tier:3,mgr:"TBD",c:"Ambulai Sheku"},
   {s:"RI-COVENTRY",id:"10214947",me:"1ME",tier:3,mgr:"Chris Paul Pierre",c:"Ambulai Sheku"},
   {s:"RI-DOUGLAS",id:"10211168",me:"1ME",tier:3,mgr:"Chris Paul Pierre",c:"Ambulai Sheku"},
-  {s:"RI-EAST PROVIDENCE",id:"10231417",me:"2ME",tier:2,mgr:"Saimary Hernandez",c:"TBD"},
-  {s:"RI-HARTFORD AVE",id:"10230359",me:"2ME",tier:2,mgr:"Keysha Bettencourt",c:"Rose Perez"},
-  {s:"RI-NEWPORT AVE",id:"10198293",me:"1ME",tier:3,mgr:"TBD",c:"Rose Perez"},
-  {s:"RI-PROVIDENCE PLACE MALL",id:"10200885",me:"2ME",tier:2,mgr:"TBD",c:"Rose Perez"},
+  {s:"RI-EAST PROVIDENCE",id:"10231417",me:"2ME",tier:1,mgr:"Saimary Hernandez",c:"TBD"},
+  {s:"RI-HARTFORD AVE",id:"10230359",me:"2ME",tier:1,mgr:"Keysha Bettencourt",c:"Rose Perez"},
+  {s:"RI-NEWPORT AVE",id:"10198293",me:"1ME",tier:2,mgr:"TBD",c:"Rose Perez"},
+  {s:"RI-PROVIDENCE PLACE MALL",id:"10200885",me:"2ME",tier:1,mgr:"TBD",c:"Rose Perez"},
   {s:"RI-RESERVOIR AVE",id:"10198970",me:"2ME",tier:2,mgr:"Daniel Rosales",c:"Ambulai Sheku"},
   {s:"TN-KEITH ST",id:"10217429",me:"1ME",tier:3,mgr:"Marquesha Jones",c:"Mr. Watts"},
-  {s:"TN-MAGNOLIA",id:"10217455",me:"2ME",tier:2,mgr:"Mel Mcallister",c:"Mr. Watts"},
+  {s:"TN-MAGNOLIA",id:"10217455",me:"2ME",tier:1,mgr:"Mel Mcallister",c:"Mr. Watts"},
   {s:"TN-MORRISTOWN",id:"10224662",me:"1ME",tier:3,mgr:"Frankcheska Rader",c:"Mr. Watts"},
-  {s:"TN-NORTH BROADWAY",id:"10217527",me:"2ME",tier:2,mgr:"Frankcheska Rader",c:"Mr. Watts"},
+  {s:"TN-NORTH BROADWAY",id:"10217527",me:"2ME",tier:1,mgr:"Frankcheska Rader",c:"Mr. Watts"},
   {s:"TN-SHALLOWFORD RD",id:"10211281",me:"2ME",tier:2,mgr:"Marquesha Jones",c:"Mr. Watts"},
-  {s:"TN-WEST MARKET",id:"10222328",me:"1ME",tier:3,mgr:"TBD",c:"Cheryl"},
-  {s:"TN-WESTERN AVE",id:"10217476",me:"1ME",tier:3,mgr:"Nicki Johnson",c:"Mr. Watts"},
+  {s:"TN-WEST MARKET",id:"10222328",me:"1ME",tier:2,mgr:"TBD",c:"Cheryl"},
+  {s:"TN-WESTERN AVE",id:"10217476",me:"1ME",tier:2,mgr:"Nicki Johnson",c:"Mr. Watts"},
 ];
 const COACHES=["Ambulai Sheku","Cheryl","Joel Montero","Manny","Mr. Watts","Rose Perez"];
 const coachColors={"Ambulai Sheku":"bt3","Cheryl":"btop","Joel Montero":"bt4","Manny":"bok2","Mr. Watts":"bt2","Rose Perez":"bt1","TBD":"bno"};
@@ -8458,6 +8460,16 @@ function renStoreRoster(){
         </select>
         ${!coach?`<div style="font-size:9px;color:var(--wa);font-weight:700;margin-top:2px">⚠ No coach assigned</div>`:''}
       </td>
+      <td style="padding:5px 10px;min-width:130px">
+        <select style="width:100%;padding:6px 9px;border:2px solid var(--pr);border-radius:7px;font-family:'Nunito',sans-serif;font-size:12px;outline:none;font-weight:700"
+          onchange="requirePin(()=>updStoreTier('${store.s}',+this.value))"
+          onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--pr)'">
+          <option value="1"${(d[store.s]?.tier||store.tier)===1?' selected':''}>Tier 1 — $1,000</option>
+          <option value="2"${(d[store.s]?.tier||store.tier)===2?' selected':''}>Tier 2 — $750</option>
+          <option value="3"${(d[store.s]?.tier||store.tier)===3?' selected':''}>Tier 3 — $500</option>
+        </select>
+        <div style="font-size:9px;color:var(--mu);margin-top:3px">Current: <strong style="color:var(--se)">Tier ${d[store.s]?.tier||store.tier}</strong></div>
+      </td>
       <td style="padding:7px 10px;text-align:center">
         ${hasLog?`<div style="font-size:10px;color:var(--mu)">${lastChange.field}: ${X(lastChange.old)} → <strong>${X(lastChange.new)}</strong></div><div style="font-size:9px;color:var(--mu)">${lastChange.by} · ${lastChange.at}</div>`:`<span style="font-size:10px;color:var(--mu)">No changes</span>`}
       </td>
@@ -8466,7 +8478,7 @@ function renStoreRoster(){
       </td>
     </tr>`;
   }).join('');
-  if(!fil.length)body.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--mu)">No stores match.</td></tr>`;
+  if(!fil.length)body.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--mu)">No stores match.</td></tr>`;
 }
 
 function updStoreMgrInline(store,val){
