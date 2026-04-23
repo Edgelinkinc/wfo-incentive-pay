@@ -6244,6 +6244,17 @@ async function downloadMgrPayoutSlipPDF(){
     const mimMn=document.getElementById('mpMimMonth')?.value||bonusMn;
     const period=bonusMn.replace('-','_');
     const mgrSafe=sanitizeFilename(mgr);
+    // Only show MIM if enabled for any store
+    const mgrStores=SR.filter(function(s){return s.mgr===mgr;});
+    const anyMim=mgrStores.some(function(s){return getMgrMimForStore(s.s,mimMn).enabled;});
+    const mimSection=anyMim?`<div class="sh">📱 MIM Spiff</div>
+    <table><thead><tr><th>Store</th><th>BANs</th><th>Rate</th><th>MIM Payout</th><th>Status</th></tr></thead>
+    <tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>`:'';
+    const grandSection=anyMim?`
+      <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
+      <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
+      <div class="item total"><label>Total Payout</label><span>${grand}</span></div>`:`
+      <div class="item total"><label>Total Store Bonus</label><span>${grand}</span></div>`;
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -6271,20 +6282,14 @@ async function downloadMgrPayoutSlipPDF(){
     <div class="meta">
       <div><label>Manager</label><span>${mgr}</span></div>
       <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
-      <div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>
+      ${anyMim?`<div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
       <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
     </div>
     <div class="sh">🏪 Store Bonus Breakdown</div>
     <table><thead><tr><th>Store</th><th>Tier</th><th>ELB Rank</th><th>Attach %</th><th>Acts</th><th>BTS</th><th>HSI</th><th>Acc $</th><th>Bonus</th><th>Notes</th></tr></thead>
     <tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
-    <div class="sh">📱 MIM Spiff</div>
-    <table><thead><tr><th>Store</th><th>BANs</th><th>Rate</th><th>MIM Payout</th><th>Status</th></tr></thead>
-    <tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>
-    <div class="grand">
-      <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
-      <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
-      <div class="item total"><label>Total Payout</label><span>${grand}</span></div>
-    </div>
+    ${mimSection}
+    <div class="grand">${grandSection}</div>
     <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${formatPeriod(bonusMn)}</div>
     </body></html>`;
     const fname=`${mgrSafe}_PayoutSlip_${period}.pdf`;
@@ -12628,46 +12633,114 @@ function buildMgrSlipBody(storeName,mn,period){
 }
 
 function buildCombinedMgrSlip(mgrName,storeNames,mn,period){
+  // Build each store using the same unified slip builder so layout/amounts are identical
   var grandTotal=0;
-  var storeBlocks='';
+  var storeSlips='';
   var tierBadges=[];
 
   storeNames.forEach(function(storeName){
     var store=SR.find(function(s){return s.s===storeName;});
     if(!store)return;
-    var sd=mgrSheetData[storeName]||{};
-    var res=calcMgrBonus(storeName,sd);
-    grandTotal+=res.total||0;
-    if(tierBadges.indexOf('Tier '+store.tier)<0)tierBadges.push('Tier '+store.tier);
 
-    storeBlocks+='<div class="store-section">'
-      +'<div class="store-section-hdr">'+storeName+' \u00b7 Tier '+store.tier
-      +(sd.elb?' \u00b7 ELB: '+sd.elb:'')
-      +(sd.attach?' \u00b7 Attach: '+(+sd.attach).toFixed(1)+'%':'')
-      +'<span style="float:right;font-weight:900;color:#6E2B8B">$'+(res.total||0).toFixed(2)+'</span></div>'
-      +(res.notes&&res.notes.length?'<div class="warn-box" style="margin:6px 10px;font-size:10px">'+res.notes.join(' \u00b7 ')+'</div>':'')
-      +'<table style="margin:0"><thead><tr><th>Category</th><th>Target</th><th>Actual</th><th>%</th><th>Earned</th></tr></thead><tbody>'
-      +(res.catRows||'<tr><td colspan="5" style="text-align:center;color:#999">No data</td></tr>')
-      +'</tbody></table></div>';
+    // Calculate bonus with correct month
+    var bs=mn?(getBs(mn)||getOrCreateBs(mn)):null;
+    var q=bs?.qualifiers||{elbCutoff:3368,attachCutoff:60,attachPenalty:25};
+    var cats=bs?bs.categories:[
+      {id:'acts',name:'New Voice Activations',t1base:300,t1up:375,t2base:225,t2up:281.25,t3base:150,t3up:187.5,baseThresh:100,upThresh:125},
+      {id:'hsi', name:'HSI Sales',            t1base:100,t1up:125,t2base:75, t2up:93.75, t3base:50, t3up:62.5, baseThresh:100,upThresh:125},
+      {id:'bts', name:'Tablet (BTS) Sales',   t1base:100,t1up:125,t2base:75, t2up:93.75, t3base:50, t3up:62.5, baseThresh:100,upThresh:125},
+      {id:'acc', name:'Accessories Target',   t1base:300,t1up:375,t2base:225,t2up:281.25,t3base:150,t3up:187.5,baseThresh:100,upThresh:125}
+    ];
+    var srBs=getSR_BS();
+    var tier=srBs[storeName]?.tier||store.tier||2;
+    var bKey=tier===1?'t1base':tier===2?'t2base':'t3base';
+    var uKey=tier===1?'t1up':tier===2?'t2up':'t3up';
+    var storeTgts=bs?.targets?.[storeName]||{};
+    var sd=mgrSheetData[storeName]||{};
+    var elb=+sd.elb||0;
+    var attach=+sd.attach||0;
+    var elbFail=elb>0&&elb>=q.elbCutoff;
+    var attachFail=attach>0&&attach<q.attachCutoff;
+
+    var storeTotal=0;
+    var rows='';
+    cats.forEach(function(cat){
+      var tgt=storeTgts[cat.id]||0;
+      var act=+sd[cat.id]||0;
+      var pct=tgt>0?(act/tgt)*100:0;
+      var bonus=0;
+      if(!elbFail&&act>0&&tgt>0){
+        if(pct>=cat.upThresh)bonus=cat[uKey];
+        else if(pct>=cat.baseThresh)bonus=cat[bKey];
+        if(attachFail&&bonus>0)bonus=bonus*(1-q.attachPenalty/100);
+      }
+      storeTotal+=bonus;
+      var clr=pct>=(cat.baseThresh||100)?'#00A651':pct>=(cat.baseThresh*0.85||85)?'#E65100':'#D32F2F';
+      var pctStr=tgt>0?pct.toFixed(1)+'%':'—';
+      rows+='<tr>'
+        +'<td style="padding:8px 12px;border-bottom:1px solid #F0F0F0;font-weight:600;font-size:11px">'+cat.name+'</td>'
+        +'<td style="padding:8px 12px;border-bottom:1px solid #F0F0F0;text-align:center;font-size:11px">'+(tgt||'—')+'</td>'
+        +'<td style="padding:8px 12px;border-bottom:1px solid #F0F0F0;text-align:center;font-size:11px">'+(act||'—')+'</td>'
+        +'<td style="padding:8px 12px;border-bottom:1px solid #F0F0F0;text-align:center;font-family:\'Poppins\',sans-serif;font-weight:700;color:'+clr+'">'+pctStr+'</td>'
+        +'<td style="padding:8px 12px;border-bottom:1px solid #F0F0F0;text-align:right;font-family:\'Poppins\',sans-serif;font-weight:800;color:'+(bonus>0?'#E20074':'#999')+'">$'+bonus.toFixed(2)+'</td>'
+        +'</tr>';
+    });
+
+    grandTotal+=storeTotal;
+    if(tierBadges.indexOf('Tier '+tier)<0)tierBadges.push('Tier '+tier);
+
+    var warnings='';
+    if(elbFail)warnings+='<div style="background:#FFEBEE;border:1px solid #D32F2F;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:11px;color:#C62828">🚫 ELB rank '+elb+' \u2265 '+q.elbCutoff+' — $0 payout</div>';
+    if(attachFail)warnings+='<div style="background:#FFF8E1;border:1px solid #FFB300;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:11px;color:#8a6000">⚠ Protection '+attach.toFixed(1)+'% < '+q.attachCutoff+'% — '+q.attachPenalty+'% penalty</div>';
+
+    storeSlips+='<div style="border:2px solid #E8E8E8;border-radius:12px;overflow:hidden;margin-bottom:18px">'
+      +'<div style="background:linear-gradient(90deg,#F3E8FF,#FFF0F7);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #E8E8E8">'
+      +'<div><span style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:13px;color:#4A1A6B">'+storeName+'</span>'
+      +'<span style="font-size:10px;color:#999;margin-left:10px">Tier '+tier+(elb?' · ELB: '+elb:'')+(attach?' · Attach: '+attach.toFixed(1)+'%':'')+'</span></div>'
+      +'<span style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:18px;color:'+( storeTotal>0?'#E20074':'#999')+'">$'+storeTotal.toFixed(2)+'</span>'
+      +'</div>'
+      +warnings
+      +'<table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="background:#FFF0F7">'
+      +'<th style="padding:7px 12px;text-align:left;font-size:9px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:1px solid #E8E8E8">Category</th>'
+      +'<th style="padding:7px 12px;text-align:center;font-size:9px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:1px solid #E8E8E8">Target</th>'
+      +'<th style="padding:7px 12px;text-align:center;font-size:9px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:1px solid #E8E8E8">Actual</th>'
+      +'<th style="padding:7px 12px;text-align:center;font-size:9px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:1px solid #E8E8E8">% to Goal</th>'
+      +'<th style="padding:7px 12px;text-align:right;font-size:9px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:1px solid #E8E8E8">Earned</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody>'
+      +'<tr style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B)">'
+      +'<td colspan="4" style="padding:8px 12px;font-family:\'Poppins\',sans-serif;font-weight:800;font-size:12px;color:#fff">STORE BONUS</td>'
+      +'<td style="padding:8px 12px;font-family:\'Poppins\',sans-serif;font-weight:900;font-size:15px;color:#fff;text-align:right">$'+storeTotal.toFixed(2)+'</td>'
+      +'</tr>'
+      +'</table>'
+      +'</div>';
   });
 
-  return '<div class="slip-page">'
-    +'<div class="slip-hdr"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
-    +'<h1>'+mgrName+'</h1>'
-    +'<p>'+storeNames.length+' Stores \u00b7 '+tierBadges.join(', ')+' \u00b7 '+period+'</p></div>'
-    +'<div class="slip-meta">'
-    +'<div class="slip-meta-item"><label>Stores</label><span>'+storeNames.join(', ')+'</span></div>'
-    +'<div class="slip-meta-item"><label>Period</label><span>'+period+'</span></div>'
-    +'<div class="slip-meta-item"><label>Generated</label><span>'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span></div>'
+  // Grand total bar
+  return '<div style="max-width:720px;margin:0 auto;padding:0 24px 40px;font-family:\'Nunito\',sans-serif">'
+    +'<div style="background:linear-gradient(135deg,#E20074,#6E2B8B,#4A1A6B);border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:20px">'
+    +'<div style="display:flex;align-items:flex-end;justify-content:space-between">'
+    +'<div><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc \u2014 Work Force Ops</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:26px">'+mgrName+'</div>'
+    +'<div style="font-size:12px;opacity:.75;margin-top:4px">'+storeNames.length+' Stores \u00b7 '+tierBadges.join(', ')+' \u00b7 '+period+'</div></div>'
+    +'<div style="text-align:right"><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Total Bonus Earned</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:40px;line-height:1">$'+grandTotal.toFixed(2)+'</div>'
+    +'</div></div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">'
+    +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Period</div><div style="font-weight:700;font-size:13px">'+period+'</div></div>'
+    +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Stores</div><div style="font-weight:700;font-size:13px">'+storeNames.length+'</div></div>'
+    +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Generated</div><div style="font-weight:700;font-size:11px">'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div></div>'
     +'</div>'
-    +storeBlocks
-    +'<div class="total-bar"><div><div class="label">Total Combined Bonus</div><div class="amount">$'+grandTotal.toFixed(2)+'</div></div>'
-    +'<div style="text-align:right;font-size:11px;opacity:.7">'+mgrName+'<br>'+storeNames.length+' stores \u00b7 '+period+'</div></div>'
-    +'<div class="sig-line">'
-    +'<div class="sig-block"><span>Manager Signature</span><em>Date</em></div>'
-    +'<div class="sig-block"><span>HR / Owner Approval</span><em>Date</em></div>'
+    +storeSlips
+    +'<div style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B);border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:14px;color:#fff">TOTAL COMBINED BONUS</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:900;font-size:24px;color:#E20074">$'+grandTotal.toFixed(2)+'</div>'
     +'</div>'
-    +'<div style="margin-top:12px;font-size:9px;color:#bbb;text-align:center">CONFIDENTIAL \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:12px">'
+    +'<div><div style="border-top:2px solid #1A1A1A;margin-top:44px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">Manager Signature</span><span style="font-size:11px;color:#999">Date</span></div></div>'
+    +'<div><div style="border-top:2px solid #1A1A1A;margin-top:44px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">HR / Owner Approval</span><span style="font-size:11px;color:#999">Date</span></div></div>'
+    +'</div>'
+    +'<div style="font-size:9px;color:#ccc;text-align:center;text-transform:uppercase;letter-spacing:.05em">Confidential \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
     +'</div>';
 }
 
