@@ -7310,7 +7310,7 @@ function showWeekConfirm(fn,count){
     </div>
     <div style="display:flex;gap:10px">
       <button class="btn bok" style="flex:1;justify-content:center" onclick="confirmWeekAndClose()">✅ Confirm Week</button>
-      <button class="btn bo" style="flex:1;justify-content:center" onclick="document.getElementById('wkConfirmModal').remove()">Skip</button>
+      <button class="btn bo" style="flex:1;justify-content:center" onclick="window._weekConfirmPending=false;document.getElementById('wkConfirmModal').remove()">Skip</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -7320,13 +7320,13 @@ function confirmWeekAndClose(){
   const dateIn=document.getElementById('wkConfirmDateIn')?.value;
   if(dateIn){
     wk=wkKey(dateIn);
-    // Update week picker and display bar
     const wksEl=document.getElementById('wks');
     if(wksEl)wksEl.value=wk;
     updWB();
+    // Now safe to save — clear the staging block first
+    window._weekConfirmPending = false;
     saveCurrentWeek();
     buildWeekSelector();
-    // Re-render everything so Breakdown & Payouts reflects the confirmed week
     renR();renCBL();upK();updLk();updSheetStatus();updRepStatus();
     if(typeof renWkHist==='function')renWkHist();
   }
@@ -9025,9 +9025,8 @@ function doUpload(mode, src){
   if(!content){tst2('Upload data lost — try again.','er');return;}
   if(mode === 'replace'){
     if(src === 'rtbdi' || src === 'metro'){
-      // Just clear in-memory — the previous week was already saved by normal operations.
-      // Do NOT save here — it would write current reps (last uploaded data) into the
-      // current wk slot, making every week look identical.
+      // Block all saves until week confirm — prevents new data writing to old week slot
+      window._weekConfirmPending = true;
       reps = [];
       CBs = [];
       tst2('Existing rep data cleared — loading new file...','wn');
@@ -9246,6 +9245,8 @@ function loadWeek(date){
 
 // ── SAVE CURRENT WEEK ──
 function saveCurrentWeek(){
+  // Block saves while waiting for week confirm — prevents new data writing to wrong slot
+  if(window._weekConfirmPending) return;
   if(!wk) return;
   localStorage.setItem("wfo_current_wk",wk);
   // Auto-backup to SharePoint if signed in (debounced)
