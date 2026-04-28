@@ -11678,7 +11678,7 @@ function spInit(){
       auth:{
         clientId: _spConfig.clientId,
         authority: 'https://login.microsoftonline.com/' + _spConfig.tenantId,
-        redirectUri: window.location.href.split('?')[0]
+        redirectUri: window.location.origin + window.location.pathname.replace(/[^/]*$/, '')
       },
       cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
     });
