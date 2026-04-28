@@ -12158,9 +12158,7 @@ function ghLoadPublicData(){
     .then(function(snap){
       if(!snap||snap.version!==1)return;
 
-      // Check if we already have this exact publish — skip if nothing new
-      var lastSeen=localStorage.getItem('wfo_gh_last_seen');
-      if(lastSeen&&lastSeen===snap.publishedAt)return;
+      // Always apply published data — published is the authoritative source for tablets
       localStorage.setItem('wfo_gh_last_seen',snap.publishedAt);
 
       // Merge week data — add new weeks, never remove existing ones
@@ -12170,7 +12168,12 @@ function ghLoadPublicData(){
         try{localIdx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
         Object.entries(snap.weekData).forEach(function(kv){
           var key='wfo_week_'+kv[0];
-          if(!localStorage.getItem(key)){
+          // Always update from published data (published is authoritative)
+          var existing=localStorage.getItem(key);
+          var pubReps=(kv[1].reps||[]).length;
+          var localReps=0;
+          try{localReps=(JSON.parse(existing||'{}').reps||[]).length;}catch(e){}
+          if(!existing||pubReps>0){
             localStorage.setItem(key,JSON.stringify(kv[1]));
             if(localIdx.indexOf(kv[0])<0)localIdx.unshift(kv[0]);
             changed=true;
