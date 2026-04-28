@@ -5503,11 +5503,19 @@ function initEmpWeekPicker(){
     sel.appendChild(opt);
   });
   // If no saved weeks yet, show current week as fallback
-  if(!idx.length){
+  if(!allWeeks.length){
     const opt=document.createElement('option');
     opt.value=wk||'current';
     opt.textContent='Current Week'+(wk?' ('+wk+')':'');
     sel.appendChild(opt);
+  }
+  // Auto-select most recent week WITH data if current week is empty
+  if(sel.options.length>1){
+    const curOpt=Array.from(sel.options).find(o=>o.value===wk);
+    if(curOpt&&curOpt.textContent.includes('· 0 reps')){
+      const firstWithData=Array.from(sel.options).find(o=>!o.textContent.includes('· 0 reps'));
+      if(firstWithData)sel.value=firstWithData.value;
+    }
   }
 }
 
