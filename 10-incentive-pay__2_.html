@@ -12233,7 +12233,6 @@ function ghLoadPublicData(){
           var key='wfo_week_'+kv[0];
           var pubReps=(kv[1].reps||[]).length;
           if(pubReps>0){
-            // Only overwrite if published has more reps than local (protect admin edits)
             var localReps=0;
             try{localReps=(JSON.parse(localStorage.getItem(key)||'{}').reps||[]).length;}catch(e){}
             if(pubReps>=localReps){
@@ -12242,7 +12241,6 @@ function ghLoadPublicData(){
               changed=true;
             }
           } else if(!localStorage.getItem(key)){
-            // Add empty week placeholder if not present
             localStorage.setItem(key,JSON.stringify(kv[1]));
             if(localIdx.indexOf(kv[0])<0)localIdx.unshift(kv[0]);
           }
@@ -12254,11 +12252,10 @@ function ghLoadPublicData(){
         localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
       }
 
-      // Don't override current week from published data — tablet uses its own date
-
-      // Only reload if new data arrived AND this is not the admin PC
-      // Admin PC has reps loaded already — tablet/fresh device does not
-      if(changed&&!hasLocalData){
+      // Reload on any new publish — settings (tiers, announcements, etc) need to re-render
+      // Only skip reload on admin PC if it's actively editing (has unsaved rep data in memory)
+      var adminEditing=reps.length>0&&!hasLocalData===false;
+      if(!adminEditing){
         window.location.reload();
       }
     })
