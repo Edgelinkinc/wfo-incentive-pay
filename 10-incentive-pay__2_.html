@@ -11718,11 +11718,18 @@ function spUpdateUI(signedIn){
 
 function spSignIn(){
   if(!_msalApp){
-    tst2('Loading auth… trying again in 2 seconds.','ok');
-    setTimeout(function(){
-      if(_msalApp)_msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
-      else tst2('Auth failed to load. Please refresh the page.','er');
-    },2000);
+    if(typeof msal === 'undefined'){
+      tst2('Microsoft auth library failed to load. Check your internet connection and refresh.','er');
+    } else {
+      tst2('Auth initializing\u2026 try again in a moment.','ok');
+      setTimeout(function(){
+        spInit();
+        setTimeout(function(){
+          if(_msalApp)_msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
+          else tst2('Auth still not ready. Please refresh the page.','er');
+        },1000);
+      },500);
+    }
     return;
   }
   _msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
@@ -11904,7 +11911,19 @@ function spSync(){
 // Hook into saveSession to auto-sync when data is saved
 var _origSaveSession = typeof saveSession === 'function' ? saveSession : null;
 document.addEventListener('DOMContentLoaded', function(){
-  spInit();
+  // Wait for MSAL library to be available (external CDN script)
+  var msalWait = 0;
+  function trySpInit(){
+    if(typeof msal !== 'undefined'){
+      spInit();
+    } else if(msalWait < 20){
+      msalWait++;
+      setTimeout(trySpInit, 250);
+    } else {
+      console.log('[WFO] MSAL library failed to load — SharePoint sign-in unavailable');
+    }
+  }
+  trySpInit();
   // Wrap saveSession to trigger auto-save
   if(typeof saveSession === 'function'){
     var _orig = saveSession;
