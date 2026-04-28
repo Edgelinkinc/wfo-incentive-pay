@@ -1748,10 +1748,6 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <label>MIM Spiff Month</label>
         <input type="month" id="cpMimMonth" onchange="renCoachPayout()" style="padding:9px 12px;border:2px solid var(--bo);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;width:100%"/>
       </div>
-      <div class="fi" style="min-width:160px">
-        <label>Payout Date</label>
-        <input type="date" id="cpPayoutDate" style="padding:9px 12px;border:2px solid var(--bo);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;width:100%"/>
-      </div>
       <button class="btn bp sm" onclick="downloadCoachPayoutSlipPDF()" style="margin-bottom:2px">⬇ Download PDF</button>
     </div>
 
@@ -1870,12 +1866,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <label>MIM Spiff Month</label>
         <input type="month" id="mpMimMonth" onchange="renMgrPayout()" style="padding:9px 12px;border:2px solid var(--bo);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;width:100%"/>
       </div>
-      <div class="fi" style="min-width:160px">
-        <label>Payout Date</label>
-        <input type="date" id="mpPayoutDate" style="padding:9px 12px;border:2px solid var(--bo);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;width:100%"/>
-      </div>
       <button class="btn bs sm" onclick="downloadMgrPayoutSlipPDF()" style="margin-bottom:2px">⬇ Download PDF</button>
-      <button class="btn bp sm" onclick="downloadAllMgrPayoutSlipsZIP()" style="margin-bottom:2px">⬇ All Managers ZIP</button>
     </div>
 
     <!-- EMPTY STATE -->
@@ -4171,7 +4162,7 @@ function generateCoachSlipPDF(coachName){
 </head><body>
   <div class="no-print" style="margin-bottom:12px"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700">🖨 Print / Save PDF</button><button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;margin-left:8px">✕ Close</button></div>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
-  <div class="meta"><div class="meta-item"><label>Coach</label><span>${coachName}</span></div><div class="meta-item"><label>Period</label><span>${period}</span></div><div class="meta-item"><label>Stores</label><span>${stores.length}</span></div><div class="meta-item"><label>Payout Date</label><span>${getPayoutDateFmt('cpPayoutDate','long')}</span></div></div>
+  <div class="meta"><div class="meta-item"><label>Coach</label><span>${coachName}</span></div><div class="meta-item"><label>Period</label><span>${period}</span></div><div class="meta-item"><label>Stores</label><span>${stores.length}</span></div><div class="meta-item"><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div></div>
   <table><thead><tr><th>Store</th><th>Tier</th><th>Act %</th><th>ELB Rank</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Shrink</th><th>Act Bonus</th><th>Acc Bonus</th><th>Store Total</th></tr></thead><tbody>${storeRows}</tbody></table>
   <div class="totals"><div class="tot-item"><label>Act Bonus</label><span>$${totalAct.toFixed(2)}</span></div><div class="tot-item"><label>Acc Bonus</label><span>$${totalAcc.toFixed(2)}</span></div><div class="tot-item"><label>MIM Spiff (${mimBans} BANs)</label><span>$${totalMim.toFixed(2)}</span></div><div class="tot-item"><label>Kicker</label><span>$${totalKick.toFixed(2)}</span></div><div class="tot-item" style="margin-left:auto"><label>Total Payout</label><span>$${grandTotal.toFixed(2)}</span></div></div>
   <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${period}</div>
@@ -4255,7 +4246,7 @@ function buildUnifiedMgrSlip(storeName, mn){
     +['<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">ELB Rank</div><div style="font-weight:700;font-size:13px">'+(elb||'\u2014')+'</div></div>',
       '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Attach %</div><div style="font-weight:700;font-size:13px;color:'+(attachFail?'#D32F2F':'#1A1A1A')+'">'+(attach?attach.toFixed(1)+'%':'\u2014')+'</div></div>',
       '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Period</div><div style="font-weight:700;font-size:13px">'+period+'</div></div>',
-      '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Payout Date</div><div style="font-weight:700;font-size:11px">'+getPayoutDateFmt('mpPayoutDate','short')+'</div></div>'
+      '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Generated</div><div style="font-weight:700;font-size:11px">'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div></div>'
     ].join('')+'</div>'
     // Warnings
     +warnings
@@ -4460,7 +4451,7 @@ function getMgrMimForStore(storeName, month){
 
 // ── ELB DATA ACCESSORS ──
 function getELBData(){
-  return lsGet('wfo_elb_data',null);
+  try{return JSON.parse(localStorage.getItem('wfo_elb_data')||'null');}catch{return null;}
 }
 function getELBMetricMap(){
   try{
@@ -4647,7 +4638,7 @@ function parseELBCSV(txt,fname){
 
 // ── RTBDI STORE ACCESSORS + UPLOAD ──
 function getRTBDIStoreData(){
-  return lsGet('wfo_rtbdi_store',null);
+  try{return JSON.parse(localStorage.getItem('wfo_rtbdi_store')||'null');}catch{return null;}
 }
 function updRTBDIStatus(){
   const d=getRTBDIStoreData();
@@ -4790,7 +4781,7 @@ function parseRTBDIStore(content,fname){
 
 // ── MIM UPLOAD + PARSER ──
 function getMIMData(){
-  return lsGet('wfo_mim_data',null);
+  try{return JSON.parse(localStorage.getItem('wfo_mim_data')||'null');}catch{return null;}
 }
 function applyMIMToReps(){
   const mim=getMIMData();if(!mim||!mim.repData)return;
@@ -4868,7 +4859,7 @@ function pMIMCoach(file){
   rd.readAsText(file);
 }
 function getCoachMimPayData(month){
-  return lsGet('wfo_coach_mim_pay_'+month,null);
+  try{return JSON.parse(localStorage.getItem('wfo_coach_mim_pay_'+month)||'null');}catch{return null;}
 }
 function saveCoachMimPayData(month,data){
   localStorage.setItem('wfo_coach_mim_pay_'+month,JSON.stringify(data));
@@ -5253,7 +5244,7 @@ function generateCoachPayoutSlip(){
     <div><label>Coach</label><span>${coach}</span></div>
     <div><label>Store Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
     <div><label>MIM Spiff Period</label><span>${formatPeriod(mimMn)}</span></div>
-    <div><label>Payout Date</label><span>${getPayoutDateFmt('cpPayoutDate','long')}</span></div>
+    <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
   </div>
   <div class="section-hdr">🏪 Store Bonus Breakdown</div>
   <table><thead><tr>
@@ -5447,7 +5438,6 @@ function generateMgrPayoutSlip(){
   const mgr=document.getElementById('mpMgrSel')?.value;
   const bonusMn=document.getElementById('mpBonusMonth')?.value;
   const mimMn=document.getElementById('mpMimMonth')?.value||bonusMn;
-  const payoutDateFmt=getPayoutDateFmt('mpPayoutDate','short');
   if(!mgr||!bonusMn){tst2('Select a manager and month first','er');return;}
   const storeTable=document.getElementById('mpStoreRows')?.innerHTML||'';
   const storeFoot=document.getElementById('mpStoreFoot')?.innerHTML||'';
@@ -5469,9 +5459,9 @@ function generateMgrPayoutSlip(){
   <div class="no-print"><button onclick="window.print()" style="background:#E20074;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;cursor:pointer">🖨 Print / Save PDF</button><span style="font-size:12px;opacity:.8">${mgr} · ${formatPeriod(bonusMn)}</span><button onclick="window.close()" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer">✕ Close</button></div>
   <div style="height:52px"></div>
   <div class="hdr"><div><div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Edgelink Inc — Work Force Ops</div><h1>${mgr}</h1><p>Manager Bonus Payout · ${formatPeriod(bonusMn)}</p></div><div style="text-align:right"><div style="font-size:9px;opacity:.6;text-transform:uppercase;margin-bottom:3px">Total Payout</div><div class="amt">${grand}</div></div></div>
-  <div class="meta"><div class="meta-item"><label>Manager</label><span>${mgr}</span></div><div class="meta-item"><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>${anyMim?`<div class="meta-item"><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:'<div class="meta-item"><label>MIM Spiff</label><span style="color:#999">Not enabled</span></div>'}<div class="meta-item"><label>Payout Date</label><span>${payoutDateFmt}</span></div></div>
+  <div class="meta"><div class="meta-item"><label>Manager</label><span>${mgr}</span></div><div class="meta-item"><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>${anyMim?`<div class="meta-item"><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:'<div class="meta-item"><label>MIM Spiff</label><span style="color:#999">Not enabled</span></div>'}<div class="meta-item"><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div></div>
   <div class="section-hdr">🏪 Store Bonus Breakdown</div>
-  <table><thead><tr><th style="text-align:left">Store</th><th style="text-align:center">Tier</th><th style="text-align:center">ELB Rank</th><th style="text-align:center">Attach %</th><th class="tgt" style="text-align:right">Acts Tgt</th><th style="text-align:right">Acts</th><th class="tgt" style="text-align:right">BTS Tgt</th><th style="text-align:right">BTS</th><th class="tgt" style="text-align:right">HSI Tgt</th><th style="text-align:right">HSI</th><th class="tgt" style="text-align:right">Acc Tgt</th><th style="text-align:right">Acc $</th><th style="text-align:right">Bonus</th><th style="text-align:left">Notes</th></tr></thead><tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
+  <table><thead><tr><th>Store</th><th>Tier</th><th>ELB Rank</th><th>Attach %</th><th class="tgt">Acts Tgt</th><th>Acts</th><th class="tgt">BTS Tgt</th><th>BTS</th><th class="tgt">HSI Tgt</th><th>HSI</th><th class="tgt">Acc Tgt</th><th>Acc $</th><th>Bonus</th><th>Notes</th></tr></thead><tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
   ${mimSection}
   <div class="grand">${grandSection}</div>
   <div class="sig"><div><div class="sig-block"><span>Manager Signature</span><em>Date</em></div></div><div><div class="sig-block"><span>HR / Owner Approval</span><em>Date</em></div></div></div>
@@ -5971,54 +5961,6 @@ function buildRepSlipFullHTML(r,c,wk2){
 </head><body>${slipDiv}</body></html>`;
 }
 
-// ── SHARED PDF SLIP CSS ──
-// Single source of truth for the styling shared across Coach Slip / Coach Payout PDF /
-// Manager Payout PDF / All-Managers ZIP. Theme: 'purple' for Coach outputs, 'magenta'
-// for Manager outputs. Emits a full <style>…</style> block.
-
-// Reads a <input type="date"> by id and returns a human-formatted string, or a signature
-// fill-in line if blank/missing. style='long' → "January 5, 2026"; style='short' → "Jan 5, 2026".
-function getPayoutDateFmt(inputId, style){
-  const raw=document.getElementById(inputId)?.value||'';
-  if(!raw)return'___________';
-  const opts=style==='short'?{month:'short',day:'numeric',year:'numeric'}:{month:'long',day:'numeric',year:'numeric'};
-  return new Date(raw+'T12:00:00').toLocaleDateString('en-US',opts);
-}
-
-function slipPdfCSS(theme){
-  const t=theme==='magenta'
-    ? {grad:'135deg,#E20074,#6E2B8B', bg:'#FFF0F7', accent:'#E20074', dark:'#6E2B8B', grandBg:'#6E2B8B'}
-    : {grad:'135deg,#4A1A6B,#6E2B8B', bg:'#F3E8FF', accent:'#6E2B8B', dark:'#4A1A6B', grandBg:'#4A1A6B'};
-  return `<style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
-    .header{background:linear-gradient(${t.grad});color:#fff;padding:20px 24px;border-radius:10px 10px 0 0;}
-    .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;}
-    .header h2{font-size:13px;opacity:.8;margin-top:4px;}
-    .meta{display:flex;gap:20px;flex-wrap:wrap;background:${t.bg};padding:12px 20px;border-bottom:2px solid ${t.accent};margin-bottom:16px;}
-    .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:${t.accent};display:block;}
-    .meta div span{font-size:14px;font-weight:700;}
-    .sh{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:${t.accent};margin:16px 0 8px;}
-    table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
-    th{background:${t.bg};color:${t.accent};font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid ${t.accent};}
-    td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
-    tr:nth-child(even) td{background:#FAFAFA;}
-    .grand{background:${t.grandBg};color:#fff;padding:16px 22px;border-radius:8px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:8px;}
-    .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
-    .grand .item span{font-size:18px;font-weight:800;}
-    .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
-    .grand .total span{font-size:26px;color:#E20074;}
-    .totals{display:flex;gap:16px;flex-wrap:wrap;background:${t.bg};padding:12px 20px;border-top:2px solid ${t.accent};border-radius:0 0 10px 10px;align-items:center;}
-    .totals .tot{display:flex;flex-direction:column;}
-    .totals .tot label{font-size:9px;text-transform:uppercase;color:${t.accent};font-weight:700;}
-    .totals .tot span{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;}
-    .totals .grand{margin-left:auto;background:${t.dark};color:#fff;padding:10px 20px;border-radius:8px;}
-    .totals .grand label{opacity:.7;}
-    .totals .grand span{font-size:22px;color:#E20074;}
-    .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-  </style>`;
-}
-
 function buildCoachSlipFullHTML(coachName){
   const srBs=getSR_BS();const ct=T.coach||DT.coach;
   const mn=document.getElementById('coachSheetMonth')?.value||'';
@@ -6036,14 +5978,34 @@ function buildCoachSlipFullHTML(coachName){
   const period=mn?formatPeriod(mn):'—';
   return`<!DOCTYPE html><html><head><meta charset="utf-8">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-  ${slipPdfCSS('purple')}
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
+    .header{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:20px 24px;border-radius:10px 10px 0 0;margin-bottom:0;}
+    .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;}
+    .header h2{font-size:13px;opacity:.8;margin-top:4px;}
+    .meta{display:flex;gap:20px;flex-wrap:wrap;background:#F3E8FF;padding:12px 20px;border-bottom:2px solid #6E2B8B;margin-bottom:16px;}
+    .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;}
+    .meta div span{font-size:14px;font-weight:700;}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
+    th{background:#F3E8FF;color:#6E2B8B;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #6E2B8B;}
+    td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
+    tr:nth-child(even) td{background:#FAFAFA;}
+    .totals{display:flex;gap:16px;flex-wrap:wrap;background:#F3E8FF;padding:12px 20px;border-top:2px solid #6E2B8B;border-radius:0 0 10px 10px;align-items:center;}
+    .totals .tot{display:flex;flex-direction:column;}
+    .totals .tot label{font-size:9px;text-transform:uppercase;color:#6E2B8B;font-weight:700;}
+    .totals .tot span{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;}
+    .totals .grand{margin-left:auto;background:#4A1A6B;color:#fff;padding:10px 20px;border-radius:8px;}
+    .totals .grand label{opacity:.7;}
+    .totals .grand span{font-size:22px;color:#E20074;}
+    .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
+  </style>
 </head><body>
   <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
   <div class="meta">
     <div><label>Coach</label><span>${coachName}</span></div>
     <div><label>Period</label><span>${period}</span></div>
     <div><label>Stores</label><span>${stores.length}</span></div>
-    <div><label>Payout Date</label><span>${getPayoutDateFmt('cpPayoutDate','long')}</span></div>
+    <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
   </div>
   <table><thead><tr><th>Store</th><th>Tier</th><th>Act %</th><th>ELB Rank</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Act Bonus</th><th>Acc Bonus</th><th>Total</th></tr></thead>
   <tbody>${storeRows}</tbody></table>
@@ -6172,14 +6134,33 @@ async function downloadCoachPayoutSlipPDF(){
     const coachSafe=sanitizeFilename(coach);
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-    ${slipPdfCSS('purple')}
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
+      .header{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:20px 24px;border-radius:10px 10px 0 0;}
+      .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;}
+      .header h2{font-size:13px;opacity:.8;margin-top:4px;}
+      .meta{display:flex;gap:20px;flex-wrap:wrap;background:#F3E8FF;padding:12px 20px;border-bottom:2px solid #6E2B8B;margin-bottom:16px;}
+      .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;}
+      .meta div span{font-size:14px;font-weight:700;}
+      .sh{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#6E2B8B;margin:16px 0 8px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
+      th{background:#F3E8FF;color:#6E2B8B;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #6E2B8B;text-align:left;}
+      td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
+      tr:nth-child(even) td{background:#FAFAFA;}
+      .grand{background:#4A1A6B;color:#fff;padding:16px 22px;border-radius:8px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+      .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
+      .grand .item span{font-size:18px;font-weight:800;}
+      .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
+      .grand .total span{font-size:26px;color:#E20074;}
+      .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
+    </style>
 </head><body>
     <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Payout · ${coach}</h2></div>
     <div class="meta">
       <div><label>Coach</label><span>${coach}</span></div>
       <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
       <div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>
-      <div><label>Payout Date</label><span>${getPayoutDateFmt('cpPayoutDate','long')}</span></div>
+      <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
     </div>
     <div class="sh">🏪 Store Bonus Breakdown</div>
     <table><thead><tr><th>Store</th><th>Tier</th><th>Act %</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Shrink</th><th>ELB</th><th>Act Bonus</th><th>Acc Bonus</th><th>Total</th></tr></thead>
@@ -6209,7 +6190,6 @@ async function downloadMgrPayoutSlipPDF(){
   const mgr=document.getElementById('mpMgrSel')?.value;
   const bonusMn=document.getElementById('mpBonusMonth')?.value;
   if(!mgr||!bonusMn){tst2('Select a manager and month first','er');return;}
-  const payoutDateFmt=getPayoutDateFmt('mpPayoutDate','long');
   tst2('Building manager payout PDF…','ok');
   try{
     await ensurePDFLibs();
@@ -6236,17 +6216,36 @@ async function downloadMgrPayoutSlipPDF(){
       <div class="item total"><label>Total Store Bonus</label><span>${grand}</span></div>`;
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-    ${slipPdfCSS('magenta')}
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
+      .header{background:linear-gradient(135deg,#E20074,#6E2B8B);color:#fff;padding:20px 24px;border-radius:10px 10px 0 0;}
+      .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;}
+      .header h2{font-size:13px;opacity:.8;margin-top:4px;}
+      .meta{display:flex;gap:20px;flex-wrap:wrap;background:#FFF0F7;padding:12px 20px;border-bottom:2px solid #E20074;margin-bottom:16px;}
+      .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#E20074;display:block;}
+      .meta div span{font-size:14px;font-weight:700;}
+      .sh{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#E20074;margin:16px 0 8px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
+      th{background:#FFF0F7;color:#E20074;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #E20074;text-align:left;}
+      td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
+      tr:nth-child(even) td{background:#FAFAFA;}
+      .grand{background:#6E2B8B;color:#fff;padding:16px 22px;border-radius:8px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+      .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
+      .grand .item span{font-size:18px;font-weight:800;}
+      .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
+      .grand .total span{font-size:26px;color:#E20074;}
+      .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
+    </style>
 </head><body>
     <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Manager Bonus Payout · ${mgr}</h2></div>
     <div class="meta">
       <div><label>Manager</label><span>${mgr}</span></div>
       <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
       ${anyMim?`<div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
-      <div><label>Payout Date</label><span>${payoutDateFmt}</span></div>
+      <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
     </div>
     <div class="sh">🏪 Store Bonus Breakdown</div>
-    <table><thead><tr><th style="text-align:left">Store</th><th style="text-align:center">Tier</th><th style="text-align:center">ELB Rank</th><th style="text-align:center">Attach %</th><th style="text-align:right;color:#999">Acts Tgt</th><th style="text-align:right">Acts</th><th style="text-align:right;color:#999">BTS Tgt</th><th style="text-align:right">BTS</th><th style="text-align:right;color:#999">HSI Tgt</th><th style="text-align:right">HSI</th><th style="text-align:right;color:#999">Acc Tgt</th><th style="text-align:right">Acc $</th><th style="text-align:right">Bonus</th><th style="text-align:left">Notes</th></tr></thead>
+    <table><thead><tr><th>Store</th><th>Tier</th><th>ELB Rank</th><th>Attach %</th><th>Acts</th><th>BTS</th><th>HSI</th><th>Acc $</th><th>Bonus</th><th>Notes</th></tr></thead>
     <tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
     ${mimSection}
     <div class="grand">${grandSection}</div>
@@ -6260,85 +6259,6 @@ async function downloadMgrPayoutSlipPDF(){
     tst2('✅ Manager payout PDF downloaded','ok');
   }catch(e){
     console.error(e);tst2('PDF error: '+e.message,'er');
-  }
-}
-
-// ──────────────────────────────────────────────────────
-// ZIP: All Manager Payout Slips (loops managers on the Manager Bonus Payout page)
-// Reuses renMgrPayout() to populate the DOM for each manager, then snapshots the slip HTML.
-// ──────────────────────────────────────────────────────
-async function downloadAllMgrPayoutSlipsZIP(){
-  const bonusMn=document.getElementById('mpBonusMonth')?.value;
-  if(!bonusMn){tst2('Pick a Bonus Month first','er');return;}
-  const mimMn=document.getElementById('mpMimMonth')?.value||bonusMn;
-  const payoutDateFmt=getPayoutDateFmt('mpPayoutDate','long');
-  const mgrSel=document.getElementById('mpMgrSel');
-  if(!mgrSel){tst2('Manager selector not found','er');return;}
-  const managers=[...new Set(SR.map(s=>s.mgr).filter(m=>m&&m!=='TBD'))].sort();
-  if(!managers.length){tst2('No managers found','er');return;}
-  const prevSel=mgrSel.value;
-  const period=bonusMn.replace('-','_');
-  tst2('Building '+managers.length+' manager PDF slips…','ok');
-  try{
-    await ensurePDFLibs();
-    const zip=new JSZip();
-    const folder=zip.folder('MgrPayoutSlips_'+period);
-    for(const mgr of managers){
-      mgrSel.value=mgr;
-      renMgrPayout(); // populate DOM for this manager
-      const storeTable=document.getElementById('mpStoreRows')?.innerHTML||'';
-      const storeFoot=document.getElementById('mpStoreFoot')?.innerHTML||'';
-      const mimTable=document.getElementById('mpMimRows')?.innerHTML||'';
-      const mimFoot=document.getElementById('mpMimFoot')?.innerHTML||'';
-      const grand=document.getElementById('mpGrandTotal')?.textContent||'$0.00';
-      const storeTotal=document.getElementById('mpTotalBonus')?.textContent||'$0.00';
-      const mimTotal=document.getElementById('mpTotalMim')?.textContent||'$0.00';
-      const mgrStores=SR.filter(function(s){return s.mgr===mgr;});
-      const anyMim=mgrStores.some(function(s){return getMgrMimForStore(s.s,mimMn).enabled;});
-      const mimSection=anyMim?`<div class="sh">📱 MIM Spiff</div>
-      <table><thead><tr><th>Store</th><th>BANs</th><th>Rate</th><th>MIM Payout</th><th>Status</th></tr></thead>
-      <tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>`:'';
-      const grandSection=anyMim?`
-        <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
-        <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
-        <div class="item total"><label>Total Payout</label><span>${grand}</span></div>`:`
-        <div class="item total"><label>Total Store Bonus</label><span>${grand}</span></div>`;
-      const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-      ${slipPdfCSS('magenta')}
-  </head><body>
-      <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Manager Bonus Payout · ${mgr}</h2></div>
-      <div class="meta">
-        <div><label>Manager</label><span>${mgr}</span></div>
-        <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
-        ${anyMim?`<div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
-        <div><label>Payout Date</label><span>${payoutDateFmt}</span></div>
-      </div>
-      <div class="sh">🏪 Store Bonus Breakdown</div>
-      <table><thead><tr><th style="text-align:left">Store</th><th style="text-align:center">Tier</th><th style="text-align:center">ELB Rank</th><th style="text-align:center">Attach %</th><th style="text-align:right;color:#999">Acts Tgt</th><th style="text-align:right">Acts</th><th style="text-align:right;color:#999">BTS Tgt</th><th style="text-align:right">BTS</th><th style="text-align:right;color:#999">HSI Tgt</th><th style="text-align:right">HSI</th><th style="text-align:right;color:#999">Acc Tgt</th><th style="text-align:right">Acc $</th><th style="text-align:right">Bonus</th><th style="text-align:left">Notes</th></tr></thead>
-      <tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
-      ${mimSection}
-      <div class="grand">${grandSection}</div>
-      <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${formatPeriod(bonusMn)}</div>
-      </body></html>`;
-      const mgrSafe=sanitizeFilename(mgr);
-      const fname=`${mgrSafe}_PayoutSlip_${period}.pdf`;
-      const blob=await htmlToPDFBlob(html,fname);
-      folder.file(fname,blob);
-    }
-    // Restore original manager selection
-    mgrSel.value=prevSel;
-    renMgrPayout();
-    const content=await zip.generateAsync({type:'blob'});
-    const url=URL.createObjectURL(content);
-    const a=document.createElement('a');a.href=url;
-    a.download=`EdgelinkMgrPayoutSlips_${period}.zip`;a.click();
-    URL.revokeObjectURL(url);
-    tst2('✅ All manager payout slips ZIP downloaded ('+managers.length+' slips)','ok');
-  }catch(e){
-    // Restore selection even on error
-    try{mgrSel.value=prevSel;renMgrPayout();}catch{}
-    console.error(e);tst2('ZIP error: '+e.message,'er');
   }
 }
 
@@ -6578,10 +6498,10 @@ function renSum(){
 
 function getBs(month){
   if(!month)return null;
-  return lsGet('wfo_bs_'+month,null);
+  try{return JSON.parse(localStorage.getItem('wfo_bs_'+month)||'null');}catch{return null;}
 }
 function saveBs(bs){
-  lsSet('wfo_bs_'+bs.month,bs);
+  localStorage.setItem('wfo_bs_'+bs.month,JSON.stringify(bs));
 }
 function getOrCreateBs(month){
   let bs=getBs(month);
@@ -7201,7 +7121,22 @@ function masterSaveTiers(){
   tst2('\u2705 Tiers saved \u2014 '+T.box.map(function(b){return b.r;}).join('/$')+'  per act', 'ok');
 }
 
-function savT(){masterSaveTiers();if(document.getElementById("aSv"))document.getElementById("aSv").textContent="Last saved: "+new Date().toLocaleString();}
+function savT(){masterSaveTiers();if(document.getElementById("aSv"))document.getElementById("aSv").textContent="Last saved: "+new Date().toLocaleString();return;// legacy below
+  T.box.forEach((t,i)=>{const mv=document.getElementById("bM"+i);const rv=document.getElementById("bR"+i);if(mv)t.mn=+mv.value;if(rv)t.r=+rv.value;});
+  for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
+  T.acc.forEach((t,i)=>{const mv=document.getElementById("aM"+i);const pv=document.getElementById("aP"+i);if(mv)t.mp=+mv.value;if(pv)t.p=+pv.value;});
+  for(let i=0;i<T.acc.length-1;i++)T.acc[i].xp=T.acc[i+1].mp-1;
+  T.af=+document.getElementById("tAf").value||5;T.hs=+document.getElementById("tHs").value||5;
+  T.mi=T.mi.map((_,i)=>{const el=document.getElementById("tM"+(i+1));return el?+el.value:_;});
+  if(!T.mgr)T.mgr=JSON.parse(JSON.stringify(DT.mgr));
+  [1,2,3].forEach(tier=>{["acts","hsi","bts","acc"].forEach(cat=>{const b=document.getElementById("mte_"+tier+"_"+cat+"_b");const u=document.getElementById("mte_"+tier+"_"+cat+"_u");if(b&&u){T.mgr[tier].cats[cat].base=+b.value||T.mgr[tier].cats[cat].base;T.mgr[tier].cats[cat].up=+u.value||T.mgr[tier].cats[cat].up;}});T.mgr[tier].baseMax=Object.values(T.mgr[tier].cats).reduce((s,c)=>s+c.base,0);T.mgr[tier].upMax=Object.values(T.mgr[tier].cats).reduce((s,c)=>s+c.up,0);});
+  if(!T.coach)T.coach=JSON.parse(JSON.stringify(DT.coach));
+  const ids={cAt100:"at100",cAt115:"at115",cAt125:"at125",cAtPen:"atPen",cAc50:"ac50",cAc60:"ac60",cAc70:"ac70",cAcElbDrop:"acElbDrop",cSh1:"sh1",cSh2:"sh2",cKick1:"kick1",cKick2:"kick2",cMimRate:"mimRate"};
+  Object.entries(ids).forEach(([elId,key])=>{const el=document.getElementById(elId);if(el)T.coach[key]=+el.value||DT.coach[key];});
+  localStorage.setItem("wfo_tiers",JSON.stringify(T));localStorage.setItem("wfo_ts",new Date().toISOString());
+  document.getElementById("aSv").textContent="Last saved: "+new Date().toLocaleString();
+  renR();renMimTables();tst2("All tiers saved!","ok");
+}
 function rstT(){if(!confirm("Reset all tiers to defaults?"))return;T=JSON.parse(JSON.stringify(DT));localStorage.removeItem("wfo_tiers");renTE();renMgrTE();renCoachTE();renR();tst2("Reset to defaults.","ok");}
 function lT(){try{const s=localStorage.getItem("wfo_tiers");return s?JSON.parse(s):JSON.parse(JSON.stringify(DT));}catch{return JSON.parse(JSON.stringify(DT));}}
 
@@ -7218,31 +7153,11 @@ function renSL(){
 }
 function renSB(){const ban=document.getElementById("spb"),pills=document.getElementById("spp");if(!ban)return;const wd=wk?new Date(wk+"T12:00:00"):new Date(),ac=actSp(wd);if(!ac.length){ban.classList.remove("show");return;}ban.classList.add("show");pills.innerHTML=ac.map(s=>`<div class="spiff-pill">⚡ ${X(s.nm)} $${s.a}</div>`).join("");}
 function savSp(){localStorage.setItem("wfo_sp",JSON.stringify(sps));}
-
-// ── STORAGE HELPERS ──
-// Centralized JSON-safe localStorage access. Replaces the try/catch JSON.parse pattern
-// copy-pasted at 29+ sites. Silently corrupt data still returns `fallback` but also
-// console.warns so it's at least visible in devtools (addresses B10 partially).
-function lsGet(key, fallback){
-  try{
-    const raw=localStorage.getItem(key);
-    if(raw==null)return fallback;
-    return JSON.parse(raw);
-  }catch(e){
-    console.warn('lsGet: corrupt JSON for '+key, e);
-    return fallback;
-  }
-}
-function lsSet(key, val){
-  try{localStorage.setItem(key, JSON.stringify(val));return true;}
-  catch(e){console.warn('lsSet failed for '+key, e);return false;}
-}
-
-function lSp(){return lsGet("wfo_sp",[]);}
+function lSp(){try{return JSON.parse(localStorage.getItem("wfo_sp")||"[]");}catch{return[];}}
 
 // ── PERSISTENCE ──
-function lReps(){return lsGet("wfo_reps",[]);}
-function lCBs(){return lsGet("wfo_cbs",[]);}
+function lReps(){try{return JSON.parse(localStorage.getItem("wfo_reps")||"[]");}catch{return[];}}
+function lCBs(){try{return JSON.parse(localStorage.getItem("wfo_cbs")||"[]");}catch{return[];}}
 
 // ── PDF SLIPS ──
 function slipStyle(){return `<style>
@@ -7406,10 +7321,10 @@ function X(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").re
 // STORE ASSIGNMENTS
 // ══════════════════════════════════════════════════════
 function getAssignment(key){
-  const a=lsGet('wfo_assign',{});return a[key]||null;
+  try{const a=JSON.parse(localStorage.getItem('wfo_assign')||'{}');return a[key]||null;}catch{return null;}
 }
 function setAssignment(key,s){
-  const a=lsGet('wfo_assign',{});const e=SR.find(r=>r.s===s);a[key]={s,c:e?.c||''};lsSet('wfo_assign',a);return e?.c||'';
+  try{const a=JSON.parse(localStorage.getItem('wfo_assign')||'{}');const e=SR.find(r=>r.s===s);a[key]={s,c:e?.c||''};localStorage.setItem('wfo_assign',JSON.stringify(a));return e?.c||'';}catch{return '';}
 }
 function clrAssign(){if(!confirm('Clear all store assignments?'))return;localStorage.removeItem('wfo_assign');renAssign();renR();tst2('Assignments cleared.','ok');}
 function popAssignDDs(){
@@ -8258,7 +8173,16 @@ function initAdminTiers(){
   const mgrEl=document.getElementById('aAdminMgrTiers');
   if(mgrEl)mgrEl.innerHTML=[1,2,3].map(tier=>`<div style="margin-bottom:16px"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--se);margin-bottom:6px">${tn[tier]}</div>${Object.keys(cn).map(cat=>`<div class="tr2"><label>${cn[cat]}:</label><span style="font-size:11px;color:var(--mu);min-width:50px">Base $</span><input type="number" id="amte_${tier}_${cat}_b" value="${mgr[tier]?.cats[cat]?.base||DT.mgr[tier].cats[cat].base}" min="0" step="0.25" style="width:85px"/><span style="font-size:11px;color:var(--mu);min-width:55px">Up $</span><input type="number" id="amte_${tier}_${cat}_u" value="${mgr[tier]?.cats[cat]?.up||DT.mgr[tier].cats[cat].up}" min="0" step="0.25" style="width:85px"/></div>`).join('')}</div>`).join('<hr style="border:1px solid var(--bo);margin:10px 0"/>');
 }
-function saveAdminTiers(){masterSaveTiers();}
+function saveAdminTiers(){masterSaveTiers();return;// legacy below
+  T.box.forEach((t,i)=>{const mv=document.getElementById('aBM'+i);const rv=document.getElementById('aBR'+i);if(mv)t.mn=+mv.value;if(rv)t.r=+rv.value;});
+  for(let i=0;i<T.box.length-1;i++)T.box[i].mx=T.box[i+1].mn-1;
+  T.acc.forEach((t,i)=>{const mv=document.getElementById('aAM'+i);const pv=document.getElementById('aAP'+i);if(mv)t.mp=+mv.value;if(pv)t.p=+pv.value;});
+  for(let i=0;i<T.acc.length-1;i++)T.acc[i].xp=T.acc[i+1].mp-1;
+  savePUConfig();
+  T.mi=T.mi.map((_,i)=>{const el=document.getElementById('aTM'+(i+1));return el?+el.value:_;});
+  localStorage.setItem('wfo_tiers',JSON.stringify(T));localStorage.setItem('wfo_ts',new Date().toISOString());
+  renR();upK();tst2('Rep tiers saved!','ok');
+}
 function saveAdminCoachTiers(){
   if(!T.coach)T.coach=JSON.parse(JSON.stringify(DT.coach));
   const cids={aCAt100:'at100',aCAt115:'at115',aCAt125:'at125',aCAtPen:'atPen',aCAc50:'ac50',aCAc60:'ac60',aCAc70:'ac70',aCAcElbDrop:'acElbDrop',aCSh1:'sh1',aCSh2:'sh2',aCKick1:'kick1',aCKick2:'kick2',aCMimRate:'mimRate'};
@@ -9214,7 +9138,7 @@ function getStoresForState(state){
 // Global: wfo_cbs_queue = [] (chargebacks pending next open week)
 // ══════════════════════════════════════════════════════
 
-const MAX_WEEKS = 52;
+const MAX_WEEKS = 999; // Store all weeks
 
 // ── WEEK KEY ──
 function wkKey(date){
@@ -9242,12 +9166,12 @@ function saveWeekData(date, data){
   const wkk = wkKey(date);
   if(!idx.includes(wkk)){
     idx.unshift(wkk);
-    if(idx.length > MAX_WEEKS) idx.pop();
+    if(MAX_WEEKS<999&&idx.length > MAX_WEEKS) idx.pop();
     localStorage.setItem('wfo_week_index', JSON.stringify(idx));
   }
 }
 function getWeekIndex(){
-  return lsGet('wfo_week_index',[]);
+  try{return JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch{return[];}
 }
 
 // ── LOAD WEEK INTO ACTIVE STATE ──
@@ -9269,6 +9193,9 @@ function loadWeek(date){
 function saveCurrentWeek(){
   if(!wk) return;
   localStorage.setItem("wfo_current_wk",wk);
+  // Auto-backup to SharePoint if signed in (debounced)
+  if(typeof _spAutoSaveTimer!=='undefined')clearTimeout(_spAutoSaveTimer);
+  _spAutoSaveTimer=setTimeout(function(){if(_spAccount&&typeof spSaveConfig==='function')spSaveConfig();},3000);
   let tG=0; reps.forEach(r=>{const c=cRp(r);tG+=c.gr;});
   saveWeekData(wk, {
     reps: JSON.parse(JSON.stringify(reps)),
@@ -9283,9 +9210,9 @@ function saveCurrentWeek(){
 
 // ── CHARGEBACK QUEUE ──
 function getCBQueue(){
-  return lsGet('wfo_cbs_queue',[]);
+  try{return JSON.parse(localStorage.getItem('wfo_cbs_queue')||'[]');}catch{return[];}
 }
-function saveCBQueue(q){lsSet('wfo_cbs_queue', q);}
+function saveCBQueue(q){localStorage.setItem('wfo_cbs_queue', JSON.stringify(q));}
 
 // Add CB to queue — always goes to next open pay period
 function addToQueue(cb){
@@ -10250,8 +10177,8 @@ function renPendingActions(){
 }
 
 // ── ANNOUNCEMENTS ──
-function getAnnouncements(){return lsGet('wfo_announcements',[]);}
-function saveAnnouncements(a){lsSet('wfo_announcements',a);}
+function getAnnouncements(){try{return JSON.parse(localStorage.getItem('wfo_announcements')||'[]');}catch{return[];}}
+function saveAnnouncements(a){localStorage.setItem('wfo_announcements',JSON.stringify(a));}
 
 function renAnnouncements(){
   const el=document.getElementById('homeAnnouncements');if(!el)return;
@@ -10307,8 +10234,8 @@ function deleteAnnouncement(i){
 }
 
 // ── IMPORTANT DATES ──
-function getImportantDates(){return lsGet('wfo_dates',[]);}
-function saveImportantDates(d){lsSet('wfo_dates',d);}
+function getImportantDates(){try{return JSON.parse(localStorage.getItem('wfo_dates')||'[]');}catch{return[];}}
+function saveImportantDates(d){localStorage.setItem('wfo_dates',JSON.stringify(d));}
 
 function renImportantDates(){
   const el=document.getElementById('homeDates');if(!el)return;
@@ -11255,7 +11182,7 @@ function openPerfBreakdownFromHistory(){
 
 // Daily snapshots
 function getDailyKey(d){return'wfo_daily_'+d;}
-function getDailyIndex(){return lsGet('wfo_daily_index',[]);}
+function getDailyIndex(){try{return JSON.parse(localStorage.getItem('wfo_daily_index')||'[]');}catch(e){return[];}}
 
 function saveDailySnapshot(manual){
   if(!reps.length){if(manual)tst2('No rep data to snapshot.','wn');return;}
@@ -12130,33 +12057,58 @@ function ghPublish(){
 
 // ── Auto-load public data for employees (no login needed) ──
 function ghLoadPublicData(){
-  // Only load if localStorage has no current week data (fresh browser)
-  var hasData=localStorage.getItem('wfo_current_wk');
-  if(hasData)return; // Already have local data, skip
   fetch(_ghDataUrl+'?t='+Date.now())
     .then(function(r){if(r.ok)return r.json();throw new Error('No public data');})
     .then(function(snap){
       if(!snap||snap.version!==1)return;
-      // Restore public data to localStorage
-      if(snap.currentWeek)localStorage.setItem('wfo_current_wk',snap.currentWeek);
-      if(snap.weekIndex)localStorage.setItem('wfo_week_index',JSON.stringify(snap.weekIndex));
+
+      // Check if we already have this exact publish — skip if nothing new
+      var lastSeen=localStorage.getItem('wfo_gh_last_seen');
+      if(lastSeen&&lastSeen===snap.publishedAt)return;
+      localStorage.setItem('wfo_gh_last_seen',snap.publishedAt);
+
+      // Merge week data — add new weeks, never remove existing ones
+      var changed=false;
+      if(snap.weekData){
+        var localIdx=[];
+        try{localIdx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+        Object.entries(snap.weekData).forEach(function(kv){
+          var key='wfo_week_'+kv[0];
+          if(!localStorage.getItem(key)){
+            localStorage.setItem(key,JSON.stringify(kv[1]));
+            if(localIdx.indexOf(kv[0])<0)localIdx.unshift(kv[0]);
+            changed=true;
+          }
+        });
+        if(snap.weekIndex){
+          snap.weekIndex.forEach(function(w){
+            if(localIdx.indexOf(w)<0)localIdx.push(w);
+          });
+        }
+        localIdx.sort().reverse();
+        localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
+      }
+
+      // Always update config/settings from published data
       if(snap.perfMetrics)localStorage.setItem('wfo_perf_metrics',snap.perfMetrics);
       if(snap.perfThresholds)localStorage.setItem('wfo_perf_thresholds',snap.perfThresholds);
       if(snap.puConfig)localStorage.setItem('wfo_pu_config',snap.puConfig);
       if(snap.customRoster)localStorage.setItem('wfo_custom_roster',snap.customRoster);
       if(snap.nameOverrides)localStorage.setItem('wfo_name_overrides',snap.nameOverrides);
       if(snap.tiers)localStorage.setItem('wfo_tiers',snap.tiers);
-      // Restore week data
-      if(snap.weekData){
-        Object.entries(snap.weekData).forEach(function(kv){
-          localStorage.setItem('wfo_week_'+kv[0],JSON.stringify(kv[1]));
-        });
+
+      // Set current week if not already set
+      if(snap.currentWeek&&!localStorage.getItem('wfo_current_wk')){
+        localStorage.setItem('wfo_current_wk',snap.currentWeek);
       }
-      // Reload silently to pick up the data
-      window.location.reload();
+
+      if(changed){
+        // New weeks available — reload to pick them up
+        window.location.reload();
+      }
     })
     .catch(function(){
-      // No public data yet, that's fine
+      // No public data yet or offline — that's fine
     });
 }
 
@@ -12283,12 +12235,12 @@ function getWeekStart(){
 }
 
 function getWeeklyNote(){
-  return lsGet('wfo_weekly_note',null);
+  try{return JSON.parse(localStorage.getItem('wfo_weekly_note')||'null');}catch(e){return null;}
 }
 function saveWeeklyNote(){
   var txt=document.getElementById('weeklyNoteText')?.value.trim()||'';
   var note={text:txt, savedAt:new Date().toISOString(), week:getWeekStart().toISOString()};
-  lsSet('wfo_weekly_note',note);
+  localStorage.setItem('wfo_weekly_note',JSON.stringify(note));
   document.getElementById('weeklyNoteModal').style.display='none';
   renWeeklyUpdates();
   tst2('Weekly note saved!','ok');
@@ -12482,12 +12434,32 @@ function saveCBEdit(){
 var _spConfigFile = 'wfo_config.json';
 
 function spSaveConfig(){
-  if(!_spAccount){return;} // not signed in, skip silently
+  if(!_spAccount){return;}
   spGetToken().then(function(token){
+    // Build complete week index for backup
+    var idx=[];
+    try{idx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+    var weekData={};
+    idx.forEach(function(w){
+      var raw=localStorage.getItem('wfo_week_'+w);
+      if(raw)try{weekData[w]=JSON.parse(raw);}catch(e){}
+    });
     var config = {
-      version: 1,
+      version: 2,
       savedAt: new Date().toISOString(),
-      gh_token: localStorage.getItem('wfo_gh_token')||''
+      gh_token: localStorage.getItem('wfo_gh_token')||'',
+      // Full data backup
+      weekIndex: idx,
+      weekData: weekData,
+      currentWeek: localStorage.getItem('wfo_current_wk')||'',
+      tiers: localStorage.getItem('wfo_tiers'),
+      puConfig: localStorage.getItem('wfo_pu_config'),
+      customRoster: localStorage.getItem('wfo_custom_roster'),
+      nameOverrides: localStorage.getItem('wfo_name_overrides'),
+      srBs: localStorage.getItem('wfo_store_roster'),
+      backsheets: localStorage.getItem('wfo_backsheets'),
+      perfMetrics: localStorage.getItem('wfo_perf_metrics'),
+      perfThresholds: localStorage.getItem('wfo_perf_thresholds'),
     };
     return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
       method:'PUT',
@@ -12495,7 +12467,10 @@ function spSaveConfig(){
       body:JSON.stringify(config)
     });
   }).then(function(r){
-    if(r&&r.ok) console.log('[WFO] Config saved to SharePoint');
+    if(r&&r.ok){
+      console.log('[WFO] Full config + week data saved to SharePoint');
+      tst2('\u2601 All data backed up to SharePoint','ok');
+    }
   }).catch(function(e){console.log('[WFO] Config save failed:',e);});
 }
 
@@ -12506,18 +12481,53 @@ function spLoadConfig(){
       headers:{'Authorization':'Bearer '+token}
     });
   }).then(function(r){
-    if(r.status===404){return null;} // first time — no config yet
+    if(r.status===404){return null;}
     if(r.ok)return r.json();
     return null;
   }).then(function(config){
-    if(!config||config.version!==1)return;
-    // Restore GitHub token
+    if(!config)return;
+    var restoredItems=[];
+
     if(config.gh_token){
       localStorage.setItem('wfo_gh_token',config.gh_token);
-      // Update UI
       var st=document.getElementById('ghTokenStatus');
       if(st){st.textContent='\u2705 Token loaded from SharePoint.';st.style.color='var(--ok)';}
-      tst2('\u2601 GitHub token loaded from SharePoint \u2014 ready to Publish','ok');
+      restoredItems.push('GitHub token');
+    }
+
+    if(config.version===2){
+      if(config.weekData){
+        var localIdx=[];
+        try{localIdx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+        Object.entries(config.weekData).forEach(function(kv){
+          var key='wfo_week_'+kv[0];
+          if(!localStorage.getItem(key)){
+            localStorage.setItem(key,JSON.stringify(kv[1]));
+            if(localIdx.indexOf(kv[0])<0)localIdx.push(kv[0]);
+          }
+        });
+        if(config.weekIndex){
+          config.weekIndex.forEach(function(w){
+            if(localIdx.indexOf(w)<0)localIdx.push(w);
+          });
+        }
+        localIdx.sort().reverse();
+        localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
+        restoredItems.push(Object.keys(config.weekData).length+' weeks');
+      }
+      if(config.currentWeek&&!localStorage.getItem('wfo_current_wk'))
+        localStorage.setItem('wfo_current_wk',config.currentWeek);
+      ['tiers','puConfig','customRoster','nameOverrides','perfMetrics','perfThresholds'].forEach(function(k){
+        if(config[k])localStorage.setItem('wfo_'+k.replace(/([A-Z])/g,function(m){return'_'+m.toLowerCase()}),config[k]);
+      });
+      if(config.srBs)localStorage.setItem('wfo_store_roster',config.srBs);
+      if(config.backsheets)localStorage.setItem('wfo_backsheets',config.backsheets);
+      restoredItems.push('settings');
+    }
+
+    if(restoredItems.length){
+      tst2('\u2601 Loaded from SharePoint: '+restoredItems.join(', '),'ok');
+      setTimeout(function(){window.location.reload();},1200);
     }
   }).catch(function(e){console.log('[WFO] Config load failed:',e);});
 }
@@ -12764,7 +12774,7 @@ function buildCombinedMgrSlip(mgrName,storeNames,mn,period){
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">'
     +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Period</div><div style="font-weight:700;font-size:13px">'+period+'</div></div>'
     +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Stores</div><div style="font-weight:700;font-size:13px">'+storeNames.length+'</div></div>'
-    +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Payout Date</div><div style="font-weight:700;font-size:11px">'+getPayoutDateFmt('mpPayoutDate','short')+'</div></div>'
+    +'<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Generated</div><div style="font-weight:700;font-size:11px">'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div></div>'
     +'</div>'
     +storeSlips
     +'<div style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B);border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'
