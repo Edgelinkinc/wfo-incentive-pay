@@ -3552,26 +3552,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   updRTBDIStatus();
   updELBStatus();
   applyMIMToReps();
-  // Load current week data — fall back to most recent week with data if current is empty
-  if(wk){
-    loadWeek(wk);
-    if(!reps.length){
-      // Current week has no data — find most recent week with data
-      var fallbackWk=null;
-      var wkIdx=getWeekIndex();
-      for(var _wi=0;_wi<wkIdx.length;_wi++){
-        var _wd=getWeekData(wkIdx[_wi]);
-        if(_wd&&_wd.reps&&_wd.reps.length){fallbackWk=wkIdx[_wi];break;}
-      }
-      if(fallbackWk&&fallbackWk!==wk){
-        wk=fallbackWk;
-        var _wksEl=document.getElementById('wks');
-        if(_wksEl)_wksEl.value=wk;
-        updWB();
-        loadWeek(wk);
-      }
-    }
-  }
+  // Load current week data from storage
+  if(wk) loadWeek(wk);
   updRepStatus();
   // Build week history selector
   buildWeekSelector();
@@ -3774,10 +3756,10 @@ function swSub(prefix,id,btn){
 // ── WEEK ──
 function setWk(){
   const t=new Date(),d=t.getDay();
-  // Default to LAST week (1 week lag for rep payout)
-  const thisMonday=new Date(new Date().setDate(t.getDate()-d+(d===0?-6:1)));
-  const lastMonday=new Date(thisMonday);lastMonday.setDate(thisMonday.getDate()-7);
-  wk=lastMonday.toISOString().split("T")[0];
+  // Use THIS week's Monday (current week)
+  const thisMonday=new Date(t);
+  thisMonday.setDate(t.getDate()-( d===0?6:d-1));
+  wk=thisMonday.toISOString().split("T")[0];
   document.getElementById("wks").value=wk;updWB();
 }
 function onWC(){
