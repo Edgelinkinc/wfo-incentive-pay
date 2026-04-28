@@ -12098,7 +12098,13 @@ function ghPublish(){
         if(r.status===401)msg='Bad credentials \u2014 token invalid or expired. Generate a new token.';
         if(r.status===403)msg='Forbidden \u2014 token lacks repo scope or repo is private with wrong permissions.';
         if(r.status===404)msg='Repo not found \u2014 check that edgelinkinc/wfo-incentive-pay exists and token has access.';
-        if(r.status===422)msg='Unprocessable \u2014 SHA mismatch. Try publishing again.';
+        if(r.status===422||(msg&&msg.indexOf('does not match')>=0)){
+          // SHA mismatch — re-fetch and retry automatically
+          if(st){st.textContent='Retrying\u2026';st.style.color='var(--mu)';}
+          if(btn){btn.textContent='\uD83D\uDCE2 Publish Now';btn.disabled=false;}
+          setTimeout(function(){ghPublish();},1500);
+          return;
+        }
         throw new Error(msg);
       });
     }
