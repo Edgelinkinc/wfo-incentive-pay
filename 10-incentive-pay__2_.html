@@ -9980,11 +9980,18 @@ function printAllFlyers(){
 function initEmpView(){
   const sel=document.getElementById('empSelect');if(!sel)return;
   sel.innerHTML='<option value="">— Choose your name —</option>';
-  // Build rep list from current week AND all historical weeks
-  const hist=JSON.parse(localStorage.getItem('wfo_wk_hist')||'[]');
+  // Build rep list from ALL saved weeks (wfo_week_* keys) + current in-memory reps
   const allReps=new Map();
+  // Add current week reps
   reps.forEach(r=>{allReps.set(r.ri||r.n,r);});
-  hist.forEach(rec=>(rec.data||[]).forEach(r=>{if(!allReps.has(r.ri||r.n))allReps.set(r.ri||r.n,r);}));
+  // Add reps from all stored weeks
+  const idx=getWeekIndex();
+  idx.forEach(function(wkDate){
+    const d=getWeekData(wkDate);
+    (d.reps||[]).forEach(function(r){
+      if(!allReps.has(r.ri||r.n))allReps.set(r.ri||r.n,r);
+    });
+  });
   [...allReps.values()].sort((a,b)=>dispName(a).localeCompare(dispName(b))).forEach(r=>{
     const opt=document.createElement('option');
     opt.value=r.ri||r.n;
