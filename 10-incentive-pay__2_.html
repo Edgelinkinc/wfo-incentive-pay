@@ -3830,7 +3830,19 @@ function arcT(r){return(r.al||[]).reduce((s,t)=>s+(t.a||0),0);}
 function cbT(n){return CBs.filter(c=>c.rp===n&&!c.voided).reduce((s,c)=>s+(c.a||0),0);}
 function actSp(wd){const d=wd||(wk?new Date(wk+"T12:00:00"):new Date());return sps.filter(s=>{if(!s.on)return false;const st=new Date(s.sd+"T12:00:00"),en=s.ed?new Date(s.ed+"T12:00:00"):null;return d>=st&&(!en||d<=en);});}
 function cSp(r){const wd=wk?new Date(wk+"T12:00:00"):new Date();let tot=0,det=[];actSp(wd).forEach(sp=>{if(sp.sc==="store"&&sp.sv&&r.s!==sp.sv)return;if(sp.sc==="coach"&&sp.sv&&r.c!==sp.sv)return;let pay=0;if(sp.ty==="flat_per_rep")pay=sp.a;else if(sp.ty==="flat_per_unit")pay=sp.a;else if(sp.ty==="pct_gross"){const g=cBx(r.ta||0)+cAc(r.ap||0)+cPU(r).t+cMI(r.ml).p;pay=g*sp.a/100;}tot+=pay;det.push({n:sp.nm,p:pay});});return{tot,det};}
-function cRp(r){const bx=cBx(r.ta||0),ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,ac,pu,mi,sp,gr,arc,cb,nt};}
+function cRp(r, wkOverride){
+  // For historical weeks, temporarily use the tiers that were active then
+  var _wkDate=wkOverride||wk;
+  var _tBackup=null;
+  if(_wkDate&&getTierHistory&&getTierHistory().length){
+    var _histT=getTiersForWeek(_wkDate);
+    if(_histT!==T){_tBackup=T;T=_histT;}
+  }
+  var _result=_cRp_inner(r);
+  if(_tBackup){T=_tBackup;}
+  return _result;
+}
+function _cRp_inner(r){const bx=cBx(r.ta||0),ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,ac,pu,mi,sp,gr,arc,cb,nt};}
 
 // ── RESTORED REP TABLE CRUD FUNCTIONS ──
 
@@ -7035,6 +7047,20 @@ function clearCoach(){["coachSel","coachMonth","coachDoors","coachActPct","coach
 function openAdm(tab){renTE();renMgrTE();renCoachTE();renSL();document.getElementById("adov").classList.add("open");swA(tab,document.querySelector('.ad-tab[onclick*="'+tab+'"]'));}
 function closeA(){document.getElementById("adov").classList.remove("open");renR();upK();}
 function swA(id,btn){document.querySelectorAll(".ad-pane").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".ad-tab").forEach(b=>b.classList.remove("active"));const p=document.getElementById("at-"+id);if(p)p.classList.add("active");if(btn)btn.classList.add("active");}
+function initTierHistoryUI(){
+  var el=document.getElementById('tierHistoryList');
+  if(!el){
+    // Add tier history panel to tier editor section
+    var te=document.getElementById('adTierEditor');
+    if(te){
+      var div=document.createElement('div');
+      div.style.marginTop='16px';
+      div.innerHTML='<div style="font-weight:700;font-size:13px;color:var(--se);margin-bottom:8px">\uD83D\uDCC5 Tier Rate History</div><div id="tierHistoryList"></div>';
+      te.appendChild(div);
+    }
+  }
+  renTierHistory();
+}
 function renTE(){
   document.getElementById("bxR").innerHTML=T.box.map((t,i)=>`<div class="tr2"><label>Tier ${i+1} min totact:</label><input type="number" id="bM${i}" value="${t.mn}" min="0" style="width:75px"/><label style="min-width:auto;margin-left:8px">$/act:</label><input type="number" id="bR${i}" value="${t.r}" min="0" step="0.5" style="width:70px"/></div>`).join("");
   document.getElementById("acR").innerHTML=T.acc.map((t,i)=>`<div class="tr2"><label>Tier ${i+1} min net profit $:</label><input type="number" id="aM${i}" value="${t.mp}" min="0" style="width:80px"/><label style="min-width:auto;margin-left:8px">Payout %:</label><input type="number" id="aP${i}" value="${t.p}" min="0" max="100" step="0.5" style="width:70px"/></div>`).join("");
@@ -7117,8 +7143,32 @@ function masterSaveTiers(){
   // Persist
   localStorage.setItem('wfo_tiers', JSON.stringify(T));
   localStorage.setItem('wfo_ts', new Date().toISOString());
-  // Log changes
+
+  // If tiers actually changed, prompt for effective date and save to history
   var _tierChanges = diffTiers(_oldT, T);
+  if(_tierChanges.length){
+    var effDate=prompt(
+      'Tiers changed. What date should the new rates take effect?\n\n'+
+      'Enter a date (YYYY-MM-DD) or leave blank to use this Monday (current week):',
+      wkKey(new Date().toISOString().split('T')[0])
+    );
+    if(effDate===null){
+      // Cancelled — restore old tiers
+      T=_oldT;
+      localStorage.setItem('wfo_tiers',JSON.stringify(T));
+      tst2('Tier change cancelled.','wn');
+      return;
+    }
+    if(!effDate||!effDate.match(/\d{4}-\d{2}-\d{2}/))
+      effDate=wkKey(new Date().toISOString().split('T')[0]);
+    var note=prompt('Optional: add a note about this change (e.g. "April rate adjustment"):','');
+    if(note===null)note='';
+    saveTiersWithEffectiveDate(effDate, note);
+    tst2('\u2705 Tiers saved — effective '+new Date(effDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),'ok');
+    renTierHistory();
+  }
+  
+  var _dummy_tierChanges=[];
   var _puChanges = diffPUConfig(_oldPU, getPUConfig());
   var _allChanges = _tierChanges.concat(_puChanges);
   if(_allChanges.length){logTierChange(_allChanges);renWeeklyUpdates();}
@@ -12589,7 +12639,8 @@ function spSaveConfig(){
       })(),
       coachRoster: localStorage.getItem('wfo_coach_roster'),
       mgrRecs: localStorage.getItem('wfo_mgr_recs'),
-      coachRecs: localStorage.getItem('wfo_coach_recs')
+      coachRecs: localStorage.getItem('wfo_coach_recs'),
+      tierHistory: localStorage.getItem('wfo_tier_history')
     };
     return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
       method:'PUT',
@@ -12656,6 +12707,7 @@ function spLoadConfig(){
       if(config.coachRoster)localStorage.setItem('wfo_coach_roster',config.coachRoster);
       if(config.mgrRecs)localStorage.setItem('wfo_mgr_recs',config.mgrRecs);
       if(config.coachRecs)localStorage.setItem('wfo_coach_recs',config.coachRecs);
+      if(config.tierHistory)localStorage.setItem('wfo_tier_history',config.tierHistory);
       // Restore per-month backsheet targets
       if(config.bsMonths){
         Object.entries(config.bsMonths).forEach(function(kv){
@@ -13008,6 +13060,87 @@ function renHomeQuickStats(){
   }
 
   el.innerHTML=html;
+}
+
+
+// ── EFFECTIVE-DATE TIER HISTORY ──
+// Each entry: {date: 'YYYY-MM-DD', tiers: {...}, savedBy: 'Admin', note: ''}
+// date = first day this tier applies (Monday of week)
+
+function getTierHistory(){
+  try{return JSON.parse(localStorage.getItem('wfo_tier_history')||'[]');}catch{return[];}
+}
+function saveTierHistory(hist){
+  localStorage.setItem('wfo_tier_history',JSON.stringify(hist));
+}
+
+// Get the tiers that were active for a given week date
+function getTiersForWeek(wkDate){
+  if(!wkDate) return T;
+  var hist=getTierHistory();
+  if(!hist.length) return T; // no history = use current
+  // Sort descending by date
+  hist.sort(function(a,b){return b.date.localeCompare(a.date);});
+  // Find the most recent tier effective ON OR BEFORE this week
+  for(var i=0;i<hist.length;i++){
+    if(hist[i].date<=wkDate) return hist[i].tiers;
+  }
+  // All history entries are AFTER this week — use the oldest one
+  return hist[hist.length-1].tiers;
+}
+
+// Save current tiers to history with an effective date
+function saveTiersWithEffectiveDate(effectiveDate, note){
+  var hist=getTierHistory();
+  // Remove any existing entry for this exact date
+  hist=hist.filter(function(h){return h.date!==effectiveDate;});
+  hist.push({
+    date: effectiveDate,
+    tiers: JSON.parse(JSON.stringify(T)),
+    savedAt: new Date().toISOString(),
+    note: note||''
+  });
+  hist.sort(function(a,b){return b.date.localeCompare(a.date);});
+  // Keep last 52 entries
+  if(hist.length>52) hist=hist.slice(0,52);
+  saveTierHistory(hist);
+}
+
+// Render tier history in admin center
+function renTierHistory(){
+  var el=document.getElementById('tierHistoryList');
+  if(!el)return;
+  var hist=getTierHistory();
+  if(!hist.length){
+    el.innerHTML='<div style="color:#999;font-size:12px;padding:10px">No tier history yet — tiers will be versioned from now on.</div>';
+    return;
+  }
+  hist.sort(function(a,b){return b.date.localeCompare(a.date);});
+  el.innerHTML=hist.map(function(h,i){
+    var d=new Date(h.date+'T12:00:00');
+    var end=new Date(d);end.setDate(end.getDate()+6);
+    var lbl=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    var isCurrent=(i===0);
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:'+(isCurrent?'#FFF0F7':'#FAFAFA')+';border-radius:8px;margin-bottom:4px;border:1px solid '+(isCurrent?'var(--pr)':'#E8E8E8')+'">'
+      +'<div>'
+      +'<div style="font-weight:700;font-size:12px;color:var(--se)">Effective: '+lbl+(isCurrent?'<span style="font-size:9px;background:var(--pr);color:#fff;padding:1px 6px;border-radius:4px;margin-left:6px">CURRENT</span>':'')+'</div>'
+      +(h.note?'<div style="font-size:11px;color:#666;margin-top:2px">'+h.note+'</div>':'')
+      +'<div style="font-size:10px;color:#999">Saved '+new Date(h.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})+'</div>'
+      +'</div>'
+      +'<button class="btn bo xs" onclick="previewTierVersion('+i+')" title="Preview these rates">👁</button>'
+      +'</div>';
+  }).join('');
+}
+
+function previewTierVersion(idx){
+  var hist=getTierHistory();
+  hist.sort(function(a,b){return b.date.localeCompare(a.date);});
+  var h=hist[idx];if(!h)return;
+  var d=new Date(h.date+'T12:00:00');
+  var lbl=d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  // Show box tiers summary
+  var boxSummary=h.tiers.box.map(function(t){return '$'+t.r+'/act @ '+t.mn+'+';}).join(', ');
+  alert('Tier rates effective '+lbl+':\nActivations: '+boxSummary+'\n'+(h.note?'Note: '+h.note:''));
 }
 
 </script>
