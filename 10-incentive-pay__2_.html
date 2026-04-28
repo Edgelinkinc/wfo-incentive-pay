@@ -7163,7 +7163,7 @@ function masterSaveTiers(){
       effDate=wkKey(new Date().toISOString().split('T')[0]);
     var note=prompt('Optional: add a note about this change (e.g. "April rate adjustment"):','');
     if(note===null)note='';
-    saveTiersWithEffectiveDate(effDate, note);
+    saveTiersWithEffectiveDate(effDate, note, _oldT);
     tst2('\u2705 Tiers saved — effective '+new Date(effDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),'ok');
     renTierHistory();
   }
@@ -13085,13 +13085,23 @@ function getTiersForWeek(wkDate){
   for(var i=0;i<hist.length;i++){
     if(hist[i].date<=wkDate) return hist[i].tiers;
   }
-  // All history entries are AFTER this week — use the oldest one
-  return hist[hist.length-1].tiers;
+  // All history entries are AFTER this week — use T (original rates before versioning)
+  return T;
 }
 
 // Save current tiers to history with an effective date
-function saveTiersWithEffectiveDate(effectiveDate, note){
+function saveTiersWithEffectiveDate(effectiveDate, note, oldTiers){
   var hist=getTierHistory();
+  // First ever tier change — save the OLD rates as baseline from the beginning
+  // so ALL prior weeks keep the original rates
+  if(!hist.length && oldTiers){
+    hist.push({
+      date: '2000-01-01',
+      tiers: JSON.parse(JSON.stringify(oldTiers)),
+      savedAt: new Date().toISOString(),
+      note: 'Original rates (baseline before versioning)'
+    });
+  }
   // Remove any existing entry for this exact date
   hist=hist.filter(function(h){return h.date!==effectiveDate;});
   hist.push({
@@ -13101,7 +13111,6 @@ function saveTiersWithEffectiveDate(effectiveDate, note){
     note: note||''
   });
   hist.sort(function(a,b){return b.date.localeCompare(a.date);});
-  // Keep last 52 entries
   if(hist.length>52) hist=hist.slice(0,52);
   saveTierHistory(hist);
 }
