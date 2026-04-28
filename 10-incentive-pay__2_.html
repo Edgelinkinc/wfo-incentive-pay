@@ -11779,29 +11779,40 @@ function spSignIn(){
       tst2('Microsoft auth library failed to load. Check your internet connection and refresh.','er');
     } else {
       tst2('Auth initializing\u2026 try again in a moment.','ok');
-      setTimeout(function(){
-        spInit();
-        setTimeout(function(){
-          if(_msalApp)_msalApp.loginPopup({scopes:_spScopes,prompt:'select_account'}).then(function(resp){if(resp&&resp.account){_spAccount=resp.account;_spToken=resp.accessToken;spUpdateUI(true);tst2('Signed in \u2014 loading data\u2026','ok');setTimeout(spLoadConfig,500);}}).catch(function(e){tst2('Sign-in failed: '+e.message,'er');});
-          else tst2('Auth still not ready. Please refresh the page.','er');
-        },1000);
-      },500);
+      setTimeout(function(){spInit();setTimeout(function(){if(_msalApp)_doSpSignIn();else tst2('Auth still not ready. Please refresh the page.','er');},1000);},500);
     }
     return;
   }
+  _doSpSignIn();
+}
+
+function _doSpSignIn(){
+  // Clear any stale MSAL interaction state before attempting login
+  Object.keys(sessionStorage).forEach(function(k){
+    if(k.indexOf('msal.')===0||k.indexOf('msal|')===0)sessionStorage.removeItem(k);
+  });
   _msalApp.loginPopup({scopes:_spScopes,prompt:'select_account'})
     .then(function(resp){
       if(resp && resp.account){
         _spAccount=resp.account;
         _spToken=resp.accessToken;
         spUpdateUI(true);
-        tst2('\u2601 Signed in to SharePoint \u2014 loading your data\u2026','ok');
+        tst2('\u2601 Signed in \u2014 loading your data\u2026','ok');
         setTimeout(spLoadConfig, 500);
       }
     })
     .catch(function(e){
-      tst2('Sign-in failed: '+e.message,'er');
-      console.error('SP sign-in error:',e);
+      if(e.errorCode==='interaction_in_progress'){
+        // Force clear and retry once
+        Object.keys(sessionStorage).filter(function(k){return k.indexOf('msal')>=0;}).forEach(function(k){sessionStorage.removeItem(k);});
+        Object.keys(localStorage).filter(function(k){return k.indexOf('msal')>=0;}).forEach(function(k){localStorage.removeItem(k);});
+        tst2('Clearing auth state\u2026 click Sign In again.','ok');
+        _msalApp=null;
+        setTimeout(spInit,500);
+      } else {
+        tst2('Sign-in failed: '+e.message,'er');
+        console.error('SP sign-in error:',e);
+      }
     });
 }
 
@@ -12133,7 +12144,14 @@ function ghPublish(){
       tst2('\uD83D\uDCE2 Data published! Employees can now see the latest leaderboard.','ok');
       if(btn){btn.textContent='\uD83D\uDCE2 Publish Now';btn.disabled=false;}
     }else{
-      return r.json().then(function(e){throw new Error(e.message||r.status);});
+      return r.json().then(function(e){
+        var msg=e.message||('HTTP '+r.status);
+        if(r.status===401)msg='Bad credentials \u2014 token invalid or expired. Generate a new token.';
+        if(r.status===403)msg='Forbidden \u2014 token lacks repo scope or repo is private with wrong permissions.';
+        if(r.status===404)msg='Repo not found \u2014 check that edgelinkinc/wfo-incentive-pay exists and token has access.';
+        if(r.status===422)msg='Unprocessable \u2014 SHA mismatch. Try publishing again.';
+        throw new Error(msg);
+      });
     }
   })
   .catch(function(e){
