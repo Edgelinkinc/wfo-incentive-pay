@@ -817,13 +817,13 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   </div>
 
     <!-- ANNOUNCEMENTS -->
-  <!-- THIS WEEK'S UPDATES -->
+  <!-- QUICK STATS -->
   <div style="background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;border:2px solid var(--pr)">
     <div style="background:linear-gradient(135deg,var(--pr),var(--se));padding:11px 16px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#fff">📝 This Week's Updates</span>
-      <button onclick="requirePin(()=>openWeeklyNote())" class="home-admin-btn" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer">✎ Edit Note</button>
+      <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#fff">📊 Pay Period Summary</span>
+      <span id="homeQuickStatsWk" style="font-size:11px;color:rgba(255,255,255,.7)"></span>
     </div>
-    <div id="weeklyUpdates" style="padding:14px 16px">
+    <div id="homeQuickStats" style="padding:14px 16px">
       <div style="color:#999;font-size:13px;text-align:center;padding:8px 0">Loading…</div>
     </div>
   </div>
@@ -10132,7 +10132,7 @@ function printEmpBonus(){
 // ══════════════════════════════════════════════════════
 
 function initHomePage(){
-  renWeeklyUpdates();
+  renHomeQuickStats();
   try{
     const el=document.getElementById('homeDateTime');
     const _updDT=()=>{const n=new Date();if(el)el.textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+' · '+n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});};
@@ -12566,6 +12566,30 @@ function spSaveConfig(){
       backsheets: localStorage.getItem('wfo_backsheets'),
       perfMetrics: localStorage.getItem('wfo_perf_metrics'),
       perfThresholds: localStorage.getItem('wfo_perf_thresholds'),
+      elbMap: localStorage.getItem('wfo_elb_map'),
+      // Save all per-month backsheet targets (wfo_bs_YYYY-MM)
+      bsMonths: (function(){
+        var bsData={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_bs_')===0;})
+          .forEach(function(k){bsData[k]=localStorage.getItem(k);});
+        return bsData;
+      })(),
+      // Save manager and coach actuals by month
+      mgrSheets: (function(){
+        var d={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_mgr_sheet_')===0;})
+          .forEach(function(k){d[k]=localStorage.getItem(k);});
+        return d;
+      })(),
+      coachSheets: (function(){
+        var d={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_coach_sheet_')===0;})
+          .forEach(function(k){d[k]=localStorage.getItem(k);});
+        return d;
+      })(),
+      coachRoster: localStorage.getItem('wfo_coach_roster'),
+      mgrRecs: localStorage.getItem('wfo_mgr_recs'),
+      coachRecs: localStorage.getItem('wfo_coach_recs')
     };
     return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
       method:'PUT',
@@ -12628,6 +12652,27 @@ function spLoadConfig(){
       });
       if(config.srBs)localStorage.setItem('wfo_store_roster',config.srBs);
       if(config.backsheets)localStorage.setItem('wfo_backsheets',config.backsheets);
+      if(config.elbMap)localStorage.setItem('wfo_elb_map',config.elbMap);
+      if(config.coachRoster)localStorage.setItem('wfo_coach_roster',config.coachRoster);
+      if(config.mgrRecs)localStorage.setItem('wfo_mgr_recs',config.mgrRecs);
+      if(config.coachRecs)localStorage.setItem('wfo_coach_recs',config.coachRecs);
+      // Restore per-month backsheet targets
+      if(config.bsMonths){
+        Object.entries(config.bsMonths).forEach(function(kv){
+          if(kv[0].indexOf('wfo_bs_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
+      // Restore manager and coach actuals
+      if(config.mgrSheets){
+        Object.entries(config.mgrSheets).forEach(function(kv){
+          if(kv[0].indexOf('wfo_mgr_sheet_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
+      if(config.coachSheets){
+        Object.entries(config.coachSheets).forEach(function(kv){
+          if(kv[0].indexOf('wfo_coach_sheet_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
       restoredItems.push('settings');
     }
 
@@ -12893,6 +12938,76 @@ function buildCombinedMgrSlip(mgrName,storeNames,mn,period){
     +'</div>'
     +'<div style="font-size:9px;color:#ccc;text-align:center;text-transform:uppercase;letter-spacing:.05em">Confidential \u2014 Edgelink Inc Internal Use Only \u00b7 Work Force Ops \u00b7 '+period+'</div>'
     +'</div>';
+}
+
+
+function renHomeQuickStats(){
+  var el=document.getElementById('homeQuickStats');
+  var wkEl=document.getElementById('homeQuickStatsWk');
+  if(!el)return;
+
+  var idx=getWeekIndex();
+  if(!idx.length&&!reps.length){
+    el.innerHTML='<div style="color:#999;font-size:13px;text-align:center;padding:8px 0">No data uploaded yet</div>';
+    return;
+  }
+
+  // Build stats from all weeks
+  var weeks=[];
+  var allWeeks=wk?[...new Set([wk,...idx])]:idx;
+  allWeeks.slice(0,8).forEach(function(wkDate){
+    var d=wkDate===wk&&reps.length?{reps:reps,cbs:CBs,locked:wkLocked}:getWeekData(wkDate);
+    if(!d||!d.reps||!d.reps.length)return;
+    var gross=0,net=0,count=d.reps.length;
+    d.reps.forEach(function(r){var c=cRp(r);gross+=c.gr;net+=c.nt;});
+    var cbTotal=(d.cbs||[]).filter(function(c){return!c.voided;}).reduce(function(s,c){return s+(c.a||0);},0);
+    var start=new Date(wkDate+'T12:00:00');
+    var end=new Date(start);end.setDate(end.getDate()+6);
+    var lbl=start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'\u2013'+end.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    weeks.push({wkDate,lbl,count,gross,net,cbTotal,locked:d.locked});
+  });
+
+  if(!weeks.length){
+    el.innerHTML='<div style="color:#999;font-size:13px;text-align:center;padding:8px 0">No rep data for saved weeks</div>';
+    return;
+  }
+
+  if(wkEl)wkEl.textContent=weeks.length+' week'+(weeks.length!==1?'s':'');
+
+  // Most recent week highlight
+  var latest=weeks[0];
+  var html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+    +'<div style="background:#FFF0F7;border-radius:8px;padding:9px 10px;text-align:center">'
+    +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#E20074;margin-bottom:2px">Reps</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:20px;color:#E20074">'+latest.count+'</div>'
+    +'<div style="font-size:9px;color:#999">'+latest.lbl+'</div></div>'
+    +'<div style="background:#F3E8FF;border-radius:8px;padding:9px 10px;text-align:center">'
+    +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;margin-bottom:2px">Gross Pay</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:20px;color:#6E2B8B">$'+latest.gross.toFixed(0)+'</div>'
+    +'<div style="font-size:9px;color:#999">before deductions</div></div>'
+    +'<div style="background:#E8F5E9;border-radius:8px;padding:9px 10px;text-align:center">'
+    +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#00796B;margin-bottom:2px">Net Owed</div>'
+    +'<div style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:20px;color:#00796B">$'+latest.net.toFixed(0)+'</div>'
+    +'<div style="font-size:9px;color:#999">after CB &amp; ARC</div></div>'
+    +'</div>';
+
+  // Week history mini-table
+  if(weeks.length>1){
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mu);margin-bottom:6px;letter-spacing:.06em">Recent Weeks</div>';
+    html+='<div style="display:flex;flex-direction:column;gap:4px">';
+    weeks.forEach(function(w){
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#FAFAFA;border-radius:7px;border:1px solid #F0F0F0;cursor:pointer" onclick="switchWeek(\''+w.wkDate+'\')">'
+        +'<div><span style="font-size:11px;font-weight:700;color:var(--se)">'+w.lbl+'</span>'
+        +(w.locked?'<span style="font-size:9px;background:#E8F5E9;color:#00796B;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:6px">\u2713 Paid</span>':'<span style="font-size:9px;background:#FFF0F7;color:#E20074;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:6px">Open</span>')
+        +'</div>'
+        +'<div style="text-align:right"><div style="font-size:11px;font-weight:800;color:var(--pr)">$'+w.gross.toFixed(0)+'</div>'
+        +'<div style="font-size:9px;color:var(--mu)">'+w.count+' reps</div></div>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+
+  el.innerHTML=html;
 }
 
 </script>
