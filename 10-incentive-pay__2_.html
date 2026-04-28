@@ -9025,9 +9025,9 @@ function doUpload(mode, src){
   if(!content){tst2('Upload data lost — try again.','er');return;}
   if(mode === 'replace'){
     if(src === 'rtbdi' || src === 'metro'){
-      // Save current week to its own slot BEFORE clearing in-memory
-      if(wk && reps.length) saveCurrentWeek();
-      // Clear in-memory only — do NOT write empty array to storage
+      // Just clear in-memory — the previous week was already saved by normal operations.
+      // Do NOT save here — it would write current reps (last uploaded data) into the
+      // current wk slot, making every week look identical.
       reps = [];
       CBs = [];
       tst2('Existing rep data cleared — loading new file...','wn');
