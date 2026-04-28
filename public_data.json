@@ -1,8 +1,9 @@
 {
   "version": 1,
-  "publishedAt": "2026-04-28T23:02:54.687Z",
+  "publishedAt": "2026-04-28T23:45:29.148Z",
   "currentWeek": "2026-04-20",
   "weekIndex": [
+    "2026-04-27",
     "2026-04-20",
     "2026-04-13"
   ],
@@ -1523,7 +1524,7 @@
       ]
     },
     "2026-04-13": {
-      "locked": true,
+      "locked": false,
       "repCount": 83,
       "reps": [
         {
@@ -1795,8 +1796,8 @@
         {
           "n": "Joseph",
           "ri": "CMP10750",
-          "s": "",
-          "c": "TBD",
+          "s": "RI-HARTFORD AVE",
+          "c": "Rose Perez",
           "ta": 20,
           "na": 13,
           "ra": 6,
@@ -2628,7 +2629,7 @@
           "n": "rosemary",
           "ri": "YXT90782",
           "s": "",
-          "c": "TBD",
+          "c": "Mr. Watts",
           "ta": 8,
           "na": 2,
           "ra": 0,
@@ -2985,8 +2986,8 @@
         {
           "n": "Amauri",
           "ri": "DDX65206",
-          "s": "",
-          "c": "TBD",
+          "s": "RI-RESERVOIR AVE",
+          "c": "Ambulai Sheku",
           "ta": 0,
           "na": 0,
           "ra": 0,
@@ -3077,8 +3078,8 @@
         {
           "n": "Sergio",
           "ri": "YWZ19652",
-          "s": "",
-          "c": "TBD",
+          "s": "TN-WESTERN AVE",
+          "c": "Mr. Watts",
           "ta": 0,
           "na": 0,
           "ra": 0,
