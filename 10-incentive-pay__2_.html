@@ -9362,7 +9362,7 @@ function renWkHist(){
           <div style="display:flex;gap:6px">
             ${!isLocked&&!isActive?`<button class="btn bp xs" onclick="event.stopPropagation();requirePin(()=>switchWeek('${wkDate}'))">Load</button>`:''}
             <button class="btn bo xs" onclick="event.stopPropagation();expWeekCSV('${wkDate}')">⬇ CSV</button>
-            ${isLocked&&!isActive?`<button class="btn bd xs" onclick="event.stopPropagation();requirePin(()=>deleteWeek('${wkDate}'))">✕</button>`:''}
+            ${!isActive?`<button class="btn bd xs" onclick="event.stopPropagation();requirePin(()=>deleteWeek('${wkDate}'))" title="Delete this week">✕</button>`:''}
           </div>
         </div>
       </div>
