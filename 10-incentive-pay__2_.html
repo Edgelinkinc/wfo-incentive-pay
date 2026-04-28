@@ -7166,8 +7166,28 @@ function savSp(){localStorage.setItem("wfo_sp",JSON.stringify(sps));}
 function lSp(){try{return JSON.parse(localStorage.getItem("wfo_sp")||"[]");}catch{return[];}}
 
 // ── PERSISTENCE ──
-function lReps(){try{return JSON.parse(localStorage.getItem("wfo_reps")||"[]");}catch{return[];}}
-function lCBs(){try{return JSON.parse(localStorage.getItem("wfo_cbs")||"[]");}catch{return[];}}
+function lReps(){
+  // Try current week storage first (new format), fall back to old wfo_reps key
+  const savedWk=localStorage.getItem('wfo_current_wk');
+  if(savedWk){
+    try{
+      const d=JSON.parse(localStorage.getItem('wfo_week_'+savedWk)||'null');
+      if(d&&d.reps&&d.reps.length)return d.reps;
+    }catch(e){}
+  }
+  try{return JSON.parse(localStorage.getItem("wfo_reps")||"[]");}catch{return[];}
+}
+function lCBs(){
+  // Try current week storage first (new format), fall back to old wfo_cbs key
+  const savedWk=localStorage.getItem('wfo_current_wk');
+  if(savedWk){
+    try{
+      const d=JSON.parse(localStorage.getItem('wfo_week_'+savedWk)||'null');
+      if(d&&d.cbs)return d.cbs;
+    }catch(e){}
+  }
+  try{return JSON.parse(localStorage.getItem("wfo_cbs")||"[]");}catch{return[];}
+}
 
 // ── PDF SLIPS ──
 function slipStyle(){return `<style>
