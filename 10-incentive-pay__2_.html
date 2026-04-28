@@ -6276,7 +6276,14 @@ async function downloadMgrPayoutSlipPDF(){
 function updRepStatus(){
   const el=document.getElementById('repStatusBadge');if(!el)return;
   if(!reps.length){el.innerHTML='';return;}
-  const wkLabel=document.getElementById('wkb')?.textContent||wk||'';
+  // Use confirmed wk date, not wkb which may still show old week during upload
+  const start=wk?new Date(wk+'T12:00:00'):null;
+  const end=start?new Date(start):null;
+  if(end)end.setDate(end.getDate()+6);
+  const wkLabel=start?
+    start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' \u2013 '+
+    end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):
+    (document.getElementById('wkb')?.textContent||'');
   el.innerHTML=`<span style="color:var(--ok);font-weight:700">✅ Loaded — ${reps.length} reps · ${wkLabel}</span>
     <button class="btn bd xs" style="margin-left:6px;padding:2px 6px;font-size:10px" onclick="requirePin(()=>{reps=[];CBs=[];saveSession();renR();updRepStatus();tst2('Rep data cleared','ok')})">Clear</button>`;
 }
@@ -7307,13 +7314,18 @@ function confirmWeekAndClose(){
   const dateIn=document.getElementById('wkConfirmDateIn')?.value;
   if(dateIn){
     wk=wkKey(dateIn);
-    document.getElementById('wks').value=wk;
+    // Update week picker and display bar
+    const wksEl=document.getElementById('wks');
+    if(wksEl)wksEl.value=wk;
     updWB();
     saveCurrentWeek();
     buildWeekSelector();
+    // Re-render everything so Breakdown & Payouts reflects the confirmed week
+    renR();renCBL();upK();updLk();updSheetStatus();updRepStatus();
+    if(typeof renWkHist==='function')renWkHist();
   }
   const modal=document.getElementById('wkConfirmModal');if(modal)modal.remove();
-  tst2('Week confirmed — data saved to week of '+document.getElementById('wkb').textContent,'ok');
+  tst2('✅ Week confirmed — saved to week of '+document.getElementById('wkb').textContent,'ok');
 }
 // ── SHEET STATUS ──
 function updSPButtons(){
