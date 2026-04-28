@@ -5486,8 +5486,10 @@ function initEmpWeekPicker(){
   if(!sel)return;
   // Read from the correct week index (wfo_week_index + wfo_week_* keys)
   const idx=getWeekIndex();
+  // Make sure current week is always included even if mid-week (not yet in index)
+  const allWeeks=[...new Set(wk?[wk,...idx]:idx)];
   sel.innerHTML='';
-  idx.forEach(function(wkDate){
+  allWeeks.forEach(function(wkDate){
     const d=getWeekData(wkDate);
     const start=new Date(wkDate+'T12:00:00');
     const end=new Date(start);end.setDate(end.getDate()+6);
@@ -5510,33 +5512,10 @@ function initEmpWeekPicker(){
 }
 
 function loadEmpBonusForWeek(){
-  const weekSel=document.getElementById('empWeekSel');
-  const repVal=document.getElementById('empSelect')?.value;
-  if(!repVal){tst2('Select your name first','wn');return;}
-  if(!weekSel)return;
-
-  const choice=weekSel.value;
-  if(choice===wk||choice==='current'){
-    // Load from current in-memory reps array
-    window._empViewReps=reps;
-    window._empViewCBs=CBs;
-    window._empViewWeek=document.getElementById('wkb')?.textContent||'Current Week';
-    loadEmpBonusFromData(repVal);
-    return;
-  }
-  // Load from saved week data (wfo_week_YYYY-MM-DD)
-  const weekData=getWeekData(choice);
-  if(!weekData||!weekData.reps||!weekData.reps.length){
-    tst2('No data found for that week','wn');return;
-  }
-  const start=new Date(choice+'T12:00:00');
-  const end=new Date(start);end.setDate(end.getDate()+6);
-  window._empViewReps=weekData.reps||[];
-  window._empViewCBs=weekData.cbs||[];
-  window._empViewWeek='Week of '+start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+
-    ' \u2013 '+end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  loadEmpBonusFromData(repVal);
+  // Simply delegate to loadEmpBonus which now handles all week types
+  loadEmpBonus();
 }
+
 
 function loadEmpBonusFromData(repVal){
   const viewReps=window._empViewReps||reps;
@@ -10015,74 +9994,37 @@ function loadEmpBonus(){
     if(empEmpty)empEmpty.style.display='block';
     return;
   }
-  // Use week picker if set to non-current
+  // Load data for whichever week is selected
   const weekSel=document.getElementById('empWeekSel');
-  if(weekSel&&weekSel.value!=='current'&&weekSel.value!==''){
-    loadEmpBonusFromData(val);return;
+  const weekVal=weekSel?.value||wk;
+
+  if(weekVal===wk||weekVal==='current'||!weekVal){
+    // Current week — use in-memory reps if available, else load from stored data
+    if(reps.length>0){
+      window._empViewReps=reps;
+      window._empViewCBs=CBs;
+    } else {
+      // Tablet/fresh browser — load from stored week data
+      const wd=getWeekData(wk);
+      window._empViewReps=wd.reps||[];
+      window._empViewCBs=wd.cbs||[];
+    }
+    window._empViewWeek=document.getElementById('wkb')?.textContent||'Current Week';
+  } else {
+    // Load from stored week data
+    const weekData=getWeekData(weekVal);
+    if(!weekData||!weekData.reps||!weekData.reps.length){
+      tst2('No data for that week.','wn');return;
+    }
+    const start=new Date(weekVal+'T12:00:00');
+    const end=new Date(start);end.setDate(end.getDate()+6);
+    window._empViewReps=weekData.reps||[];
+    window._empViewCBs=weekData.cbs||[];
+    window._empViewWeek='Week of '+start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+
+      ' \u2013 '+end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   }
-  window._empViewReps=reps;
-  window._empViewCBs=CBs;
-  window._empViewWeek=document.getElementById('wkb')?.textContent||'Current Week';
-  const r=reps.find(x=>(x.ri||x.n)===val);
-  if(!r){tst2('Rep not found in this week\'s data.','wn');return;}
-
-  const c=cRp(r);
-  const arc=arcT(r);
-  const cbTotal=CBs.filter(cb=>cb.rp===r.n||cb.rp===r.ri).reduce((s,cb)=>s+cb.a,0);
-  const net=c.gr-arc-cbTotal;
-  const spTotal=c.sp?.tot||0;
-
-  // Show card
-  if(empCard)empCard.style.display='block';
-  if(empEmpty)empEmpty.style.display='none';
-
-  // Populate
-  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  const bxTier=bBd(r.ta||0);
-  const acTier=aBd(r.ap||0);
-
-  s('empName',dispName(r));
-  s('empInfo',(r.s||'No Store')+' · '+(r.c||'No Coach'));
-  s('empWeekDisp','Week of '+(document.getElementById('wkb')?.textContent||'—'));
-  s('empBx','$'+c.bx.toFixed(2));
-  s('empBxDetail',(r.ta||0)+' PPD · '+bxTier.l+' tier · $'+bxTier.r+'/act');
-  s('empAc','$'+c.ac.toFixed(2));
-  s('empAcDetail','$'+(r.ap||0).toFixed(2)+' net · '+acTier.l+' · '+acTier.p+'%');
-  s('empPu','$'+c.pu.t.toFixed(2));
-  s('empPuDetail',(r.af||0)+' Affirm ($'+(c.pu.a||0).toFixed(0)+') · '+(r.hs||0)+' HSI ($'+(c.pu.h||0).toFixed(0)+')');
-  s('empMim','$'+c.mi.p.toFixed(2));
-  const mimQual=r.mb>=6;
-  s('empMimDetail',(r.mb||0)+' BANs · '+(r.ml||0)+' lines'+(mimQual?'':' ⚠ Need 6 BANs'));
-  s('empSp','$'+spTotal.toFixed(2));
-  s('empSpDetail',c.sp?.list?.length?c.sp.list.map(sp=>sp.nm).join(', '):'No active spiffs');
-  s('empArc','-$'+arc.toFixed(2));
-  s('empNet','$'+net.toFixed(2));
-  s('empGross',c.gr.toFixed(2));
-  s('empArcAmt',arc.toFixed(2));
-  s('empCbAmt',cbTotal.toFixed(2));
-
-  // Chargebacks
-  const myCBs=CBs.filter(cb=>cb.rp===r.n||cb.rp===r.ri);
-  const cbSection=document.getElementById('empCbSection');
-  const cbList=document.getElementById('empCbList');
-  if(cbSection)cbSection.style.display=myCBs.length?'block':'none';
-  if(cbList)cbList.innerHTML=myCBs.map(cb=>{
-    const cbDtFmt=cb.dt?(new Date(cb.dt+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})):'';
-    const submittedFmt=cb.at||'';
-    return `<div style="padding:8px 0;border-bottom:1px solid rgba(211,47,47,.2)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700">${cb.tp}${cb.rf?' — '+cb.rf:''}</span>
-        <strong style="color:var(--da);font-size:12px">-$${cb.a.toFixed(2)}</strong>
-      </div>
-      <div style="display:flex;gap:14px;margin-top:3px;flex-wrap:wrap">
-        ${cbDtFmt?`<span style="font-size:10px;color:#E20074">📅 CB Date: ${cbDtFmt}</span>`:''}
-        ${submittedFmt?`<span style="font-size:10px;color:#999">🕐 Submitted: ${submittedFmt}</span>`:''}
-        ${cb.nt?`<span style="font-size:10px;color:#666;font-style:italic">${cb.nt}</span>`:''}
-      </div>
-    </div>`;
-  }).join('');
+  loadEmpBonusFromData(val);
 }
-
 function printEmpBonus(){
   const card=document.getElementById('emp-card');
   if(!card||card.style.display==='none'){tst2('Select your name first.','wn');return;}
