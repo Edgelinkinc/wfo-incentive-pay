@@ -7323,6 +7323,8 @@ function confirmWeekAndClose(){
     const wksEl=document.getElementById('wks');
     if(wksEl)wksEl.value=wk;
     updWB();
+    // New upload = always unlocked week
+    wkLocked = false;
     // Now safe to save — clear the staging block first
     window._weekConfirmPending = false;
     saveCurrentWeek();
