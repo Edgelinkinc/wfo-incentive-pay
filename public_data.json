@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "publishedAt": "2026-04-28T22:54:23.719Z",
+  "publishedAt": "2026-04-28T22:55:23.056Z",
   "currentWeek": "2026-04-20",
   "weekIndex": [
     "2026-04-20",
@@ -8,7 +8,7 @@
   ],
   "weekData": {
     "2026-04-20": {
-      "locked": true,
+      "locked": false,
       "repCount": 80,
       "reps": [
         {
