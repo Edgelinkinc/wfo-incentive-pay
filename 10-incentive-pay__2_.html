@@ -5476,24 +5476,31 @@ function generateMgrPayoutSlip(){
 // ══════════════════════════════════════════════════════
 
 function initEmpWeekPicker(){
-  // Build week dropdown from history + current week
   const sel=document.getElementById('empWeekSel');
   if(!sel)return;
-  const hist=JSON.parse(localStorage.getItem('wfo_wk_hist')||'[]');
+  // Read from the correct week index (wfo_week_index + wfo_week_* keys)
+  const idx=getWeekIndex();
   sel.innerHTML='';
-  // Current week option
-  const curOpt=document.createElement('option');
-  curOpt.value='current';
-  curOpt.textContent='Current Week'+(wk?' ('+wk+')':'');
-  sel.appendChild(curOpt);
-  // Historical weeks
-  hist.forEach((rec,i)=>{
+  idx.forEach(function(wkDate){
+    const d=getWeekData(wkDate);
+    const start=new Date(wkDate+'T12:00:00');
+    const end=new Date(start);end.setDate(end.getDate()+6);
+    const label=start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+
+      ' \u2013 '+end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     const opt=document.createElement('option');
-    opt.value=i; // index into hist array
-    opt.textContent=(rec.week||rec.wkStart||'Week '+i)+' — '+rec.repCount+' reps';
+    opt.value=wkDate;
+    opt.textContent=(wkDate===wk?'Current Week ':'')+'('+wkDate+') '+label+
+      (d.locked?' \u2713':'')+' \u00b7 '+(d.repCount||0)+' reps';
+    if(wkDate===wk)opt.selected=true;
     sel.appendChild(opt);
   });
-  sel.value='current';
+  // If no saved weeks yet, show current week as fallback
+  if(!idx.length){
+    const opt=document.createElement('option');
+    opt.value=wk||'current';
+    opt.textContent='Current Week'+(wk?' ('+wk+')':'');
+    sel.appendChild(opt);
+  }
 }
 
 function loadEmpBonusForWeek(){
@@ -5503,22 +5510,25 @@ function loadEmpBonusForWeek(){
   if(!weekSel)return;
 
   const choice=weekSel.value;
-  if(choice==='current'){
-    // Load from current reps array
+  if(choice===wk||choice==='current'){
+    // Load from current in-memory reps array
     window._empViewReps=reps;
     window._empViewCBs=CBs;
     window._empViewWeek=document.getElementById('wkb')?.textContent||'Current Week';
     loadEmpBonusFromData(repVal);
     return;
   }
-  // Load from history
-  const hist=JSON.parse(localStorage.getItem('wfo_wk_hist')||'[]');
-  const idx=+choice;
-  const rec=hist[idx];
-  if(!rec){tst2('Week data not found','er');return;}
-  window._empViewReps=rec.data||[];
-  window._empViewCBs=rec.cbs||[];
-  window._empViewWeek=rec.week||rec.wkStart||'Week '+idx;
+  // Load from saved week data (wfo_week_YYYY-MM-DD)
+  const weekData=getWeekData(choice);
+  if(!weekData||!weekData.reps||!weekData.reps.length){
+    tst2('No data found for that week','wn');return;
+  }
+  const start=new Date(choice+'T12:00:00');
+  const end=new Date(start);end.setDate(end.getDate()+6);
+  window._empViewReps=weekData.reps||[];
+  window._empViewCBs=weekData.cbs||[];
+  window._empViewWeek='Week of '+start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+
+    ' \u2013 '+end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   loadEmpBonusFromData(repVal);
 }
 
