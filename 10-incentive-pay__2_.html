@@ -949,9 +949,9 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </select>
     </div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button onclick="empWeekNav(-1)" style="background:var(--sf);border:2px solid var(--bo);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:15px;font-weight:700;color:var(--se)">‹ Older</button>
+      <button onclick="empWeekNav(1)" style="background:var(--sf);border:2px solid var(--bo);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:15px;font-weight:700;color:var(--se)">‹ Older</button>
       <button onclick="empWeekNav(0)" style="background:var(--thb);border:2px solid var(--se);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:11px;font-weight:700;color:var(--se)">Current</button>
-      <button onclick="empWeekNav(1)" style="background:var(--sf);border:2px solid var(--bo);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:15px;font-weight:700;color:var(--se)">Newer ›</button>
+      <button onclick="empWeekNav(-1)" style="background:var(--sf);border:2px solid var(--bo);border-radius:8px;padding:7px 16px;cursor:pointer;font-size:15px;font-weight:700;color:var(--se)">Newer ›</button>
     </div>
   </div>
 
@@ -12029,16 +12029,23 @@ function ghInitTokenUI(){
 
 // ── Build the public snapshot (leaderboard + perf data only, no pay details) ──
 function ghBuildPublicData(){
-  // Include only what employees need to see: leaderboard and perf grades
-  // Does NOT include pay amounts, chargeback details, admin settings
   var idx=[];
   try{idx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+
+  // Always include current week — add to index if not there
+  if(wk&&idx.indexOf(wk)<0)idx.unshift(wk);
+
   var weekData={};
   idx.forEach(function(w){
     var raw=localStorage.getItem('wfo_week_'+w);
-    if(!raw)return;
-    try{
-      var d=JSON.parse(raw);
+    var d=null;
+    try{d=JSON.parse(raw||'null');}catch(e){}
+
+    // For current active week, use in-memory reps if stored data is empty
+    if(w===wk&&(!d||!d.reps||!d.reps.length)&&reps.length>0){
+      d={reps:reps,cbs:CBs,locked:wkLocked,repCount:reps.length};
+    }
+    if(!d||!d.reps||!d.reps.length)return;
       // Strip sensitive pay data, keep rep metrics for leaderboard/perf
       var stripped={
         week:d.week,locked:d.locked,repCount:d.repCount,
@@ -12052,7 +12059,6 @@ function ghBuildPublicData(){
         })
       };
       weekData[w]=stripped;
-    }catch(e){}
   });
 
   return {
