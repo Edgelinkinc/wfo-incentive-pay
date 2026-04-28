@@ -3763,10 +3763,16 @@ function setWk(){
   document.getElementById("wks").value=wk;updWB();
 }
 function onWC(){
-  wk=document.getElementById("wks").value;
+  const newWk=document.getElementById("wks").value;
+  if(!newWk)return;
+  // Save current week before switching
+  if(wk && wk!==newWk && reps.length>0) saveCurrentWeek();
+  wk=wkKey(newWk);
+  document.getElementById("wks").value=wk;
   localStorage.setItem("wfo_current_wk",wk);
-  updWB();renR();renSB();
-  // If lb/sum are showing same week, update them too
+  updWB();
+  // Load the stored data for this week
+  loadWeek(wk);
   if(!_lbWk||_lbWk===_prevWk){_lbReps=reps;_lbWk=wk;}
   if(!_sumWk||_sumWk===_prevWk){_sumReps=reps;_sumWk=wk;}
   _prevWk=wk;
