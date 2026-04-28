@@ -6418,7 +6418,13 @@ function doMimExp(role){
 }
 function dlC(data,fn){const csv=data.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");const b=new Blob([csv],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u);}
 
-// ── WEEK LOCK ──function unlockWk(){if(!confirm("Unlock week for corrections?"))return;wkLocked=false;updLk();renR();tst2("Week unlocked.","ok");}
+// ── WEEK LOCK ──
+function unlockWk(){
+  if(!confirm("Unlock week for corrections?"))return;
+  wkLocked=false;
+  saveCurrentWeek(); // persist the unlocked state
+  updLk();renR();tst2("Week unlocked.","ok");
+}
 function updLk(){
   const dot=document.getElementById("lkDot"),lbl=document.getElementById("lkLbl"),meta=document.getElementById("lkMeta"),btn=document.getElementById("lkBtn");if(!dot)return;
   if(wkLocked){dot.className="lk-dot locked";lbl.className="lk-lbl locked";lbl.textContent="Locked - Paid";meta.textContent="Unlock to correct";btn.textContent="Unlock";btn.className="btn bd sm";btn.onclick=()=>requirePin(unlockWk);}
@@ -8112,9 +8118,14 @@ function updAdminLockUI(){
   if(cb){cb.textContent=coachPeriodLocked?'🔓 Unlock Coach':'🔒 Lock Coach Period';cb.className=coachPeriodLocked?'btn bd':'btn bok';}
 }
 function adminToggleLock(){
-  if(wkLocked){if(!confirm('Unlock week for corrections?'))return;wkLocked=false;tst2('Week unlocked.','ok');}
-  else{if(!reps.length){tst2('No rep data to lock.','er');return;}if(!confirm('Lock & mark as paid?'))return;lockWk();}
-  updAdminLockUI();updLk();renR();
+  if(wkLocked){
+    if(!confirm('Unlock week for corrections?'))return;
+    wkLocked=false;
+    saveCurrentWeek();
+    updLk();renR();tst2('Week unlocked.','ok');
+  } else {
+    lockWk();
+  }
 }
 function adminToggleMgrLock(){
   mgrPeriodLocked=!mgrPeriodLocked;
