@@ -12119,7 +12119,12 @@ function ghBuildPublicData(){
     puConfig:       localStorage.getItem('wfo_pu_config'),
     customRoster:   localStorage.getItem('wfo_custom_roster'),
     nameOverrides:  localStorage.getItem('wfo_name_overrides'),
-    tiers:          localStorage.getItem('wfo_tiers')
+    tiers:          localStorage.getItem('wfo_tiers'),
+    tierHistory:    localStorage.getItem('wfo_tier_history'),
+    announcements:  localStorage.getItem('wfo_announcements'),
+    importantDates: localStorage.getItem('wfo_important_dates'),
+    contacts:       localStorage.getItem('wfo_contacts'),
+    weeklyNote:     localStorage.getItem('wfo_weekly_note')
   };
 }
 
@@ -12202,13 +12207,18 @@ function ghLoadPublicData(){
       var lastSeen=localStorage.getItem('wfo_gh_last_seen');
       var isNewPublish=lastSeen!==snap.publishedAt;
 
-      // Always update settings (tiers, config etc)
+      // Always update settings from published data
       if(snap.perfMetrics)localStorage.setItem('wfo_perf_metrics',snap.perfMetrics);
       if(snap.perfThresholds)localStorage.setItem('wfo_perf_thresholds',snap.perfThresholds);
       if(snap.puConfig)localStorage.setItem('wfo_pu_config',snap.puConfig);
       if(snap.customRoster)localStorage.setItem('wfo_custom_roster',snap.customRoster);
       if(snap.nameOverrides)localStorage.setItem('wfo_name_overrides',snap.nameOverrides);
       if(snap.tiers)localStorage.setItem('wfo_tiers',snap.tiers);
+      if(snap.tierHistory)localStorage.setItem('wfo_tier_history',snap.tierHistory);
+      if(snap.announcements)localStorage.setItem('wfo_announcements',snap.announcements);
+      if(snap.importantDates)localStorage.setItem('wfo_important_dates',snap.importantDates);
+      if(snap.contacts)localStorage.setItem('wfo_contacts',snap.contacts);
+      if(snap.weeklyNote)localStorage.setItem('wfo_weekly_note',snap.weeklyNote);
 
       // Only update week data if this is a new publish
       if(!isNewPublish)return;
