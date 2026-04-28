@@ -12158,37 +12158,12 @@ function ghLoadPublicData(){
     .then(function(snap){
       if(!snap||snap.version!==1)return;
 
-      // Always apply published data — published is the authoritative source for tablets
-      localStorage.setItem('wfo_gh_last_seen',snap.publishedAt);
+      // If admin has local data uploaded this session, don't overwrite with published
+      var hasLocalData=reps.length>0||localStorage.getItem('wfo_current_wk');
+      var lastSeen=localStorage.getItem('wfo_gh_last_seen');
+      var isNewPublish=lastSeen!==snap.publishedAt;
 
-      // Merge week data — add new weeks, never remove existing ones
-      var changed=false;
-      if(snap.weekData){
-        var localIdx=[];
-        try{localIdx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
-        Object.entries(snap.weekData).forEach(function(kv){
-          var key='wfo_week_'+kv[0];
-          // Always update from published data (published is authoritative)
-          var existing=localStorage.getItem(key);
-          var pubReps=(kv[1].reps||[]).length;
-          var localReps=0;
-          try{localReps=(JSON.parse(existing||'{}').reps||[]).length;}catch(e){}
-          if(!existing||pubReps>0){
-            localStorage.setItem(key,JSON.stringify(kv[1]));
-            if(localIdx.indexOf(kv[0])<0)localIdx.unshift(kv[0]);
-            changed=true;
-          }
-        });
-        if(snap.weekIndex){
-          snap.weekIndex.forEach(function(w){
-            if(localIdx.indexOf(w)<0)localIdx.push(w);
-          });
-        }
-        localIdx.sort().reverse();
-        localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
-      }
-
-      // Always update config/settings from published data
+      // Always update settings (tiers, config etc)
       if(snap.perfMetrics)localStorage.setItem('wfo_perf_metrics',snap.perfMetrics);
       if(snap.perfThresholds)localStorage.setItem('wfo_perf_thresholds',snap.perfThresholds);
       if(snap.puConfig)localStorage.setItem('wfo_pu_config',snap.puConfig);
@@ -12196,18 +12171,52 @@ function ghLoadPublicData(){
       if(snap.nameOverrides)localStorage.setItem('wfo_name_overrides',snap.nameOverrides);
       if(snap.tiers)localStorage.setItem('wfo_tiers',snap.tiers);
 
-      // Set current week if not already set
+      // Only update week data if this is a new publish
+      if(!isNewPublish)return;
+      localStorage.setItem('wfo_gh_last_seen',snap.publishedAt);
+
+      // Update week data
+      var localIdx=[];
+      try{localIdx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch(e){}
+      var changed=false;
+      if(snap.weekData){
+        Object.entries(snap.weekData).forEach(function(kv){
+          var key='wfo_week_'+kv[0];
+          var pubReps=(kv[1].reps||[]).length;
+          if(pubReps>0){
+            // Only overwrite if published has more reps than local (protect admin edits)
+            var localReps=0;
+            try{localReps=(JSON.parse(localStorage.getItem(key)||'{}').reps||[]).length;}catch(e){}
+            if(pubReps>=localReps){
+              localStorage.setItem(key,JSON.stringify(kv[1]));
+              if(localIdx.indexOf(kv[0])<0)localIdx.unshift(kv[0]);
+              changed=true;
+            }
+          } else if(!localStorage.getItem(key)){
+            // Add empty week placeholder if not present
+            localStorage.setItem(key,JSON.stringify(kv[1]));
+            if(localIdx.indexOf(kv[0])<0)localIdx.unshift(kv[0]);
+          }
+        });
+        if(snap.weekIndex){
+          snap.weekIndex.forEach(function(w){if(localIdx.indexOf(w)<0)localIdx.push(w);});
+        }
+        localIdx.sort().reverse();
+        localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
+      }
+
       if(snap.currentWeek&&!localStorage.getItem('wfo_current_wk')){
         localStorage.setItem('wfo_current_wk',snap.currentWeek);
       }
 
-      if(changed){
-        // New weeks available — reload to pick them up
+      // Only reload if new data arrived AND this is not the admin PC
+      // Admin PC has reps loaded already — tablet/fresh device does not
+      if(changed&&!hasLocalData){
         window.location.reload();
       }
     })
     .catch(function(){
-      // No public data yet or offline — that's fine
+      // No public data or offline — fine
     });
 }
 
