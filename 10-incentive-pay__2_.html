@@ -6325,11 +6325,13 @@ function pC(txt,src,fn){
       ad++;
     }
   }
-  setDZ(true);saveSession();renR();updRepStatus();const _lu=document.getElementById("lu");if(_lu)_lu.textContent="Updated: "+new Date().toLocaleString();
+  setDZ(true);renR();updRepStatus();const _lu=document.getElementById("lu");if(_lu)_lu.textContent="Updated: "+new Date().toLocaleString();
   applyRosterToAll();
   // Auto-add any new NTIDs to roster
   if(src==='rtbdi'||src==='metro'){const newCount=checkAndAutoAddNewReps(reps);}
-  saveSession();
+  // NOTE: Don't call saveSession() here for rep data — week confirm dialog does the save
+  // so data lands in the correct week slot, not the previous one
+  if(src!=='rtbdi'&&src!=='metro'){saveSession();}
   if(src==='rtbdi'||src==='metro'){setTimeout(()=>{if(typeof saveDailySnapshot==='function')saveDailySnapshot(false);},600);}
   const wkDisplay=document.getElementById('wkb')?.textContent||'selected week';
   st2("✅ "+fn+" loaded — "+ad+" new, "+up+" updated","ok");
@@ -7269,12 +7271,22 @@ function showWeekConfirm(fn,count){
 function confirmWeekAndClose(){
   const dateIn=document.getElementById('wkConfirmDateIn')?.value;
   if(dateIn){
-    wk=dateIn;
-    document.getElementById('wks').value=dateIn;
+    const prevWk=wk;
+    wk=wkKey(dateIn);
+    document.getElementById('wks').value=wk;
     updWB();
-    // Save uploaded data to this week's storage
+    // Save uploaded data to the confirmed week slot
     saveCurrentWeek();
     buildWeekSelector();
+    // If week changed, remove stale empty entry from old slot
+    if(prevWk&&prevWk!==wk){
+      const prevData=getWeekData(prevWk);
+      if(!prevData.reps||!prevData.reps.length){
+        localStorage.removeItem('wfo_week_'+wkKey(prevWk));
+        const idx=getWeekIndex().filter(w=>w!==wkKey(prevWk));
+        localStorage.setItem('wfo_week_index',JSON.stringify(idx));
+      }
+    }
   }
   const modal=document.getElementById('wkConfirmModal');if(modal)modal.remove();
   tst2('Week confirmed — data saved to week of '+document.getElementById('wkb').textContent,'ok');
@@ -8970,11 +8982,12 @@ function doUpload(mode, src){
   const {content, fn} = window._pendingUpload || {};
   if(!content){tst2('Upload data lost — try again.','er');return;}
   if(mode === 'replace'){
-    // Clear relevant data
+    // Save current week data BEFORE clearing — preserves previous week in its own slot
     if(src === 'rtbdi' || src === 'metro'){
+      if(wk && reps.length) saveCurrentWeek();
       reps = [];
       CBs = [];
-      saveSession();
+      saveCurrentWeek(); // Save empty state to current slot so it's not stale
       tst2('Existing rep data cleared — loading new file...','wn');
     } else if(src === 'mgr_metro'){
       mgrSheetData = {};
