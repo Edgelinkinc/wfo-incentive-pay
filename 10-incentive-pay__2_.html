@@ -11744,18 +11744,6 @@ function spInit(){
       _spAccount = accounts[0];
       spUpdateUI(true);
     }
-    // Handle redirect response
-    _msalApp.handleRedirectPromise().then(function(resp){
-      if(resp && resp.account){
-        _spAccount = resp.account;
-        _spToken = resp.accessToken;
-        spUpdateUI(true);
-        tst2('Signed in to SharePoint \u2014 loading data\u2026','ok');
-        setTimeout(spLoad, 500);
-      }
-    }).catch(function(e){
-      console.log('MSAL redirect error:',e);
-    });
   }catch(e){
     console.log('MSAL init error:',e);
   }
@@ -11781,14 +11769,27 @@ function spSignIn(){
       setTimeout(function(){
         spInit();
         setTimeout(function(){
-          if(_msalApp)_msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
+          if(_msalApp)_msalApp.loginPopup({scopes:_spScopes,prompt:'select_account'}).then(function(resp){if(resp&&resp.account){_spAccount=resp.account;_spToken=resp.accessToken;spUpdateUI(true);tst2('Signed in \u2014 loading data\u2026','ok');setTimeout(spLoadConfig,500);}}).catch(function(e){tst2('Sign-in failed: '+e.message,'er');});
           else tst2('Auth still not ready. Please refresh the page.','er');
         },1000);
       },500);
     }
     return;
   }
-  _msalApp.loginRedirect({scopes:_spScopes,prompt:'select_account'});
+  _msalApp.loginPopup({scopes:_spScopes,prompt:'select_account'})
+    .then(function(resp){
+      if(resp && resp.account){
+        _spAccount=resp.account;
+        _spToken=resp.accessToken;
+        spUpdateUI(true);
+        tst2('\u2601 Signed in to SharePoint \u2014 loading your data\u2026','ok');
+        setTimeout(spLoadConfig, 500);
+      }
+    })
+    .catch(function(e){
+      tst2('Sign-in failed: '+e.message,'er');
+      console.error('SP sign-in error:',e);
+    });
 }
 
 function spSignOut(){
