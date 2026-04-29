@@ -1855,6 +1855,10 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <label>MIM Spiff Month</label>
         <input type="month" id="mpMimMonth" onchange="renMgrPayout()" style="padding:9px 12px;border:2px solid var(--bo);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;width:100%"/>
       </div>
+      <div class="fi" style="min-width:160px">
+        <label>Payout Date</label>
+        <input type="date" id="mpPayoutDate" onchange="localStorage.setItem('wfo_payout_date',this.value)" style="padding:9px 12px;border:2px solid var(--pr);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;width:100%" title="Date printed on the manager slip"/>
+      </div>
       <button class="btn bs sm" onclick="downloadMgrPayoutSlipPDF()" style="margin-bottom:2px">⬇ Download PDF</button>
     </div>
 
@@ -3530,6 +3534,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   initMgrStoreDD();initCoachDD();renderCatRows();renMgrHist();renCoachHist();
   const _lu=document.getElementById("lu");if(_lu)_lu.textContent="Updated: "+new Date().toLocaleString();
   const mn=document.getElementById("mgrMonth");if(mn){const n=new Date();mn.value=n.getFullYear()+"-"+(String(n.getMonth()+1).padStart(2,"0"));}
+  const _pd=document.getElementById("mpPayoutDate");if(_pd&&!_pd.value){const _sv=localStorage.getItem('wfo_payout_date');if(_sv)_pd.value=_sv;}
   const cm=document.getElementById("coachMonth");if(cm){const n=new Date();cm.value=n.getFullYear()+"-"+(String(n.getMonth()+1).padStart(2,"0"));}
   loadCustomRoster();
   // Init coach roster (pre-seeds Mike Cobbs as inactive if first load)
@@ -4236,6 +4241,9 @@ function buildUnifiedMgrSlip(storeName, mn){
   if(elbFail)warnings+='<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#C62828">\uD83D\uDEAB ELB rank '+elb+' \u2265 '+q.elbCutoff+' \u2014 $0 payout (disqualifier)</div>';
   if(attachFail)warnings+='<div style="background:#FFF8E1;border:1px solid #FFB300;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a6000">\u26A0 Metro Protection attach '+attach.toFixed(1)+'% < '+q.attachCutoff+'% \u2014 '+q.attachPenalty+'% penalty applied</div>';
 
+  // Meta
+  const payoutDate=document.getElementById('mpPayoutDate')?.value||localStorage.getItem('wfo_payout_date')||'';
+  const payoutDisplay=payoutDate?new Date(payoutDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Not set';
   return '<div style="max-width:720px;margin:0 auto;padding:0 24px 40px;font-family:\'Nunito\',sans-serif">'
     // Header
     +'<div style="background:linear-gradient(135deg,#E20074,#6E2B8B,#4A1A6B);border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:20px">'
@@ -4253,12 +4261,13 @@ function buildUnifiedMgrSlip(storeName, mn){
     +['<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">ELB Rank</div><div style="font-weight:700;font-size:13px">'+(elb||'\u2014')+'</div></div>',
       '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Attach %</div><div style="font-weight:700;font-size:13px;color:'+(attachFail?'#D32F2F':'#1A1A1A')+'">'+(attach?attach.toFixed(1)+'%':'\u2014')+'</div></div>',
       '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Period</div><div style="font-weight:700;font-size:13px">'+period+'</div></div>',
-      '<div style="background:#F8F8F8;border-radius:8px;padding:9px 12px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px">Generated</div><div style="font-weight:700;font-size:11px">'+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div></div>'
+      '<div style="background:'+(payoutDate?'#FFF0F7':'#FFF8E1')+';border-radius:8px;padding:9px 12px;border:1px solid '+(payoutDate?'#E20074':'#FFB300')+'"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:'+(payoutDate?'#E20074':'#8a6000')+';margin-bottom:2px">Payout Date</div><div style="font-weight:700;font-size:11px">'+payoutDisplay+'</div></div>'
     ].join('')+'</div>'
     // Warnings
     +warnings
-    // Category table
-    +'<table style="width:100%;border-collapse:collapse;border:1px solid #E8E8E8;border-radius:12px;overflow:hidden;margin-bottom:20px">'
+    // Category table — fixed layout keeps headers over correct columns
+    +'<table style="width:100%;border-collapse:collapse;border:1px solid #E8E8E8;border-radius:12px;overflow:hidden;margin-bottom:20px;table-layout:fixed">'
+    +'<colgroup><col style="width:36%"><col style="width:16%"><col style="width:16%"><col style="width:16%"><col style="width:16%"></colgroup>'
     +'<thead><tr style="background:#FFF0F7">'
     +'<th style="padding:9px 14px;text-align:left;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Category</th>'
     +'<th style="padding:9px 14px;text-align:center;font-size:10px;font-family:\'Poppins\',sans-serif;font-weight:700;color:#E20074;text-transform:uppercase;border-bottom:2px solid #E20074">Target</th>'
