@@ -9427,7 +9427,31 @@ function saveWeekData(date, data){
   }
 }
 function getWeekIndex(){
-  try{return JSON.parse(localStorage.getItem('wfo_week_index')||'[]');}catch{return[];}
+  try{
+    var idx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');
+    // Normalize all entries to Monday — fixes any raw dates saved before this fix
+    var normalized=idx.map(function(d){return wkKey(d);});
+    // Deduplicate after normalization
+    var seen={};
+    normalized=normalized.filter(function(d){if(seen[d])return false;seen[d]=true;return true;});
+    // If normalization changed anything, migrate stale data and save clean index
+    var changed=normalized.some(function(d,i){return d!==idx[i];});
+    if(changed){
+      idx.forEach(function(oldKey,i){
+        var newKey=normalized[i];
+        if(oldKey!==newKey){
+          var stale=localStorage.getItem('wfo_week_'+oldKey);
+          if(stale&&!localStorage.getItem('wfo_week_'+newKey)){
+            localStorage.setItem('wfo_week_'+newKey,stale);
+          }
+          localStorage.removeItem('wfo_week_'+oldKey);
+        }
+      });
+      normalized.sort().reverse();
+      localStorage.setItem('wfo_week_index',JSON.stringify(normalized));
+    }
+    return normalized;
+  }catch{return[];}
 }
 
 // ── LOAD WEEK INTO ACTIVE STATE ──
