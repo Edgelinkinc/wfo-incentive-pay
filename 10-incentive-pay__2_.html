@@ -12112,7 +12112,7 @@ function ghBuildPublicData(){
   return {
     version: 1,
     publishedAt: new Date().toISOString(),
-    currentWeek: localStorage.getItem('wfo_current_wk')||'',
+    currentWeek: wkKey(localStorage.getItem('wfo_current_wk')||wk||new Date().toISOString().split('T')[0]),
     weekIndex: idx,
     weekData: weekData,
     perfMetrics:    localStorage.getItem('wfo_perf_metrics'),
@@ -12603,7 +12603,7 @@ function spSaveConfig(){
       // Full data backup
       weekIndex: idx,
       weekData: weekData,
-      currentWeek: localStorage.getItem('wfo_current_wk')||'',
+      currentWeek: wkKey(localStorage.getItem('wfo_current_wk')||wk||new Date().toISOString().split('T')[0]),
       tiers: localStorage.getItem('wfo_tiers'),
       puConfig: localStorage.getItem('wfo_pu_config'),
       customRoster: localStorage.getItem('wfo_custom_roster'),
