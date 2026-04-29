@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "publishedAt": "2026-04-29T17:05:13.534Z",
-  "currentWeek": "2026-04-20",
+  "publishedAt": "2026-04-29T21:56:37.212Z",
+  "currentWeek": "2026-04-27",
   "weekIndex": [
     "2026-04-27",
     "2026-04-20",
@@ -433,7 +433,7 @@
         {
           "n": "Cleoty",
           "ri": "YGR92575",
-          "s": "",
+          "s": "RI-751 BROAD",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 6,
@@ -510,7 +510,7 @@
           "n": "Yanna",
           "ri": "NRG89467",
           "s": "RI-BALD HILL",
-          "c": "TBD",
+          "c": "Rose Perez",
           "state": "RI",
           "ta": 5,
           "na": 5,
@@ -998,7 +998,7 @@
         {
           "n": "Jalah",
           "ri": "CAI39911",
-          "s": "",
+          "s": "CT-NEW LONDON",
           "c": "TBD",
           "ta": 1,
           "na": 1,
@@ -1148,7 +1148,7 @@
         {
           "n": "ANGELOUS",
           "ri": "CIZ66134",
-          "s": "",
+          "s": "AR-RADIO GEYER",
           "c": "TBD",
           "ta": 0,
           "na": 0,
@@ -1204,8 +1204,8 @@
         {
           "n": "IMMANUEL",
           "ri": "RZD14638",
-          "s": "",
-          "c": "TBD",
+          "s": "MA-ROCKDALE",
+          "c": "Manny",
           "ta": 0,
           "na": 0,
           "ra": 0,
@@ -1222,7 +1222,7 @@
         {
           "n": "James",
           "ri": "YSK35283",
-          "s": "",
+          "s": "TN-WESTERN AVE",
           "c": "Mr. Watts",
           "ta": 0,
           "na": 0,
@@ -1333,7 +1333,7 @@
       ]
     },
     "2026-04-20": {
-      "locked": false,
+      "locked": true,
       "repCount": 80,
       "reps": [
         {
@@ -2893,7 +2893,7 @@
           "n": "Yanna",
           "ri": "NRG89467",
           "s": "RI-BALD HILL",
-          "c": "TBD",
+          "c": "Rose Perez",
           "state": "RI",
           "ta": 36,
           "na": 26,
@@ -3745,7 +3745,7 @@
         {
           "n": "April",
           "ri": "ZYM14820",
-          "s": "",
+          "s": "TN-WESTERN AVE",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 9,
@@ -4346,7 +4346,7 @@
         {
           "n": "Cleoty",
           "ri": "YGR92575",
-          "s": "",
+          "s": "RI-751 BROAD",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 0,
