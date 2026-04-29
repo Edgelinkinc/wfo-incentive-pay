@@ -3793,7 +3793,7 @@ function initMgrStoreDD(){const s=document.getElementById("mgrStore");if(!s)retu
 function initCoachDD(){const s=document.getElementById("coachSel");if(!s)return;s.innerHTML="<option value=''>Select Coach...</option>";COACHES.sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`);}
 
 // ── TIER ENGINE ──
-function gBT(t){return T.box.find(x=>t>=x.mn&&t<=x.mx)||null;}
+function gBT(t){const box=(typeof getTiersForWeek==='function'&&wk?getTiersForWeek(wk):T).box||T.box;return box.find(x=>t>=x.mn&&t<=x.mx)||null;}
 function cBx(t){const x=gBT(t);return x?t*x.r:0;}
 function bBd(t){const x=gBT(t);if(!x)return{l:"No Tier",c:"bno"};if(x.r===3)return{l:"$3 · 8-11",c:"bt1"};if(x.r===4)return{l:"$4 · 12-17",c:"bt2"};if(x.r===5)return{l:"$5 · 18-24",c:"bt3"};return{l:"$6 TOP",c:"btop"};}
 function gAT(p){return T.acc.find(x=>p>=x.mp&&p<=x.xp)||null;}
