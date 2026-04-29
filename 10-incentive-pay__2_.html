@@ -6213,9 +6213,6 @@ async function downloadMgrPayoutSlipPDF(){
     const payoutDate=document.getElementById('mpPayoutDate')?.value||localStorage.getItem('wfo_payout_date')||'';
     const payoutDisplay=payoutDate?new Date(payoutDate+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Not set';
     const mgrStores=SR.filter(function(s){return s.mgr===mgr;});
-    const anyMim=mgrStores.some(function(s){return getMgrMimForStore(s.s,mimMn).enabled;});
-
-    // Build store rows from data (not DOM innerHTML)
     const bs=getBs(bonusMn)||getOrCreateBs(bonusMn);
     const q=bs.qualifiers||{elbCutoff:3368,attachCutoff:60,attachPenalty:25};
     const cats=bs.categories||[
@@ -6226,7 +6223,8 @@ async function downloadMgrPayoutSlipPDF(){
     ];
 
     var grandTotal=0;
-    var storeRows='';
+    var storeBlocks='';
+
     mgrStores.forEach(function(store){
       const srBs=getSR_BS();
       const tier=srBs[store.s]?.tier||store.tier||2;
@@ -6238,15 +6236,13 @@ async function downloadMgrPayoutSlipPDF(){
       const elbFail=elb>0&&elb>=q.elbCutoff;
       const attachFail=attach>0&&attach<q.attachCutoff;
       const tgts=bs.targets?.[store.s]||{};
-      var storeBonus=0;
-      var notes=[];
-      if(elbFail)notes.push('ELB '+elb+' \u2265 cutoff — $0');
-      if(attachFail)notes.push('Attach '+attach.toFixed(1)+'% < '+q.attachCutoff+'% — '+q.attachPenalty+'% penalty');
+      var storeTotal=0;
 
-      // Calculate per-category (same logic as calcMgrBonus)
+      var catRows='';
       cats.forEach(function(cat){
-        const act=+sd[cat.id]||0;
         const tgt=tgts[cat.id]||0;
+        const act=+sd[cat.id]||0;
+        const maxBonus=cat[uKey]||0;
         const pct=tgt>0?(act/tgt)*100:0;
         var bonus=0;
         if(!elbFail&&act>0&&tgt>0){
@@ -6254,75 +6250,102 @@ async function downloadMgrPayoutSlipPDF(){
           else if(pct>=cat.baseThresh)bonus=cat[bKey];
           if(attachFail&&bonus>0)bonus*=(1-q.attachPenalty/100);
         }
-        storeBonus+=bonus;
+        storeTotal+=bonus;
+        // Color coding
+        const metGoal=tgt>0&&pct>=cat.baseThresh;
+        const nearGoal=tgt>0&&pct>=(cat.baseThresh*0.85)&&pct<cat.baseThresh;
+        const missed=tgt>0&&pct<(cat.baseThresh*0.85);
+        const rowBg=elbFail?'#FFF3F3':metGoal?'#F0FFF4':nearGoal?'#FFFBF0':missed&&tgt>0?'#FFF3F3':'#FAFAFA';
+        const pctClr=metGoal?'#00A651':nearGoal?'#E65100':missed&&tgt>0?'#D32F2F':'#999';
+        const bonusClr=bonus>0?'#E20074':'#999';
+        catRows+='<tr style="background:'+rowBg+'">'
+          +'<td style="padding:7px 10px;font-weight:600">'+cat.name+'</td>'
+          +'<td style="padding:7px 10px;text-align:center;color:#555">'+(tgt?tgt:'—')+'</td>'
+          +'<td style="padding:7px 10px;text-align:center;font-weight:700">'+(act||'—')+'</td>'
+          +'<td style="padding:7px 10px;text-align:center;font-weight:800;color:'+pctClr+'">'+(tgt>0?pct.toFixed(1)+'%':'—')+'</td>'
+          +'<td style="padding:7px 10px;text-align:center;color:#888">$'+maxBonus.toFixed(0)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right;font-weight:800;color:'+bonusClr+'">$'+bonus.toFixed(2)+'</td>'
+          +'</tr>';
       });
-      grandTotal+=storeBonus;
+      grandTotal+=storeTotal;
 
-      storeRows+='<tr>'
-        +'<td>'+store.s+'</td>'
-        +'<td>Tier '+tier+'</td>'
-        +'<td>'+(elb||'—')+'</td>'
-        +'<td>'+(attach?attach.toFixed(1)+'%':'—')+'</td>'
-        +'<td>'+(+sd.acts||'—')+'</td>'
-        +'<td>'+(+sd.bts||'—')+'</td>'
-        +'<td>'+(+sd.hsi||'—')+'</td>'
-        +'<td>'+(sd.acc?'$'+(+sd.acc).toLocaleString('en-US',{minimumFractionDigits:2}):'—')+'</td>'
-        +'<td style="font-weight:800;color:'+(storeBonus>0?'#E20074':'#999')+'">$'+storeBonus.toFixed(2)+'</td>'
-        +'<td style="font-size:10px;color:#666">'+(notes.join(' · '))+'</td>'
-        +'</tr>';
+      // Store header color
+      var storeHeaderBg=elbFail?'#FFEBEE':attachFail?'#FFF8E1':'#F3E8FF';
+      var storeHeaderClr=elbFail?'#C62828':attachFail?'#8a6000':'#4A1A6B';
+      var warnings='';
+      if(elbFail)warnings+='<div style="background:#FFEBEE;border-left:4px solid #D32F2F;padding:6px 10px;font-size:10px;color:#C62828;margin-bottom:4px">\uD83D\uDEAB ELB rank '+elb+' \u2265 '+q.elbCutoff+' — disqualified, $0 payout</div>';
+      if(attachFail)warnings+='<div style="background:#FFF8E1;border-left:4px solid #FFB300;padding:6px 10px;font-size:10px;color:#8a6000;margin-bottom:4px">\u26A0 Protection attach '+attach.toFixed(1)+'% < '+q.attachCutoff+'% — '+q.attachPenalty+'% penalty applied</div>';
+
+      storeBlocks+='<div style="margin-bottom:16px;border:1px solid #E0E0E0;border-radius:8px;overflow:hidden">'
+        +'<div style="background:'+storeHeaderBg+';padding:8px 12px;display:flex;justify-content:space-between;align-items:center">'
+        +'<div><span style="font-family:Poppins,sans-serif;font-weight:800;font-size:13px;color:'+storeHeaderClr+'">'+store.s+'</span>'
+        +'<span style="font-size:10px;color:#888;margin-left:10px">Tier '+tier+' · ELB: '+(elb||'—')+' · Attach: '+(attach?attach.toFixed(1)+'%':'—')+'</span></div>'
+        +'<span style="font-family:Poppins,sans-serif;font-weight:900;font-size:16px;color:'+(storeTotal>0?'#E20074':'#D32F2F')+'">$'+storeTotal.toFixed(2)+'</span>'
+        +'</div>'
+        +warnings
+        +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
+        +'<thead><tr style="background:#FFF0F7">'
+        +'<th style="padding:6px 10px;text-align:left;font-size:9px;color:#E20074;font-weight:700;text-transform:uppercase;border-bottom:1px solid #E8E8E8;width:22%">Category</th>'
+        +'<th style="padding:6px 10px;text-align:center;font-size:9px;color:#E20074;font-weight:700;text-transform:uppercase;border-bottom:1px solid #E8E8E8;width:13%">Target</th>'
+        +'<th style="padding:6px 10px;text-align:center;font-size:9px;color:#E20074;font-weight:700;text-transform:uppercase;border-bottom:1px solid #E8E8E8;width:13%">Actual</th>'
+        +'<th style="padding:6px 10px;text-align:center;font-size:9px;color:#E20074;font-weight:700;text-transform:uppercase;border-bottom:1px solid #E8E8E8;width:13%">% to Goal</th>'
+        +'<th style="padding:6px 10px;text-align:center;font-size:9px;color:#E20074;font-weight:700;text-transform:uppercase;border-bottom:1px solid #E8E8E8;width:13%">Max Earn</th>'
+        +'<th style="padding:6px 10px;text-align:right;font-size:9px;color:#E20074;font-weight:700;text-transform:uppercase;border-bottom:1px solid #E8E8E8;width:13%">Earned</th>'
+        +'</tr></thead><tbody>'+catRows+'</tbody>'
+        +'<tr style="background:linear-gradient(90deg,#4A1A6B,#6E2B8B)">'
+        +'<td colspan="5" style="padding:8px 10px;font-weight:800;font-size:12px;color:#fff;font-family:Poppins,sans-serif">STORE TOTAL</td>'
+        +'<td style="padding:8px 10px;text-align:right;font-weight:900;font-size:15px;color:#fff;font-family:Poppins,sans-serif">$'+storeTotal.toFixed(2)+'</td>'
+        +'</tr></table></div>';
     });
 
-    const grandSection='<div class="item total"><label>Total Store Bonus</label><span>$'+grandTotal.toFixed(2)+'</span></div>';
-
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+      @page{size:landscape;margin:18mm 16mm;}
       *{margin:0;padding:0;box-sizing:border-box;}
-      body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
-      .header{background:linear-gradient(135deg,#E20074,#6E2B8B);color:#fff;padding:20px 24px;border-radius:10px;margin-bottom:16px;}
-      .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;letter-spacing:.02em;}
-      .header h2{font-size:13px;opacity:.8;margin-top:4px;}
-      .meta{display:flex;gap:32px;background:#FFF0F7;padding:12px 20px;border-radius:8px;margin-bottom:16px;border:1px solid #F8C0DC;}
-      .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#E20074;display:block;margin-bottom:2px;}
-      .meta div span{font-size:14px;font-weight:700;}
-      .sh{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#E20074;margin:0 0 10px;}
-      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
-      thead tr{background:#FFF0F7;}
-      th{padding:8px 10px;border-bottom:2px solid #E20074;font-family:'Poppins',sans-serif;font-weight:700;font-size:9px;text-transform:uppercase;color:#E20074;text-align:center;}
-      th:first-child{text-align:left;width:20%;}
-      th:last-child{text-align:left;width:20%;}
-      td{padding:9px 10px;border-bottom:1px solid #EEEEEE;text-align:center;vertical-align:middle;}
-      td:first-child{text-align:left;font-weight:700;}
-      td:last-child{text-align:left;}
-      tr:nth-child(even) td{background:#FAFAFA;}
-      .grand{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:16px 22px;border-radius:8px;display:flex;justify-content:flex-end;align-items:center;gap:24px;margin-top:4px;}
-      .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
-      .grand .item.total span{font-family:'Poppins',sans-serif;font-size:28px;font-weight:900;color:#fff;}
-      .grand .item.total label{font-size:10px;opacity:.8;}
-      .sigs{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin:24px 0 12px;}
-      .sig-line{border-top:2px solid #1A1A1A;padding-top:6px;display:flex;justify-content:space-between;}
-      .sig-line span{font-size:11px;font-weight:700;color:#555;}
-      .sig-line em{font-size:11px;color:#999;font-style:normal;}
-      .footer{font-size:9px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:8px;text-transform:uppercase;letter-spacing:.05em;}
+      body{font-family:Arial,sans-serif;font-size:11px;color:#1A1A1A;background:#fff;}
+      .header{background:linear-gradient(135deg,#E20074,#6E2B8B);color:#fff;padding:16px 22px;border-radius:10px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+      .header-left h1{font-size:17px;font-weight:900;letter-spacing:.03em;margin-bottom:3px;}
+      .header-left h2{font-size:12px;opacity:.8;}
+      .header-right{text-align:right;}
+      .header-right .amount{font-size:32px;font-weight:900;line-height:1;}
+      .header-right .label{font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+      .meta{display:flex;gap:24px;background:#FFF0F7;padding:10px 16px;border-radius:8px;margin-bottom:14px;border:1px solid #F8C0DC;}
+      .meta div label{font-size:8px;font-weight:700;text-transform:uppercase;color:#E20074;display:block;margin-bottom:2px;}
+      .meta div span{font-size:13px;font-weight:700;}
+      .legend{display:flex;gap:16px;margin-bottom:10px;font-size:10px;}
+      .legend span{display:flex;align-items:center;gap:5px;}
+      .legend .dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+      .sigs{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin:20px 0 10px;}
+      .sig-line{border-top:2px solid #1A1A1A;padding-top:5px;display:flex;justify-content:space-between;}
+      .sig-line span{font-size:10px;font-weight:700;color:#555;}
+      .sig-line em{font-size:10px;color:#999;font-style:normal;}
+      .footer{font-size:8px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:6px;text-transform:uppercase;letter-spacing:.05em;}
+      .grand-bar{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:14px 20px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+      .grand-bar .lbl{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.06em;}
+      .grand-bar .amt{font-size:26px;font-weight:900;}
     </style></head><body>
     <div class="header">
-      <h1>EDGELINK INC — WORK FORCE OPS</h1>
-      <h2>Manager Bonus Payout &middot; ${mgr}</h2>
+      <div class="header-left">
+        <h1>EDGELINK INC — WORK FORCE OPS</h1>
+        <h2>Manager Bonus Payout &middot; ${mgr}</h2>
+      </div>
+      <div class="header-right">
+        <div class="label">Total Bonus Earned</div>
+        <div class="amount">$${grandTotal.toFixed(2)}</div>
+      </div>
     </div>
     <div class="meta">
       <div><label>Manager</label><span>${mgr}</span></div>
       <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
+      <div><label>Stores</label><span>${mgrStores.length}</span></div>
       <div><label>Payout Date</label><span style="color:${payoutDate?'#E20074':'#999'}">${payoutDisplay}</span></div>
     </div>
-    <div class="sh">&#127978; Store Bonus Breakdown</div>
-    <table>
-      <thead><tr>
-        <th>Store</th><th>Tier</th><th>ELB Rank</th><th>Attach %</th>
-        <th>Acts</th><th>BTS</th><th>HSI</th><th>Acc $</th><th>Bonus</th><th>Notes</th>
-      </tr></thead>
-      <tbody>${storeRows}</tbody>
-    </table>
-    <div class="grand"><div class="item total"><label>Total Store Bonus</label><span>$${grandTotal.toFixed(2)}</span></div></div>
+    <div class="legend">
+      <span><span class="dot" style="background:#F0FFF4;border:1px solid #00A651"></span> Met goal</span>
+      <span><span class="dot" style="background:#FFFBF0;border:1px solid #E65100"></span> Near goal (&ge;85%)</span>
+      <span><span class="dot" style="background:#FFF3F3;border:1px solid #D32F2F"></span> Missed / Disqualified</span>
+    </div>
+    ${storeBlocks}
     <div class="sigs">
       <div><div class="sig-line"><span>Manager Signature</span><em>Date</em></div></div>
       <div><div class="sig-line"><span>HR / Owner Approval</span><em>Date</em></div></div>
