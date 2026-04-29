@@ -6228,6 +6228,8 @@ async function downloadMgrPayoutSlipPDF(){
       <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
       <div class="item total"><label>Total Payout</label><span>${grand}</span></div>`:`
       <div class="item total"><label>Total Store Bonus</label><span>${grand}</span></div>`;
+    const payoutDate=document.getElementById('mpPayoutDate')?.value||localStorage.getItem('wfo_payout_date')||'';
+    const payoutDisplay=payoutDate?new Date(payoutDate+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Not set';
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -6239,9 +6241,11 @@ async function downloadMgrPayoutSlipPDF(){
       .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#E20074;display:block;}
       .meta div span{font-size:14px;font-weight:700;}
       .sh{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#E20074;margin:16px 0 8px;}
-      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
-      th{background:#FFF0F7;color:#E20074;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #E20074;text-align:left;}
-      td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;table-layout:fixed;}
+      th{background:#FFF0F7;color:#E20074;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #E20074;text-align:center;}
+      th:first-child{text-align:left;}
+      td{padding:6px 8px;border-bottom:1px solid #E8E8E8;text-align:center;overflow:hidden;}
+      td:first-child{text-align:left;}
       tr:nth-child(even) td{background:#FAFAFA;}
       .grand{background:#6E2B8B;color:#fff;padding:16px 22px;border-radius:8px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:8px;}
       .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
@@ -6256,11 +6260,14 @@ async function downloadMgrPayoutSlipPDF(){
       <div><label>Manager</label><span>${mgr}</span></div>
       <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
       ${anyMim?`<div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
-      <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
+      <div><label>Payout Date</label><span style="color:${payoutDate?'#E20074':'#999'}">${payoutDisplay}</span></div>
     </div>
     <div class="sh">🏪 Store Bonus Breakdown</div>
-    <table><thead><tr><th>Store</th><th>Tier</th><th>ELB Rank</th><th>Attach %</th><th>Acts</th><th>BTS</th><th>HSI</th><th>Acc $</th><th>Bonus</th><th>Notes</th></tr></thead>
-    <tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
+    <table>
+      <colgroup><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:9%"><col style="width:8%"><col style="width:18%"></colgroup>
+      <thead><tr><th style="text-align:left">Store</th><th>Tier</th><th>ELB Rank</th><th>Attach %</th><th>Acts</th><th>BTS</th><th>HSI</th><th>Acc $</th><th>Bonus</th><th style="text-align:left">Notes</th></tr></thead>
+      <tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot>
+    </table>
     ${mimSection}
     <div class="grand">${grandSection}</div>
     <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${formatPeriod(bonusMn)}</div>
