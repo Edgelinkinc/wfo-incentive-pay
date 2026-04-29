@@ -3524,7 +3524,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   ghLoadPublicData();
   const _savedWk=localStorage.getItem("wfo_current_wk");
   setWk();
-  if(_savedWk&&_savedWk>wk){wk=_savedWk;document.getElementById("wks").value=wk;updWB();}
+  if(_savedWk){const _normSaved=wkKey(_savedWk);if(_normSaved>wk){wk=_normSaved;document.getElementById("wks").value=wk;updWB();}}
   popDD();renTE();renMgrTE();renCoachTE();renSL();renSB();upK();updLk();
   renMgrOverview();renWkHist();renCBL();renRepOv();renMimTables();renCoachOv();
   initMgrStoreDD();initCoachDD();renderCatRows();renMgrHist();renCoachHist();
@@ -5487,8 +5487,9 @@ function initEmpWeekPicker(){
   if(!sel)return;
   // Read from the correct week index (wfo_week_index + wfo_week_* keys)
   const idx=getWeekIndex();
-  // Make sure current week is always included even if mid-week (not yet in index)
-  const allWeeks=[...new Set(wk?[wk,...idx]:idx)];
+  // Make sure current week is always included — normalize to Monday to avoid duplicates
+  const currentMon=wk?wkKey(wk):'';
+  const allWeeks=[...new Set(currentMon?[currentMon,...idx]:idx)];
   sel.innerHTML='';
   allWeeks.forEach(function(wkDate){
     const d=getWeekData(wkDate);
