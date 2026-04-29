@@ -3527,8 +3527,12 @@ function sumSwitchWeek(wkDate){
 document.addEventListener("DOMContentLoaded",()=>{
   ghLoadPublicData();
   const _savedWk=localStorage.getItem("wfo_current_wk");
-  setWk();
-  if(_savedWk){const _normSaved=wkKey(_savedWk);if(_normSaved>wk){wk=_normSaved;document.getElementById("wks").value=wk;updWB();}}
+  setWk(); // sets wk to this Monday
+  if(_savedWk){
+    const _normSaved=wkKey(_savedWk);
+    // Only override with saved week if it matches or is newer than today's Monday
+    if(_normSaved>=wk){wk=_normSaved;document.getElementById("wks").value=wk;updWB();}
+  }
   popDD();renTE();renMgrTE();renCoachTE();renSL();renSB();upK();updLk();
   renMgrOverview();renWkHist();renCBL();renRepOv();renMimTables();renCoachOv();
   initMgrStoreDD();initCoachDD();renderCatRows();renMgrHist();renCoachHist();
@@ -5511,7 +5515,7 @@ function initEmpWeekPicker(){
   const idx=getWeekIndex();
   // Make sure current week is always included — normalize to Monday to avoid duplicates
   const currentMon=wk?wkKey(wk):'';
-  const allWeeks=[...new Set(currentMon?[currentMon,...idx]:idx)];
+  const allWeeks=[...new Set(currentMon?[currentMon,...idx]:idx)].sort().reverse();
   sel.innerHTML='';
   allWeeks.forEach(function(wkDate){
     const d=getWeekData(wkDate);
@@ -9429,29 +9433,40 @@ function saveWeekData(date, data){
 function getWeekIndex(){
   try{
     var idx=JSON.parse(localStorage.getItem('wfo_week_index')||'[]');
-    // Normalize all entries to Monday — fixes any raw dates saved before this fix
-    var normalized=idx.map(function(d){return wkKey(d);});
-    // Deduplicate after normalization
+    // Normalize all entries to Monday — fix any raw dates saved before this fix
+    var normalized=idx.map(function(d){
+      if(!d)return null;
+      // Inline Monday normalization (don't use wkKey which depends on global wk)
+      var dt=new Date(d+'T12:00:00');
+      if(isNaN(dt.getTime()))return d;
+      var day=dt.getDay();
+      dt.setDate(dt.getDate()-(day===0?6:day-1));
+      return dt.toISOString().split('T')[0];
+    }).filter(Boolean);
+    // Deduplicate
     var seen={};
     normalized=normalized.filter(function(d){if(seen[d])return false;seen[d]=true;return true;});
-    // If normalization changed anything, migrate stale data and save clean index
-    var changed=normalized.some(function(d,i){return d!==idx[i];});
-    if(changed){
-      idx.forEach(function(oldKey,i){
-        var newKey=normalized[i];
-        if(oldKey!==newKey){
-          var stale=localStorage.getItem('wfo_week_'+oldKey);
-          if(stale&&!localStorage.getItem('wfo_week_'+newKey)){
-            localStorage.setItem('wfo_week_'+newKey,stale);
-          }
-          localStorage.removeItem('wfo_week_'+oldKey);
-        }
-      });
+    // Migrate stale data keys if any changed
+    var anyChanged=false;
+    idx.forEach(function(oldKey){
+      if(!oldKey)return;
+      var dt=new Date(oldKey+'T12:00:00');if(isNaN(dt.getTime()))return;
+      var day=dt.getDay();dt.setDate(dt.getDate()-(day===0?6:day-1));
+      var newKey=dt.toISOString().split('T')[0];
+      if(newKey!==oldKey){
+        anyChanged=true;
+        var stale=localStorage.getItem('wfo_week_'+oldKey);
+        if(stale&&!localStorage.getItem('wfo_week_'+newKey))
+          localStorage.setItem('wfo_week_'+newKey,stale);
+        localStorage.removeItem('wfo_week_'+oldKey);
+      }
+    });
+    if(anyChanged){
       normalized.sort().reverse();
       localStorage.setItem('wfo_week_index',JSON.stringify(normalized));
     }
-    return normalized;
-  }catch{return[];}
+    return normalized.sort().reverse();
+  }catch(e){return[];}
 }
 
 // ── LOAD WEEK INTO ACTIVE STATE ──
