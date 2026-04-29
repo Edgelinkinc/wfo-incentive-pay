@@ -3793,9 +3793,22 @@ function initMgrStoreDD(){const s=document.getElementById("mgrStore");if(!s)retu
 function initCoachDD(){const s=document.getElementById("coachSel");if(!s)return;s.innerHTML="<option value=''>Select Coach...</option>";COACHES.sort().forEach(c=>s.innerHTML+=`<option value="${c}">${c}</option>`);}
 
 // ── TIER ENGINE ──
-function gBT(t){const box=(typeof getTiersForWeek==='function'&&wk?getTiersForWeek(wk):T).box||T.box;return box.find(x=>t>=x.mn&&t<=x.mx)||null;}
+function gBT(t){
+  // For current week use T directly; for past weeks use historical tiers
+  var tiers=(wk&&typeof getTiersForWeek==='function'&&wk<new Date().toISOString().split('T')[0])?getTiersForWeek(wk):T;
+  var box=(tiers&&tiers.box)||T.box;
+  return box.find(function(x){return t>=x.mn&&t<=x.mx;})||null;
+}
 function cBx(t){const x=gBT(t);return x?t*x.r:0;}
-function bBd(t){const x=gBT(t);if(!x)return{l:"No Tier",c:"bno"};if(x.r===3)return{l:"$3 · 8-11",c:"bt1"};if(x.r===4)return{l:"$4 · 12-17",c:"bt2"};if(x.r===5)return{l:"$5 · 18-24",c:"bt3"};return{l:"$6 TOP",c:"btop"};}
+function bBd(t){
+  const x=gBT(t);
+  if(!x)return{l:'No Tier',c:'bno'};
+  // Build label dynamically from actual tier values
+  const isTop=!x.mx||x.mx>=9999;
+  const lbl=isTop?'$'+x.r+' TOP':'$'+x.r+' · '+x.mn+'–'+x.mx;
+  const cls=x.r<=3?'bt1':x.r<=4?'bt2':x.r<=5?'bt3':'btop';
+  return{l:lbl,c:cls};
+}
 function gAT(p){return T.acc.find(x=>p>=x.mp&&p<=x.xp)||null;}
 function cAc(p){const x=gAT(p);return x?(p*x.p/100):0;}
 function aBd(p){const x=gAT(p);if(!x)return{l:"No Tier",c:"bno",p:0};const m={5:"bt1",7:"bt2",10:"bt3",15:"bt4",20:"btop"};return{l:`${x.p}% $${x.mp}+`,c:m[x.p]||"bt3",p:x.p};}
@@ -3829,12 +3842,14 @@ function cbT(n){return CBs.filter(c=>c.rp===n&&!c.voided).reduce((s,c)=>s+(c.a||
 function actSp(wd){const d=wd||(wk?new Date(wk+"T12:00:00"):new Date());return sps.filter(s=>{if(!s.on)return false;const st=new Date(s.sd+"T12:00:00"),en=s.ed?new Date(s.ed+"T12:00:00"):null;return d>=st&&(!en||d<=en);});}
 function cSp(r){const wd=wk?new Date(wk+"T12:00:00"):new Date();let tot=0,det=[];actSp(wd).forEach(sp=>{if(sp.sc==="store"&&sp.sv&&r.s!==sp.sv)return;if(sp.sc==="coach"&&sp.sv&&r.c!==sp.sv)return;let pay=0;if(sp.ty==="flat_per_rep")pay=sp.a;else if(sp.ty==="flat_per_unit")pay=sp.a;else if(sp.ty==="pct_gross"){const g=cBx(r.ta||0)+cAc(r.ap||0)+cPU(r).t+cMI(r.ml).p;pay=g*sp.a/100;}tot+=pay;det.push({n:sp.nm,p:pay});});return{tot,det};}
 function cRp(r, wkOverride){
-  // For historical weeks, temporarily use the tiers that were active then
   var _wkDate=wkOverride||wk;
   var _tBackup=null;
-  if(_wkDate&&getTierHistory&&getTierHistory().length){
+  // Only use historical tiers for PAST weeks — current week always uses live T
+  var today=new Date().toISOString().split('T')[0];
+  var isPast=_wkDate&&_wkDate<today;
+  if(isPast&&typeof getTiersForWeek==='function'&&getTierHistory().length){
     var _histT=getTiersForWeek(_wkDate);
-    if(_histT!==T){_tBackup=T;T=_histT;}
+    if(_histT&&_histT!==T){_tBackup=T;T=_histT;}
   }
   var _result=_cRp_inner(r);
   if(_tBackup){T=_tBackup;}
