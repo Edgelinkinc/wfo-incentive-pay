@@ -12252,10 +12252,9 @@ function ghLoadPublicData(){
         localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
       }
 
-      // Reload on any new publish — settings (tiers, announcements, etc) need to re-render
-      // Only skip reload on admin PC if it's actively editing (has unsaved rep data in memory)
-      var adminEditing=reps.length>0&&!hasLocalData===false;
-      if(!adminEditing){
+      // Reload to re-render with new data
+      // Skip reload only if admin is actively signed in (their session has priority)
+      if(!_spAccount){
         window.location.reload();
       }
     })
