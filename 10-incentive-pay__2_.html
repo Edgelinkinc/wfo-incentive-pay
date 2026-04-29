@@ -5293,24 +5293,33 @@ function generateCoachPayoutSlip(){
 function initMgrPayoutPage(){
   const sel=document.getElementById('mpMgrSel');
   if(!sel)return;
-  while(sel.options.length>1)sel.remove(1);
-  // Build unique manager list from SR
-  const mgrs=[...new Set(SR.map(s=>s.mgr).filter(m=>m&&m!=='TBD'))].sort();
-  mgrs.forEach(m=>{
-    const opt=document.createElement('option');
-    opt.value=m;opt.textContent=m;
-    sel.appendChild(opt);
-  });
   const mn=defaultMonthCurrent();
   const bm=document.getElementById('mpBonusMonth');
   const mm=document.getElementById('mpMimMonth');
   if(bm&&!bm.value)bm.value=mn;
   if(mm&&!mm.value)mm.value=mn;
+  refreshMgrPayoutDropdown(bm?.value||mn);
+}
+
+function refreshMgrPayoutDropdown(mn){
+  const sel=document.getElementById('mpMgrSel');
+  if(!sel)return;
+  const cur=sel.value;
+  while(sel.options.length>1)sel.remove(1);
+  // Build manager list for the selected month (historical + current)
+  const mgrs=getAllMgrsForMonth(mn);
+  mgrs.forEach(function(m){
+    const opt=document.createElement('option');
+    opt.value=m;opt.textContent=m;
+    sel.appendChild(opt);
+  });
+  if(cur)sel.value=cur;
 }
 
 function renMgrPayout(){
-  const mgr=document.getElementById('mpMgrSel')?.value;
   const bonusMn=document.getElementById('mpBonusMonth')?.value;
+  if(bonusMn)refreshMgrPayoutDropdown(bonusMn);
+  const mgr=document.getElementById('mpMgrSel')?.value;
   const mimMn=document.getElementById('mpMimMonth')?.value||bonusMn;
   const empty=document.getElementById('mpEmpty');
   const content=document.getElementById('mpContent');
@@ -5323,7 +5332,7 @@ function renMgrPayout(){
   if(content)content.style.display='block';
 
   // Get all stores for this manager
-  const stores=SR.filter(s=>s.mgr===mgr);
+  const stores=getStoresForMgrMonth(mgr,bonusMn);
   const elbCutoff=T.elbDQ||DT.elbDQ||3368;
 
   // Ensure mgrSheetData is current — populate from uploads if not already done
@@ -8643,6 +8652,16 @@ function renStoreRoster(){
             onchange="requirePin(()=>setStoreMgrSince('${store.s}',this.value))"
             title="Month this manager started at this location"/>
           ${d[store.s]?.mgrSince?`<span style="font-size:10px;color:var(--se);font-weight:700">${formatPeriod(d[store.s].mgrSince)}</span>`:'<span style="font-size:10px;color:#999">Not set</span>'}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
+          <span style="font-size:10px;color:var(--mu);font-weight:700;white-space:nowrap">📌 Override for month:</span>
+          <input type="month" id="mhMn_${store.s.replace(/[^a-zA-Z0-9]/g,'_')}"
+            style="padding:3px 8px;border:1px solid var(--bo);border-radius:6px;font-size:11px;font-family:'Nunito',sans-serif;outline:none"
+            title="Set a different manager for a specific past month"/>
+          <input type="text" id="mhMgr_${store.s.replace(/[^a-zA-Z0-9]/g,'_')}" placeholder="Manager name…"
+            style="padding:3px 8px;border:1px solid var(--bo);border-radius:6px;font-size:11px;font-family:'Nunito',sans-serif;outline:none;width:160px"/>
+          <button class="btn bo xs" onclick="requirePin(()=>{const id='${store.s.replace(/[^a-zA-Z0-9]/g,'_')}';const mn=document.getElementById('mhMn_'+id)?.value;const mgr=document.getElementById('mhMgr_'+id)?.value;if(!mn){tst2('Pick a month first','wn');return;}setStoreMgrForMonth('${store.s}',mn,mgr.trim());})" style="font-size:10px;padding:3px 8px">Set</button>
+          ${(d[store.s]?.mgrHistory||[]).length?`<span style="font-size:9px;color:var(--mu)">${(d[store.s].mgrHistory||[]).map(h=>`<strong>${formatPeriod(h.month)}:</strong> ${h.mgr}`).join(' · ')}</span>`:''}
         </div>
           <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mu);cursor:pointer">
             <input type="checkbox" ${getStoreMgrGuarantee(store.s)?'checked':''}
@@ -13269,6 +13288,58 @@ function previewTierVersion(idx){
   // Show box tiers summary
   var boxSummary=h.tiers.box.map(function(t){return '$'+t.r+'/act @ '+t.mn+'+';}).join(', ');
   alert('Tier rates effective '+lbl+':\nActivations: '+boxSummary+'\n'+(h.note?'Note: '+h.note:''));
+}
+
+
+// ── MANAGER HISTORY PER STORE ──
+// srBs[store].mgrHistory = [{month:'2026-03', mgr:'Josh Landry'}, ...]
+// Used so past months can have different managers than current
+
+function getMgrForMonth(storeName, mn){
+  // Returns manager name for a specific month, falling back to current
+  const d=getSR_BS();
+  const sd=d[storeName]||{};
+  if(mn&&sd.mgrHistory&&sd.mgrHistory.length){
+    const exact=sd.mgrHistory.find(function(h){return h.month===mn;});
+    if(exact&&exact.mgr)return exact.mgr;
+  }
+  // Fall back to current assignment
+  return sd.mgr||'';
+}
+
+function setStoreMgrForMonth(storeName, mn, mgrName){
+  const d=getSR_BS();
+  if(!d[storeName])d[storeName]={};
+  if(!d[storeName].mgrHistory)d[storeName].mgrHistory=[];
+  // Remove existing entry for this month
+  d[storeName].mgrHistory=d[storeName].mgrHistory.filter(function(h){return h.month!==mn;});
+  if(mgrName){
+    d[storeName].mgrHistory.push({month:mn,mgr:mgrName,setAt:new Date().toISOString()});
+  }
+  // Log the change
+  if(!d[storeName].log)d[storeName].log=[];
+  d[storeName].log.unshift({field:'Manager ('+mn+')',old:'—',new:mgrName||'(cleared)',by:'Admin',at:new Date().toLocaleString()});
+  saveSR_BS(d);
+  renStoreRoster();
+  tst2('Manager for '+storeName+' in '+formatPeriod(mn)+' set to '+(mgrName||'(none)'),'ok');
+}
+
+function getAllMgrsForMonth(mn){
+  // Returns all unique manager names active in a given month
+  const d=getSR_BS();
+  const mgrs=new Set();
+  SR.forEach(function(store){
+    const m=getMgrForMonth(store.s, mn);
+    if(m&&m!=='TBD')mgrs.add(m);
+  });
+  return [...mgrs].sort();
+}
+
+function getStoresForMgrMonth(mgrName, mn){
+  // Returns stores where this manager was active in the given month
+  return SR.filter(function(store){
+    return getMgrForMonth(store.s, mn)===mgrName;
+  });
 }
 
 </script>
