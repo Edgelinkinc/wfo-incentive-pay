@@ -4235,6 +4235,7 @@ function applyRTBDIToMgrSheet(){
     if(v.accTotal)mgrSheetData[storeName]['acc']=v.accTotal;
     if(uploadMn)mgrSheetData[storeName]['_uploadMn']=uploadMn;
   });
+  if(uploadMn)saveMgrSheetForPeriod(uploadMn);
 }
 
 // ── PDF PAY SLIPS ──
@@ -4655,6 +4656,7 @@ function applyELBToCoachSheet(){
     if(d.actTarget)sd.actTarget=d.actTarget;
     if(uploadMn)sd._uploadMn=uploadMn;
   });
+  if(uploadMn)saveCoachSheetForPeriod(uploadMn);
 }
 function applyELBToMgrSheet(){
   const elb=getELBData();
@@ -4670,6 +4672,8 @@ function applyELBToMgrSheet(){
     if(d.elbRank)sd['elb']=d.elbRank;
     if(uploadMn)sd['_uploadMn']=uploadMn;
   });
+  // Auto-save so MoM report can read this period's data
+  if(uploadMn)saveMgrSheetForPeriod(uploadMn);
 }
 
 // ── ELB UPLOAD + PARSER ──
@@ -4828,6 +4832,7 @@ function applyRTBDIToCoachSheet(){
     if(v.ppd)sd.totalBoxes=v.ppd;else if(v.boxes)sd.totalBoxes=v.boxes;
     if(uploadMn)sd._uploadMn=uploadMn;
   });
+  if(uploadMn)saveCoachSheetForPeriod(uploadMn);
 }
 function pRTBDI_Store(file){
   const fnEl=document.getElementById('fnRTBDIStore');
@@ -13721,10 +13726,12 @@ function getMoMMonths(){
   var endMn=document.getElementById('momEndMonth')?.value;
   var range=+(document.getElementById('momRange')?.value)||3;
   if(!endMn)return[];
+  // Parse YYYY-MM without UTC timezone shift
+  var parts=endMn.split('-');
+  var endYear=+parts[0],endMonth=+parts[1]-1; // 0-indexed month
   var months=[];
-  var d=new Date(endMn+'-01');
   for(var i=range-1;i>=0;i--){
-    var m=new Date(d.getFullYear(),d.getMonth()-i,1);
+    var m=new Date(endYear,endMonth-i,1);
     months.push(m.getFullYear()+'-'+(String(m.getMonth()+1).padStart(2,'0')));
   }
   return months;
