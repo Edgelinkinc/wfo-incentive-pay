@@ -4229,9 +4229,11 @@ function applyMIMToMgrSheet(){
 
 function applyRTBDIToMgrSheet(){
   const d=getRTBDIStoreData();if(!d||!d.data)return;
+  const uploadMn=d.period||'';
   Object.entries(d.data).forEach(([storeName,v])=>{
     if(!mgrSheetData[storeName])mgrSheetData[storeName]={};
     if(v.accTotal)mgrSheetData[storeName]['acc']=v.accTotal;
+    if(uploadMn)mgrSheetData[storeName]['_uploadMn']=uploadMn;
   });
 }
 
@@ -4643,6 +4645,7 @@ function clearELBData(){
 function applyELBToCoachSheet(){
   const elb=getELBData();
   if(!elb||!elb.data)return;
+  const uploadMn=elb.period||'';
   Object.entries(elb.data).forEach(([storeName,d])=>{
     if(!coachSheetData[storeName])coachSheetData[storeName]={};
     const sd=coachSheetData[storeName];
@@ -4650,11 +4653,13 @@ function applyELBToCoachSheet(){
     if(d.actPct!==undefined&&d.actPct>0)sd.actPct=d.actPct;
     if(d.actActual)sd.actActual=d.actActual;
     if(d.actTarget)sd.actTarget=d.actTarget;
+    if(uploadMn)sd._uploadMn=uploadMn;
   });
 }
 function applyELBToMgrSheet(){
   const elb=getELBData();
   if(!elb||!elb.data)return;
+  const uploadMn=elb.period||'';
   Object.entries(elb.data).forEach(([storeName,d])=>{
     if(!mgrSheetData[storeName])mgrSheetData[storeName]={};
     const sd=mgrSheetData[storeName];
@@ -4663,6 +4668,7 @@ function applyELBToMgrSheet(){
     if(d.mgrHsiActual)sd['hsi']=d.mgrHsiActual;
     if(d.mgrProtPct)sd['attach']=d.mgrProtPct;
     if(d.elbRank)sd['elb']=d.elbRank;
+    if(uploadMn)sd['_uploadMn']=uploadMn;
   });
 }
 
@@ -4814,11 +4820,13 @@ function clearRTBDIData(){
 }
 function applyRTBDIToCoachSheet(){
   const d=getRTBDIStoreData();if(!d||!d.data)return;
+  const uploadMn=d.period||'';
   Object.entries(d.data).forEach(([storeName,v])=>{
     if(!coachSheetData[storeName])coachSheetData[storeName]={};
     const sd=coachSheetData[storeName];
     if(v.accTotal!==undefined)sd.accTotal=v.accTotal;
     if(v.ppd)sd.totalBoxes=v.ppd;else if(v.boxes)sd.totalBoxes=v.boxes;
+    if(uploadMn)sd._uploadMn=uploadMn;
   });
 }
 function pRTBDI_Store(file){
@@ -8155,14 +8163,15 @@ function loadCoachSheetForPeriod(mn){
     const saved=JSON.parse(localStorage.getItem(getCoachSheetKey(mn))||'null');
     if(saved){
       coachSheetData=saved;
-      // Strip upload-sourced fields UNLESS the user manually typed them
-      // _manual[field]=true means it was typed by the user and must be preserved
       const _upFields=['elbRank','actPct','actActual','actTarget','accTotal','totalBoxes'];
       Object.keys(coachSheetData).forEach(key=>{
         const entry=coachSheetData[key];
         if(entry&&typeof entry==='object'){
           const manual=entry._manual||{};
-          _upFields.forEach(f=>{if(!manual[f])delete entry[f];});
+          const uploadMn=entry._uploadMn||'';
+          _upFields.forEach(f=>{
+            if(!manual[f]&&uploadMn!==mn)delete entry[f];
+          });
         }
       });
     }else coachSheetData={};
@@ -8200,12 +8209,18 @@ function loadMgrSheetForPeriod(mn){
     const saved=JSON.parse(localStorage.getItem(getMgrSheetKey(mn))||'null');
     if(saved){
       mgrSheetData=saved;
+      // Only strip upload-sourced fields if they were saved from a DIFFERENT period
+      // If _uploadMn matches mn, the upload data is valid for this period — keep it
       const _mUpFields=['acts','bts','hsi','attach','elb','acc'];
       Object.keys(mgrSheetData).forEach(key=>{
         const entry=mgrSheetData[key];
         if(entry&&typeof entry==='object'){
           const manual=entry._manual||{};
-          _mUpFields.forEach(f=>{if(!manual[f])delete entry[f];});
+          const uploadMn=entry._uploadMn||'';
+          _mUpFields.forEach(f=>{
+            // Keep if manually entered OR if upload was for this same period
+            if(!manual[f]&&uploadMn!==mn)delete entry[f];
+          });
         }
       });
     }else mgrSheetData={};
