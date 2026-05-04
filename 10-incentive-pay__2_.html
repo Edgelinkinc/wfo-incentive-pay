@@ -13752,37 +13752,29 @@ function renMoM(){
 }
 
 // ── MANAGER M/O/M ──
+
 function renMomMgr(){
   var el=document.getElementById('momMgrTable');if(!el)return;
   var months=getMoMMonths();
   if(!months.length){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Set an end month above</div>';return;}
   var mgrFilter=document.getElementById('momMgrFilter')?.value||'';
   var srBs=getSR_BS();
-
-  // Load from saved records — the proper source of truth
+  // Read from both records AND raw sheet data (hybrid — use whichever has data)
   var mgrRecs=JSON.parse(localStorage.getItem('wfo_mgr_recs')||'[]');
-
-  // Build lookup: store+month → record
   var recMap={};
   mgrRecs.forEach(function(r){recMap[r.store+'_'+r.month]=r;});
-
   var allMgrs=[...new Set(SR.map(function(s){return srBs[s.s]?.mgr||s.mgr||'';}).filter(Boolean))].sort();
   var mgrsToShow=mgrFilter?[mgrFilter]:allMgrs;
   var html='';var totalPips=0;
-
   mgrsToShow.forEach(function(mgr){
     var stores=SR.filter(function(s){return (srBs[s.s]?.mgr||s.mgr)===mgr;});
     if(!stores.length)return;
-
-    var bsData={};
-    months.forEach(function(mn){bsData[mn]=getBs(mn)||getOrCreateBs(mn);});
-
     html+='<div style="margin-bottom:20px">';
     html+='<div style="background:linear-gradient(135deg,var(--dk),var(--se));padding:10px 16px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center">';
     html+='<span style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:14px;color:#fff">'+mgr+'</span>';
     html+='<span style="font-size:11px;color:rgba(255,255,255,.7)">'+stores.length+' store'+(stores.length!==1?'s':'')+'</span>';
-    html+='</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
-
+    html+='</div>';
+    html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
     html+='<thead><tr style="background:var(--thb)">';
     html+='<th style="padding:7px 10px;text-align:left;border-bottom:2px solid var(--pr);white-space:nowrap;position:sticky;left:0;background:var(--thb);z-index:2">Store</th>';
     html+='<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--pr)">PIP</th>';
@@ -13798,47 +13790,66 @@ function renMomMgr(){
       });
     });
     html+='</tr></thead><tbody>';
-
     stores.forEach(function(store,si){
       var cells=months.map(function(mn){
-        var rec=recMap[store.s+'_'+mn];
-        var bs=bsData[mn];
-        var q=bs?.qualifiers||{elbCutoff:3368,attachCutoff:60};
-        if(!rec)return{hasSomeData:false,q:q};
-        var tgts=bs?.targets?.[store.s]||{};
-        var acts=rec.catData?.acts?.act||0; var actTgt=rec.catData?.acts?.tgt||tgts.acts||0;
-        var bts=rec.catData?.bts?.act||0;   var btsTgt=rec.catData?.bts?.tgt||tgts.bts||0;
-        var hsi=rec.catData?.hsi?.act||0;   var hsiTgt=rec.catData?.hsi?.tgt||tgts.hsi||0;
-        var acc=rec.catData?.acc?.act||0;   var accTgt=rec.catData?.acc?.tgt||tgts.acc||0;
-        var elb=+rec.elb||0; var attach=+rec.attach||0; var bonus=rec.total||0;
-        var elbFail=elb>0&&elb>=q.elbCutoff; var attachFail=attach>0&&attach<q.attachCutoff;
+        // Try records first, fall back to raw sheet data
+        var rec=recMap[store.s+'_'+mn]||null;
+        var rawSheet=null;
+        try{var rs=localStorage.getItem('wfo_mgr_sheet_'+mn);if(rs)rawSheet=JSON.parse(rs)[store.s]||null;}catch(e){}
+        var bs=null;try{bs=getBs(mn)||getOrCreateBs(mn);}catch(e){}
+        var q=(bs&&bs.qualifiers)||{elbCutoff:3368,attachCutoff:60};
+        var tgts=(bs&&bs.targets&&bs.targets[store.s])||{};
+        var acts,actTgt,bts,btsTgt,hsi,hsiTgt,acc,accTgt,elb,attach,bonus,hasSomeData;
+        if(rec){
+          var cd=rec.catData||{};
+          acts=+cd.acts?.act||0;actTgt=+cd.acts?.tgt||0;
+          bts=+cd.bts?.act||0;btsTgt=+cd.bts?.tgt||0;
+          hsi=+cd.hsi?.act||0;hsiTgt=+cd.hsi?.tgt||0;
+          acc=+cd.acc?.act||0;accTgt=+cd.acc?.tgt||0;
+          elb=+rec.elb||0;attach=+rec.attach||0;bonus=+rec.total||0;
+          hasSomeData=true;
+        } else if(rawSheet){
+          acts=+rawSheet.acts||0;actTgt=+tgts.acts||0;
+          bts=+rawSheet.bts||0;btsTgt=+tgts.bts||0;
+          hsi=+rawSheet.hsi||0;hsiTgt=+tgts.hsi||0;
+          acc=+rawSheet.acc||0;accTgt=+tgts.acc||0;
+          elb=+rawSheet.elb||0;attach=+rawSheet.attach||0;
+          var res2=calcMgrBonus(store.s,rawSheet,mn);bonus=res2.total||0;
+          hasSomeData=!!(acts||bts||hsi||acc||elb);
+        } else {
+          acts=actTgt=bts=btsTgt=hsi=hsiTgt=acc=accTgt=elb=attach=bonus=0;hasSomeData=false;
+        }
+        var elbFail=elb>0&&elb>=(q.elbCutoff||3368);
+        var attachFail=attach>0&&attach<(q.attachCutoff||60);
         var actPct=actTgt>0?acts/actTgt:null;
         var btsPct=btsTgt>0?bts/btsTgt:null;
         var hsiPct=hsiTgt>0?hsi/hsiTgt:null;
         var accPct=accTgt>0?acc/accTgt:null;
         function pctClr(p){return p===null?'#999':p>=1?'#00A651':p>=0.85?'#E65100':'#D32F2F';}
         function cellBg(p){return p===null?'#fff':p>=1?'#F0FFF4':p>=0.85?'#FFFBF0':'#FFEBEE';}
-        return{acts,actTgt,bts,btsTgt,hsi,hsiTgt,acc,accTgt,elb,attach,bonus,
-          elbFail,attachFail,actPct,btsPct,hsiPct,accPct,pctClr,cellBg,q,hasSomeData:true};
+        return{acts,actTgt,bts,btsTgt,hsi,hsiTgt,acc,accTgt,elb,attach,bonus,elbFail,attachFail,actPct,btsPct,hsiPct,accPct,pctClr,cellBg,q,hasSomeData};
       });
-
+      // PIP detection
       var pipReasons=[];
       for(var mi=1;mi<cells.length;mi++){
         var prev=cells[mi-1],curr=cells[mi];
-        if(!prev.hasSomeData||!curr.hasSomeData)continue;
-        if(prev.elbFail&&curr.elbFail)pipReasons.push('ELB ≥ cutoff 2+ months');
-        if(prev.actPct!==null&&prev.actPct<0.85&&curr.actPct!==null&&curr.actPct<0.85)pipReasons.push('Acts <85% 2+ months');
-        if(prev.btsPct!==null&&prev.btsPct<0.85&&curr.btsPct!==null&&curr.btsPct<0.85)pipReasons.push('BTS <85% 2+ months');
-        if(prev.hsiPct!==null&&prev.hsiPct<0.85&&curr.hsiPct!==null&&curr.hsiPct<0.85)pipReasons.push('HSI <85% 2+ months');
-        if(prev.accPct!==null&&prev.accPct<0.85&&curr.accPct!==null&&curr.accPct<0.85)pipReasons.push('Acc <85% 2+ months');
+        if(prev.hasSomeData&&curr.hasSomeData){
+          if(prev.elbFail&&curr.elbFail)pipReasons.push('ELB \u2265 cutoff 2+ months');
+          if(prev.actPct!==null&&prev.actPct<0.85&&curr.actPct!==null&&curr.actPct<0.85)pipReasons.push('Acts <85% 2+ months');
+          if(prev.btsPct!==null&&prev.btsPct<0.85&&curr.btsPct!==null&&curr.btsPct<0.85)pipReasons.push('BTS <85% 2+ months');
+          if(prev.hsiPct!==null&&prev.hsiPct<0.85&&curr.hsiPct!==null&&curr.hsiPct<0.85)pipReasons.push('HSI <85% 2+ months');
+          if(prev.accPct!==null&&prev.accPct<0.85&&curr.accPct!==null&&curr.accPct<0.85)pipReasons.push('Acc <85% 2+ months');
+        }
       }
       var hasPip=[...new Set(pipReasons)];
       if(hasPip.length)totalPips++;
-
       html+='<tr style="border-bottom:1px solid var(--bo);background:'+(si%2===0?'#fff':'#FAFAFA')+'">';
       html+='<td style="padding:7px 10px;font-weight:700;white-space:nowrap;position:sticky;left:0;background:'+(si%2===0?'#fff':'#FAFAFA')+';z-index:1">'+store.s+'</td>';
-      html+='<td style="padding:7px 6px;text-align:center">'+(hasPip.length?'<span title="'+hasPip.join(' · ')+'" style="background:#D32F2F;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:help;white-space:nowrap">🚨 PIP</span>':'<span style="color:#00A651;font-size:10px">✓</span>')+'</td>';
-
+      if(hasPip.length){
+        html+='<td style="padding:7px 6px;text-align:center"><span title="'+hasPip.join(' \u00b7 ')+'" style="background:#D32F2F;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:help;white-space:nowrap">\uD83D\uDEA8 PIP</span></td>';
+      } else {
+        html+='<td style="padding:7px 6px;text-align:center"><span style="color:#00A651;font-size:10px">\u2713</span></td>';
+      }
       cells.forEach(function(c,ci){
         var bl=ci===0?'border-left:2px solid var(--pr);':'';
         if(!c.hasSomeData){html+='<td colspan="7" style="padding:7px 8px;text-align:center;color:#ccc;font-size:10px;'+bl+'">No data</td>';return;}
@@ -13854,46 +13865,28 @@ function renMomMgr(){
     });
     html+='</tbody></table></div></div>';
   });
-
-  if(!html)html='<div style="color:var(--mu);padding:20px;text-align:center">No saved manager records found. Save actuals from the Manager Actuals page first.</div>';
+  if(!html)html='<div style="color:var(--mu);padding:20px;text-align:center">No manager data found</div>';
   el.innerHTML=html;
   var pc=document.getElementById('momMgrPipCount');
-  if(pc)pc.textContent=totalPips?('🚨 '+totalPips+' store'+(totalPips!==1?'s':'')+' at PIP risk'):'';
+  if(pc)pc.textContent=totalPips?('\uD83D\uDEA8 '+totalPips+' store'+(totalPips!==1?'s':'')+' at PIP risk'):'';
 }
 
-// ── COACH M/O/M ──
 function renMomCoach(){
   var el=document.getElementById('momCoachTable');if(!el)return;
   var months=getMoMMonths();
   if(!months.length){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Set an end month above</div>';return;}
   var coachFilter=document.getElementById('momCoachFilter')?.value||'';
   var srBs=getSR_BS();
-
-  // Load from saved coach records — the proper source of truth
-  var coachRecs=JSON.parse(localStorage.getItem('wfo_coach_recs')||'[]');
-
-  // Build lookup: coach+period+store → storeBreakdown entry
-  var recMap={};
-  coachRecs.forEach(function(r){
-    if(!r.storeBreakdown)return;
-    r.storeBreakdown.forEach(function(sb){
-      recMap[sb.store+'_'+r.period]=Object.assign({},sb,{period:r.period,coach:r.coach});
-    });
-  });
-
   var coachesToShow=coachFilter?[coachFilter]:COACHES.slice().sort();
   var html='';var totalPips=0;
-
   coachesToShow.forEach(function(coach){
     var stores=SR.filter(function(s){return (srBs[s.s]?.coach||s.c)===coach;});
     if(!stores.length)return;
-
     html+='<div style="margin-bottom:20px">';
     html+='<div style="background:linear-gradient(135deg,var(--dk),var(--se));padding:10px 16px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center">';
     html+='<span style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:14px;color:#fff">'+coach+'</span>';
     html+='<span style="font-size:11px;color:rgba(255,255,255,.7)">'+stores.length+' store'+(stores.length!==1?'s':'')+'</span>';
     html+='</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
-
     html+='<thead><tr style="background:var(--thb)">';
     html+='<th style="padding:7px 10px;text-align:left;border-bottom:2px solid var(--pr);white-space:nowrap;position:sticky;left:0;background:var(--thb);z-index:2">Store</th>';
     html+='<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--pr)">PIP</th>';
@@ -13904,47 +13897,49 @@ function renMomCoach(){
     html+='<th style="padding:5px 10px;position:sticky;left:0;background:#FAFAFA;z-index:2;border-bottom:1px solid var(--bo)"></th>';
     html+='<th style="padding:5px 8px;border-bottom:1px solid var(--bo)"></th>';
     months.forEach(function(mn,mi){
-      ['Act%','Acc$','PPD','$/Box','ELB','Shrink','ActB','AccB','Total'].forEach(function(h,hi){
+      ['Act%','Acc$','PPD','$/Box','ELB','Shrink%','ActB','AccB','Total'].forEach(function(h,hi){
         html+='<th style="padding:5px 6px;text-align:center;border-bottom:1px solid var(--bo);font-size:9px;color:var(--mu);white-space:nowrap'+(hi===0?';border-left:2px solid var(--pr)':'')+'">'+h+'</th>';
       });
     });
     html+='</tr></thead><tbody>';
-
     stores.forEach(function(store,si){
       var cells=months.map(function(mn){
-        var rec=recMap[store.s+'_'+mn];
+        // Read raw coach sheet data (most complete source)
+        var sd={};
+        try{var rs=localStorage.getItem('wfo_coach_sheet_'+mn);if(rs){var full=JSON.parse(rs);sd=full[store.s]||{};}}catch(e){}
+        // Supplement with coach_recs for bonuses if sheet missing
         var elbDQ=T.elbDQ||DT.elbDQ||3368;
-        if(!rec)return{hasSomeData:false};
-        var actPct=+rec.actPct||0;
-        var acc=0,ppd=+rec.totalBoxes||0,accPerBox=0,elb=0,shrink=+rec.shrinkPct||0;
-        // Look up ELB and acc from the coach sheet stored data
-        var csd=JSON.parse(localStorage.getItem('wfo_coach_sheet_'+mn)||'{}')[store.s]||{};
-        acc=+csd.accTotal||0;
-        elb=+csd.elbRank||0;
-        if(!ppd)ppd=+csd.totalBoxes||0;
-        if(!shrink)shrink=+csd.shrinkPct||0;
-        accPerBox=ppd>0?acc/ppd:0;
+        var actPct=+sd.actPct||0;
+        var acc=+sd.accTotal||0;
+        var ppd=+sd.totalBoxes||0;
+        var accPerBox=ppd>0&&acc>0?acc/ppd:(+sd.accPerBox||0);
+        var elb=+sd.elbRank||0;
+        var shrink=+sd.shrinkPct||0;
+        var res=calcStoreCoachBonus(store.s,sd);
         var elbFail=elb>0&&elb>=elbDQ;
         var actFail=actPct>0&&actPct<85;
         var actNear=actPct>=85&&actPct<100;
         var actWin=actPct>=100;
-        return{actPct,acc,ppd,accPerBox,elb,shrink,actBonus:rec.actBonus||0,accBonus:rec.accBonus||0,total:rec.total||0,elbFail,actFail,actNear,actWin,hasSomeData:true};
+        var hasSomeData=!!(actPct||acc||ppd||elb||sd.accTotal||sd.elbRank);
+        return{actPct,acc,ppd,accPerBox,elb,shrink,actBonus:res.actBonus,accBonus:res.accBonus,total:res.total,elbFail,actFail,actNear,actWin,hasSomeData};
       });
-
       var pipReasons=[];
       for(var mi=1;mi<cells.length;mi++){
         var prev=cells[mi-1],curr=cells[mi];
-        if(!prev.hasSomeData||!curr.hasSomeData)continue;
-        if(prev.elbFail&&curr.elbFail)pipReasons.push('ELB ≥ cutoff 2+ months');
-        if(prev.actFail&&curr.actFail)pipReasons.push('Act% <85% 2+ months');
+        if(prev.hasSomeData&&curr.hasSomeData){
+          if(prev.elbFail&&curr.elbFail)pipReasons.push('ELB \u2265 cutoff 2+ months');
+          if(prev.actFail&&curr.actFail)pipReasons.push('Act% <85% 2+ months');
+        }
       }
       var hasPip=[...new Set(pipReasons)];
       if(hasPip.length)totalPips++;
-
       html+='<tr style="border-bottom:1px solid var(--bo);background:'+(si%2===0?'#fff':'#FAFAFA')+'">';
       html+='<td style="padding:7px 10px;font-weight:700;white-space:nowrap;position:sticky;left:0;background:'+(si%2===0?'#fff':'#FAFAFA')+';z-index:1">'+store.s+'</td>';
-      html+='<td style="padding:7px 6px;text-align:center">'+(hasPip.length?'<span title="'+hasPip.join(' · ')+'" style="background:#D32F2F;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:help">🚨 PIP</span>':'<span style="color:#00A651;font-size:10px">✓</span>')+'</td>';
-
+      if(hasPip.length){
+        html+='<td style="padding:7px 6px;text-align:center"><span title="'+hasPip.join(' \u00b7 ')+'" style="background:#D32F2F;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:help">\uD83D\uDEA8 PIP</span></td>';
+      } else {
+        html+='<td style="padding:7px 6px;text-align:center"><span style="color:#00A651;font-size:10px">\u2713</span></td>';
+      }
       cells.forEach(function(c,ci){
         var bl=ci===0?'border-left:2px solid var(--pr);':'';
         if(!c.hasSomeData){html+='<td colspan="9" style="padding:7px 8px;text-align:center;color:#ccc;font-size:10px;'+bl+'">No data</td>';return;}
@@ -13958,17 +13953,16 @@ function renMomCoach(){
         html+='<td style="padding:6px 8px;text-align:center;color:#555">'+(c.shrink?c.shrink+'%':'—')+'</td>';
         html+='<td style="padding:6px 8px;text-align:right;color:'+(c.actBonus>0?'var(--pr)':'#999')+';font-weight:700">$'+c.actBonus.toFixed(0)+'</td>';
         html+='<td style="padding:6px 8px;text-align:right;color:'+(c.accBonus>0?'var(--se)':'#999')+';font-weight:700">$'+c.accBonus.toFixed(0)+'</td>';
-        html+='<td style="padding:6px 8px;text-align:right;font-weight:900;color:'+(c.total>0?'var(--pr)':'#999')+'">$'+c.total.toFixed(0)+'</td>';
+        html+='<td style="padding:6px 8px;text-align:right;font-weight:900;color:'+(c.total>0?'var(--pr)':'#999')+'\">$'+c.total.toFixed(0)+'</td>';
       });
       html+='</tr>';
     });
     html+='</tbody></table></div></div>';
   });
-
-  if(!html)html='<div style="color:var(--mu);padding:20px;text-align:center">No saved coach records found. Save actuals from the Coach Actuals page first.</div>';
+  if(!html)html='<div style="color:var(--mu);padding:20px;text-align:center">No coach data found</div>';
   el.innerHTML=html;
   var pc=document.getElementById('momCoachPipCount');
-  if(pc)pc.textContent=totalPips?('🚨 '+totalPips+' store'+(totalPips!==1?'s':'')+' at PIP risk'):'';
+  if(pc)pc.textContent=totalPips?('\uD83D\uDEA8 '+totalPips+' store'+(totalPips!==1?'s':'')+' at PIP risk'):'';
 }
 
 </script>
