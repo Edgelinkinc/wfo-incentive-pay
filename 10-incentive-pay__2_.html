@@ -757,6 +757,9 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     <div class="sg-wrap">
       <div class="si si-solo" data-page="pg-roster" onclick="goPage('pg-roster',this)"><span class="ic">👥</span><span class="si-label">Rep Roster</span></div>
     </div>
+    <div class="sg-wrap">
+      <div class="si si-solo" data-page="pg-mom" onclick="requirePin(()=>goPage('pg-mom',null))"><span class="ic">📊</span><span class="si-label">M/O/M Report</span></div>
+    </div>
   </div>
 
   <div class="sb-divider"></div>
@@ -1676,6 +1679,58 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </div>
     </div></div>
   </div>
+
+<div class="page" id="pg-mom">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr" style="background:linear-gradient(135deg,var(--dk),var(--se))">
+      <div class="card-title">📊 Month-Over-Month Performance</div>
+    </div>
+    <div style="padding:14px 16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div class="fi" style="min-width:140px">
+        <label>View</label>
+        <select id="momRange" onchange="renMoM()" style="padding:8px 10px;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;outline:none">
+          <option value="3">Last 3 Months</option>
+          <option value="6">Last 6 Months</option>
+        </select>
+      </div>
+      <div class="fi" style="min-width:160px">
+        <label>End Month</label>
+        <input type="month" id="momEndMonth" onchange="renMoM()" style="padding:8px 10px;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;outline:none"/>
+      </div>
+    </div>
+  </div>
+  <!-- SUB TABS -->
+  <div class="sub-tabs" style="margin-bottom:12px">
+    <button class="sub-tab active" onclick="swSub('mom','mgr',this)">🏢 Managers</button>
+    <button class="sub-tab" onclick="swSub('mom','coach',this)">🎯 Coaches</button>
+  </div>
+  <!-- MANAGER TAB -->
+  <div class="sub-pane active" id="mom-mgr">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <div class="fi" style="min-width:180px">
+        <label>Filter by Manager</label>
+        <select id="momMgrFilter" onchange="renMomMgr()" style="padding:8px 10px;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;outline:none">
+          <option value="">All Managers</option>
+        </select>
+      </div>
+      <div id="momMgrPipCount" style="font-size:12px;color:var(--da);font-weight:700;margin-top:20px"></div>
+    </div>
+    <div class="tw" id="momMgrTable"><div style="color:var(--mu);padding:20px;text-align:center">Select a range and end month to load data</div></div>
+  </div>
+  <!-- COACH TAB -->
+  <div class="sub-pane" id="mom-coach">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <div class="fi" style="min-width:180px">
+        <label>Filter by Coach</label>
+        <select id="momCoachFilter" onchange="renMomCoach()" style="padding:8px 10px;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;outline:none">
+          <option value="">All Coaches</option>
+        </select>
+      </div>
+      <div id="momCoachPipCount" style="font-size:12px;color:var(--da);font-weight:700;margin-top:20px"></div>
+    </div>
+    <div class="tw" id="momCoachTable"><div style="color:var(--mu);padding:20px;text-align:center">Select a range and end month to load data</div></div>
+  </div>
+</div><!-- /pg-mom -->
 
 <div class="page" id="pg-assign">
     <div class="card"><div class="card-hdr card-hdr-dk">
@@ -3714,6 +3769,7 @@ function goPage(id,el){
     renR();renRepOv();upK();
   }
   if(id==="pg-employee"){initEmpView();}
+  if(id==="pg-mom"){initMoMPage();}
   if(id==="pg-perf"){document.body.classList.add("perf-active");initPerfPage();var _pf=document.getElementById('pg-perf');if(_pf)_pf.scrollTop=0;[0,100,300].forEach(function(t){setTimeout(function(){var pf=document.getElementById('pg-perf');if(pf)pf.scrollTop=0;},t);});}
   if(id==="pg-admin"){
     document.body.classList.add("admin-active");
@@ -13616,6 +13672,302 @@ function getStoresForMgrMonth(mgrName, mn){
   return SR.filter(function(store){
     return getMgrForMonth(store.s, mn)===mgrName;
   });
+}
+
+
+// ══════════════════════════════════════════════════════
+// MONTH-OVER-MONTH PERFORMANCE REPORT
+// ══════════════════════════════════════════════════════
+
+function initMoMPage(){
+  // Set default end month to current month
+  var em=document.getElementById('momEndMonth');
+  if(em&&!em.value){
+    var n=new Date();
+    em.value=n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'));
+  }
+  // Populate manager filter
+  var mgrSel=document.getElementById('momMgrFilter');
+  if(mgrSel){
+    mgrSel.innerHTML='<option value="">All Managers</option>';
+    var mgrs=[...new Set(SR.map(function(s){return s.mgr||'';}).filter(Boolean))].sort();
+    mgrs.forEach(function(m){mgrSel.innerHTML+='<option value="'+m+'">'+m+'</option>';});
+  }
+  // Populate coach filter
+  var coachSel=document.getElementById('momCoachFilter');
+  if(coachSel){
+    coachSel.innerHTML='<option value="">All Coaches</option>';
+    COACHES.sort().forEach(function(c){coachSel.innerHTML+='<option value="'+c+'">'+c+'</option>';});
+  }
+  renMoM();
+}
+
+function getMoMMonths(){
+  var endMn=document.getElementById('momEndMonth')?.value;
+  var range=+(document.getElementById('momRange')?.value)||3;
+  if(!endMn)return[];
+  var months=[];
+  var d=new Date(endMn+'-01');
+  for(var i=range-1;i>=0;i--){
+    var m=new Date(d.getFullYear(),d.getMonth()-i,1);
+    months.push(m.getFullYear()+'-'+(String(m.getMonth()+1).padStart(2,'0')));
+  }
+  return months;
+}
+
+function formatMn(mn){
+  var d=new Date(mn+'-01');
+  return d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+}
+
+function pipCell(val,ok){
+  return ok===true?'#F0FFF4':ok===false?'#FFEBEE':'#fff';
+}
+
+function renMoM(){
+  renMomMgr();
+  renMomCoach();
+}
+
+// ── MANAGER M/O/M ──
+function renMomMgr(){
+  var el=document.getElementById('momMgrTable');if(!el)return;
+  var months=getMoMMonths();
+  if(!months.length){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Set an end month above</div>';return;}
+  var mgrFilter=document.getElementById('momMgrFilter')?.value||'';
+  var srBs=getSR_BS();
+
+  // Collect all managers
+  var allMgrs=[...new Set(SR.map(function(s){return srBs[s.s]?.mgr||s.mgr||'';}).filter(Boolean))].sort();
+  var mgrsToShow=mgrFilter?[mgrFilter]:allMgrs;
+
+  var html='';
+  var totalPips=0;
+
+  mgrsToShow.forEach(function(mgr){
+    var stores=SR.filter(function(s){return (srBs[s.s]?.mgr||s.mgr)===mgr;});
+    if(!stores.length)return;
+
+    // Load data for each month
+    var monthData={};
+    months.forEach(function(mn){
+      var raw=localStorage.getItem('wfo_mgr_sheet_'+mn);
+      monthData[mn]=raw?JSON.parse(raw):{};
+    });
+
+    // Load backsheets for targets
+    var bsData={};
+    months.forEach(function(mn){
+      bsData[mn]=getBs(mn)||getOrCreateBs(mn);
+    });
+
+    // Manager header
+    html+='<div style="margin-bottom:20px">';
+    html+='<div style="background:linear-gradient(135deg,var(--dk),var(--se));padding:10px 16px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center">';
+    html+='<span style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:14px;color:#fff">'+mgr+'</span>';
+    html+='<span style="font-size:11px;color:rgba(255,255,255,.7)">'+stores.length+' store'+(stores.length!==1?'s':'')+'</span>';
+    html+='</div>';
+    html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+
+    // Header row
+    html+='<thead><tr style="background:var(--thb)">';
+    html+='<th style="padding:7px 10px;text-align:left;border-bottom:2px solid var(--pr);white-space:nowrap;position:sticky;left:0;background:var(--thb);z-index:2">Store</th>';
+    html+='<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--pr);white-space:nowrap">PIP</th>';
+    months.forEach(function(mn){
+      html+='<th colspan="7" style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--pr);border-left:2px solid var(--pr);color:var(--pr);font-family:\'Poppins\',sans-serif">'+formatMn(mn)+'</th>';
+    });
+    html+='</tr>';
+    html+='<tr style="background:#FAFAFA">';
+    html+='<th style="padding:5px 10px;text-align:left;border-bottom:1px solid var(--bo);position:sticky;left:0;background:#FAFAFA;z-index:2"></th>';
+    html+='<th style="padding:5px 8px;border-bottom:1px solid var(--bo)"></th>';
+    months.forEach(function(mn){
+      ['Acts','BTS','HSI','Acc $','ELB','Attach%','Bonus'].forEach(function(h,hi){
+        html+='<th style="padding:5px 6px;text-align:center;border-bottom:1px solid var(--bo);font-size:9px;color:var(--mu);white-space:nowrap'+(hi===0?';border-left:2px solid var(--pr)':'')+'">'+h+'</th>';
+      });
+    });
+    html+='</tr></thead><tbody>';
+
+    // Store rows
+    stores.forEach(function(store,si){
+      var pipFlags=[];
+      var cells=months.map(function(mn){
+        var sd=monthData[mn][store.s]||{};
+        var bs=bsData[mn];
+        var tgts=bs?.targets?.[store.s]||{};
+        var q=bs?.qualifiers||{elbCutoff:3368,attachCutoff:60};
+        var acts=+sd.acts||0;var actTgt=tgts.acts||0;
+        var bts=+sd.bts||0;var btsTgt=tgts.bts||0;
+        var hsi=+sd.hsi||0;var hsiTgt=tgts.hsi||0;
+        var acc=+sd.acc||0;var accTgt=tgts.acc||0;
+        var elb=+sd.elb||0;
+        var attach=+sd.attach||0;
+        var res=calcMgrBonus(store.s,sd,mn);
+        var bonus=res.total||0;
+        var elbFail=elb>0&&elb>=q.elbCutoff;
+        var attachFail=attach>0&&attach<q.attachCutoff;
+        var actPct=actTgt>0?acts/actTgt:null;
+        var btsPct=btsTgt>0?bts/btsTgt:null;
+        var hsiPct=hsiTgt>0?hsi/hsiTgt:null;
+        var accPct=accTgt>0?acc/accTgt:null;
+
+        function pctClr(p){return p===null?'#999':p>=1?'#00A651':p>=0.85?'#E65100':'#D32F2F';}
+        function cellBg(p){return p===null?'#fff':p>=1?'#F0FFF4':p>=0.85?'#FFFBF0':'#FFEBEE';}
+
+        return {acts,actTgt,bts,btsTgt,hsi,hsiTgt,acc,accTgt,elb,attach,bonus,
+          elbFail,attachFail,actPct,btsPct,hsiPct,accPct,pctClr,cellBg,q,hasSomeData:!!(acts||bts||hsi||acc||elb)};
+      });
+
+      // PIP detection: 2 consecutive months failing ELB or any cat below 85%
+      var pipReasons=[];
+      for(var mi=1;mi<cells.length;mi++){
+        var prev=cells[mi-1],curr=cells[mi];
+        if(prev.elbFail&&curr.elbFail)pipReasons.push('ELB ≥ cutoff 2+ months');
+        if(prev.actPct!==null&&prev.actPct<0.85&&curr.actPct!==null&&curr.actPct<0.85)pipReasons.push('Acts <85% 2+ months');
+        if(prev.btsPct!==null&&prev.btsPct<0.85&&curr.btsPct!==null&&curr.btsPct<0.85)pipReasons.push('BTS <85% 2+ months');
+        if(prev.hsiPct!==null&&prev.hsiPct<0.85&&curr.hsiPct!==null&&curr.hsiPct<0.85)pipReasons.push('HSI <85% 2+ months');
+        if(prev.accPct!==null&&prev.accPct<0.85&&curr.accPct!==null&&curr.accPct<0.85)pipReasons.push('Acc <85% 2+ months');
+      }
+      var hasPip=[...new Set(pipReasons)];
+      if(hasPip.length)totalPips++;
+
+      html+='<tr style="border-bottom:1px solid var(--bo);background:'+(si%2===0?'#fff':'#FAFAFA')+'">';
+      html+='<td style="padding:7px 10px;font-weight:700;white-space:nowrap;position:sticky;left:0;background:'+(si%2===0?'#fff':'#FAFAFA')+';z-index:1">'+store.s+'</td>';
+      // PIP badge
+      if(hasPip.length){
+        html+='<td style="padding:7px 6px;text-align:center"><span title="'+hasPip.join(' · ')+'" style="background:#D32F2F;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:help;white-space:nowrap">🚨 PIP</span></td>';
+      } else {
+        html+='<td style="padding:7px 6px;text-align:center"><span style="color:#00A651;font-size:10px">✓</span></td>';
+      }
+
+      cells.forEach(function(c,ci){
+        var bl=ci===0?'border-left:2px solid var(--pr);':'';
+        if(!c.hasSomeData){
+          html+='<td colspan="7" style="padding:7px 8px;text-align:center;color:#ccc;font-size:10px;'+bl+'">No data</td>';
+          return;
+        }
+        html+='<td style="padding:6px 8px;text-align:center;background:'+c.cellBg(c.actPct)+';'+bl+'"><span style="color:'+c.pctClr(c.actPct)+';font-weight:700">'+(c.actTgt>0?c.acts+' <small style="font-weight:400;color:#999">/ '+c.actTgt+'</small>':'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+c.cellBg(c.btsPct)+'"><span style="color:'+c.pctClr(c.btsPct)+';font-weight:700">'+(c.btsTgt>0?c.bts+' <small style="font-weight:400;color:#999">/ '+c.btsTgt+'</small>':'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+c.cellBg(c.hsiPct)+'"><span style="color:'+c.pctClr(c.hsiPct)+';font-weight:700">'+(c.hsiTgt>0?c.hsi+' <small style="font-weight:400;color:#999">/ '+c.hsiTgt+'</small>':'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+c.cellBg(c.accPct)+'"><span style="color:'+c.pctClr(c.accPct)+';font-weight:700">'+(c.accTgt>0?'$'+c.acc.toFixed(0):'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+(c.elbFail?'#FFEBEE':c.elb>0?'#F0FFF4':'#fff')+'"><span style="color:'+(c.elbFail?'#D32F2F':c.elb>0?'#00A651':'#999')+';font-weight:700">'+(c.elb||'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+(c.attachFail?'#FFEBEE':'#fff')+'"><span style="color:'+(c.attachFail?'#E65100':'#555')+'">'+(c.attach?c.attach.toFixed(1)+'%':'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:right;font-weight:800;color:'+(c.bonus>0?'var(--pr)':'#999')+'">$'+c.bonus.toFixed(0)+'</td>';
+      });
+      html+='</tr>';
+    });
+
+    html+='</tbody></table></div></div>';
+  });
+
+  if(!html)html='<div style="color:var(--mu);padding:20px;text-align:center">No manager data found for this range</div>';
+  el.innerHTML=html;
+
+  var pc=document.getElementById('momMgrPipCount');
+  if(pc)pc.textContent=totalPips?('🚨 '+totalPips+' store'+(totalPips!==1?'s':'')+' at PIP risk'):'';
+}
+
+// ── COACH M/O/M ──
+function renMomCoach(){
+  var el=document.getElementById('momCoachTable');if(!el)return;
+  var months=getMoMMonths();
+  if(!months.length){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Set an end month above</div>';return;}
+  var coachFilter=document.getElementById('momCoachFilter')?.value||'';
+  var srBs=getSR_BS();
+  var coachesToShow=coachFilter?[coachFilter]:COACHES.slice().sort();
+  var html='';var totalPips=0;
+
+  coachesToShow.forEach(function(coach){
+    var stores=SR.filter(function(s){return (srBs[s.s]?.coach||s.c)===coach;});
+    if(!stores.length)return;
+
+    var monthData={};
+    months.forEach(function(mn){
+      var raw=localStorage.getItem('wfo_coach_sheet_'+mn);
+      monthData[mn]=raw?JSON.parse(raw):{};
+    });
+
+    html+='<div style="margin-bottom:20px">';
+    html+='<div style="background:linear-gradient(135deg,var(--dk),var(--se));padding:10px 16px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center">';
+    html+='<span style="font-family:\'Poppins\',sans-serif;font-weight:800;font-size:14px;color:#fff">'+coach+'</span>';
+    html+='<span style="font-size:11px;color:rgba(255,255,255,.7)">'+stores.length+' store'+(stores.length!==1?'s':'')+'</span>';
+    html+='</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+
+    html+='<thead><tr style="background:var(--thb)">';
+    html+='<th style="padding:7px 10px;text-align:left;border-bottom:2px solid var(--pr);white-space:nowrap;position:sticky;left:0;background:var(--thb);z-index:2">Store</th>';
+    html+='<th style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--pr)">PIP</th>';
+    months.forEach(function(mn){
+      html+='<th colspan="9" style="padding:7px 8px;text-align:center;border-bottom:2px solid var(--pr);border-left:2px solid var(--pr);color:var(--pr);font-family:\'Poppins\',sans-serif">'+formatMn(mn)+'</th>';
+    });
+    html+='</tr><tr style="background:#FAFAFA">';
+    html+='<th style="padding:5px 10px;position:sticky;left:0;background:#FAFAFA;z-index:2;border-bottom:1px solid var(--bo)"></th>';
+    html+='<th style="padding:5px 8px;border-bottom:1px solid var(--bo)"></th>';
+    months.forEach(function(mn,mi){
+      ['Act%','Acc$','PPD','$/Box','ELB','Shrink%','ActB','AccB','Total'].forEach(function(h,hi){
+        html+='<th style="padding:5px 6px;text-align:center;border-bottom:1px solid var(--bo);font-size:9px;color:var(--mu);white-space:nowrap'+(hi===0?';border-left:2px solid var(--pr)':'')+'">'+h+'</th>';
+      });
+    });
+    html+='</tr></thead><tbody>';
+
+    stores.forEach(function(store,si){
+      var cells=months.map(function(mn){
+        var sd=monthData[mn][store.s]||{};
+        var elbDQ=T.elbDQ||DT.elbDQ||3368;
+        var actPct=+sd.actPct||0;
+        var acc=+sd.accTotal||0;
+        var ppd=+sd.totalBoxes||0;
+        var accPerBox=ppd>0?acc/ppd:0;
+        var elb=+sd.elbRank||0;
+        var shrink=+sd.shrinkPct||0;
+        var res=calcStoreCoachBonus(store.s,sd);
+        var elbFail=elb>0&&elb>=elbDQ;
+        var actFail=actPct>0&&actPct<85;
+        var actNear=actPct>=85&&actPct<100;
+        var actWin=actPct>=100;
+        return{actPct,acc,ppd,accPerBox,elb,shrink,actBonus:res.actBonus,accBonus:res.accBonus,total:res.total,elbFail,actFail,actNear,actWin,hasSomeData:!!(actPct||acc||ppd||elb)};
+      });
+
+      // PIP detection
+      var pipReasons=[];
+      for(var mi=1;mi<cells.length;mi++){
+        var prev=cells[mi-1],curr=cells[mi];
+        if(prev.elbFail&&curr.elbFail)pipReasons.push('ELB ≥ cutoff 2+ months');
+        if(prev.actFail&&curr.actFail)pipReasons.push('Act% <85% 2+ months');
+      }
+      var hasPip=[...new Set(pipReasons)];
+      if(hasPip.length)totalPips++;
+
+      html+='<tr style="border-bottom:1px solid var(--bo);background:'+(si%2===0?'#fff':'#FAFAFA')+'">';
+      html+='<td style="padding:7px 10px;font-weight:700;white-space:nowrap;position:sticky;left:0;background:'+(si%2===0?'#fff':'#FAFAFA')+';z-index:1">'+store.s+'</td>';
+      if(hasPip.length){
+        html+='<td style="padding:7px 6px;text-align:center"><span title="'+hasPip.join(' · ')+'" style="background:#D32F2F;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:help">🚨 PIP</span></td>';
+      } else {
+        html+='<td style="padding:7px 6px;text-align:center"><span style="color:#00A651;font-size:10px">✓</span></td>';
+      }
+      cells.forEach(function(c,ci){
+        var bl=ci===0?'border-left:2px solid var(--pr);':'';
+        if(!c.hasSomeData){html+='<td colspan="9" style="padding:7px 8px;text-align:center;color:#ccc;font-size:10px;'+bl+'">No data</td>';return;}
+        var actBg=c.actWin?'#F0FFF4':c.actNear?'#FFFBF0':c.actFail?'#FFEBEE':'#fff';
+        var actClr=c.actWin?'#00A651':c.actNear?'#E65100':c.actFail?'#D32F2F':'#999';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+actBg+';'+bl+'"><span style="font-weight:700;color:'+actClr+'">'+(c.actPct?c.actPct.toFixed(1)+'%':'—')+'</span></td>';
+        html+='<td style="padding:6px 8px;text-align:right">'+(c.acc?'$'+c.acc.toFixed(0):'—')+'</td>';
+        html+='<td style="padding:6px 8px;text-align:center">'+(c.ppd||'—')+'</td>';
+        html+='<td style="padding:6px 8px;text-align:center;color:#666">'+(c.accPerBox>0?'$'+c.accPerBox.toFixed(2):'—')+'</td>';
+        html+='<td style="padding:6px 8px;text-align:center;background:'+(c.elbFail?'#FFEBEE':c.elb>0?'#F0FFF4':'#fff')+';font-weight:700;color:'+(c.elbFail?'#D32F2F':c.elb>0?'#00A651':'#999')+'">'+(c.elb||'—')+'</td>';
+        html+='<td style="padding:6px 8px;text-align:center;color:#555">'+(c.shrink?c.shrink+'%':'—')+'</td>';
+        html+='<td style="padding:6px 8px;text-align:right;color:'+(c.actBonus>0?'var(--pr)':'#999')+';font-weight:700">$'+c.actBonus.toFixed(0)+'</td>';
+        html+='<td style="padding:6px 8px;text-align:right;color:'+(c.accBonus>0?'var(--se)':'#999')+';font-weight:700">$'+c.accBonus.toFixed(0)+'</td>';
+        html+='<td style="padding:6px 8px;text-align:right;font-weight:900;color:'+(c.total>0?'var(--pr)':'#999')+'">$'+c.total.toFixed(0)+'</td>';
+      });
+      html+='</tr>';
+    });
+
+    html+='</tbody></table></div></div>';
+  });
+
+  if(!html)html='<div style="color:var(--mu);padding:20px;text-align:center">No coach data found for this range</div>';
+  el.innerHTML=html;
+  var pc=document.getElementById('momCoachPipCount');
+  if(pc)pc.textContent=totalPips?('🚨 '+totalPips+' store'+(totalPips!==1?'s':'')+' at PIP risk'):'';
 }
 
 </script>
