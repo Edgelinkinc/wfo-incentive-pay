@@ -5589,10 +5589,6 @@ function renMgrPayout(){
   const stores=getStoresForMgrMonth(mgr,bonusMn);
   const elbCutoff=T.elbDQ||DT.elbDQ||3368;
 
-  // Ensure mgrSheetData is current — populate from uploads if not already done
-  if(typeof applyELBToMgrSheet==='function')applyELBToMgrSheet();
-  if(typeof applyRTBDIToMgrSheet==='function')applyRTBDIToMgrSheet();
-
   // Load mgr sheet data for bonus month
   let bsd={};
   try{bsd=JSON.parse(localStorage.getItem(getMgrSheetKey(bonusMn))||'{}');}catch{}
