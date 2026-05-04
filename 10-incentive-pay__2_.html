@@ -1700,6 +1700,9 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       <div style="margin-top:20px">
         <button class="btn bp" onclick="refreshMomData()" title="Rebuild M/O/M snapshots from saved sheet data">🔄 Refresh Data</button>
       </div>
+      <div style="margin-top:20px">
+        <button class="btn bo" onclick="exportMomToExcel()" title="Export M/O/M report to Excel">📥 Export Excel</button>
+      </div>
     </div>
   </div>
   <!-- SUB TABS -->
@@ -13926,7 +13929,6 @@ function getMomMgrKey(mn){return 'wfo_mom_mgr_'+mn;}
 function getMomCoachKey(mn){return 'wfo_mom_coach_'+mn;}
 
 function refreshMomData(){
-  // Clear all existing MoM snapshots so they rebuild fresh
   var keysToDelete=[];
   for(var k=0;k<localStorage.length;k++){
     var lk=localStorage.key(k);
@@ -13937,6 +13939,132 @@ function refreshMomData(){
   buildMomData();
   renMoM();
   tst2('✅ M/O/M data refreshed','ok');
+}
+
+function exportMomToExcel(){
+  var months=getMoMMonths();
+  if(!months.length){tst2('Set an end month first','wn');return;}
+  var srBs=getSR_BS();
+  var rows=[];
+  var activeTab=document.querySelector('#mom-mgr.active')?'mgr':'coach';
+
+  if(activeTab==='mgr'){
+    // Header
+    var hdr=['Manager','Store','PIP'];
+    months.forEach(function(mn){
+      var m=formatMn(mn);
+      ['Acts','Acts Tgt','BTS','BTS Tgt','HSI','HSI Tgt','Acc$','Acc$ Tgt','ELB','Attach%','Bonus'].forEach(function(h){hdr.push(m+' '+h);});
+    });
+    rows.push(hdr);
+
+    var mgrFilter=document.getElementById('momMgrFilter')?.value||'';
+    var allMgrs=[...new Set(SR.map(function(s){return srBs[s.s]?.mgr||s.mgr||'';}).filter(Boolean))].sort();
+    var mgrsToShow=mgrFilter?[mgrFilter]:allMgrs;
+    var recMap={};
+    months.forEach(function(mn){
+      try{var d=JSON.parse(localStorage.getItem(getMomMgrKey(mn))||'null');
+        if(d)Object.keys(d).forEach(function(store){recMap[store+'_'+mn]=Object.assign({store:store,month:mn},d[store]);});
+      }catch(e){}
+    });
+
+    mgrsToShow.forEach(function(mgr){
+      var stores=SR.filter(function(s){return (srBs[s.s]?.mgr||s.mgr)===mgr;});
+      stores.forEach(function(store){
+        // PIP check
+        var cells=months.map(function(mn){return recMap[store.s+'_'+mn]||null;});
+        var pipReasons=[];
+        for(var mi=1;mi<cells.length;mi++){
+          var prev=cells[mi-1],curr=cells[mi];
+          if(prev&&curr){
+            var q={elbCutoff:3368};try{var bs=getBs(months[mi]);if(bs&&bs.qualifiers)q=bs.qualifiers;}catch(e){}
+            if(+prev.elb>=(q.elbCutoff||3368)&&+curr.elb>=(q.elbCutoff||3368))pipReasons.push('ELB');
+            var pPct=prev.catData?.acts?.tgt>0?prev.catData.acts.act/prev.catData.acts.tgt:null;
+            var cPct=curr.catData?.acts?.tgt>0?curr.catData.acts.act/curr.catData.acts.tgt:null;
+            if(pPct!==null&&pPct<0.85&&cPct!==null&&cPct<0.85)pipReasons.push('Acts');
+          }
+        }
+        var row=[mgr,store.s,pipReasons.length?'PIP: '+[...new Set(pipReasons)].join(', '):''];
+        months.forEach(function(mn){
+          var rec=recMap[store.s+'_'+mn];
+          if(!rec){['','','','','','','','','','',''].forEach(function(v){row.push(v);});return;}
+          var cd=rec.catData||{};
+          row.push(+cd.acts?.act||'');
+          row.push(+cd.acts?.tgt||'');
+          row.push(+cd.bts?.act||'');
+          row.push(+cd.bts?.tgt||'');
+          row.push(+cd.hsi?.act||'');
+          row.push(+cd.hsi?.tgt||'');
+          row.push(+cd.acc?.act||'');
+          row.push(+cd.acc?.tgt||'');
+          row.push(+rec.elb||'');
+          row.push(+rec.attach?+rec.attach+'%':'');
+          row.push(+rec.total||0);
+        });
+        rows.push(row);
+      });
+    });
+  } else {
+    // Coach tab
+    var hdr=['Coach','Store','PIP'];
+    months.forEach(function(mn){
+      var m=formatMn(mn);
+      ['Act%','Acc$','PPD','$/Box','ELB','Shrink%','Act Bonus','Acc Bonus','Total'].forEach(function(h){hdr.push(m+' '+h);});
+    });
+    rows.push(hdr);
+
+    var coachFilter=document.getElementById('momCoachFilter')?.value||'';
+    var coachesToShow=coachFilter?[coachFilter]:COACHES.slice().sort();
+
+    coachesToShow.forEach(function(coach){
+      var stores=SR.filter(function(s){return (srBs[s.s]?.coach||s.c)===coach;});
+      stores.forEach(function(store){
+        var cells=months.map(function(mn){
+          try{var d=JSON.parse(localStorage.getItem(getMomCoachKey(mn))||'null');return d&&d[store.s]?d[store.s]:null;}catch(e){return null;}
+        });
+        var pipReasons=[];
+        for(var mi=1;mi<cells.length;mi++){
+          var prev=cells[mi-1],curr=cells[mi];
+          if(prev&&curr){
+            var elbDQ=T.elbDQ||DT.elbDQ||3368;
+            if(+prev.elbRank>=elbDQ&&+curr.elbRank>=elbDQ)pipReasons.push('ELB');
+            if(+prev.actPct>0&&+prev.actPct<85&&+curr.actPct>0&&+curr.actPct<85)pipReasons.push('Act%');
+          }
+        }
+        var row=[coach,store.s,pipReasons.length?'PIP: '+[...new Set(pipReasons)].join(', '):''];
+        cells.forEach(function(c){
+          if(!c){[...Array(9)].forEach(function(){row.push('');});return;}
+          row.push(c.actPct?c.actPct.toFixed(1)+'%':'');
+          row.push(c.accTotal||'');
+          row.push(c.totalBoxes||'');
+          row.push(c.accPerBox?'$'+c.accPerBox.toFixed(2):'');
+          row.push(c.elbRank||'');
+          row.push(c.shrinkPct?c.shrinkPct+'%':'');
+          row.push(c.actBonus||0);
+          row.push(c.accBonus||0);
+          row.push(c.total||0);
+        });
+        rows.push(row);
+      });
+    });
+  }
+
+  // Build CSV and download as .xlsx-compatible format
+  var csv=rows.map(function(r){
+    return r.map(function(v){
+      var s=String(v===null||v===undefined?'':v);
+      if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)s='"'+s.replace(/"/g,'""')+'"';
+      return s;
+    }).join(',');
+  }).join('\n');
+
+  var label=activeTab==='mgr'?'Managers':'Coaches';
+  var endMn=document.getElementById('momEndMonth')?.value||'';
+  var fname='MoM_'+label+'_'+endMn+'_Last'+getMoMMonths().length+'Months.csv';
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=fname;a.click();
+  URL.revokeObjectURL(url);
+  tst2('✅ M/O/M exported: '+fname,'ok');
 }
 
 function buildMomData(){
