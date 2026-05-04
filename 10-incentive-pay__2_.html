@@ -1782,7 +1782,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </div>
 
       <!-- SECTION 2: MIM SPIFF -->
-      <div class="card" style="margin-bottom:16px">
+      <div id="cpMimSection" class="card" style="margin-bottom:16px">
         <div class="card-hdr" style="background:var(--ok)">
           <div class="card-title">📱 Coach MIM Spiff</div>
           <div id="cpMimPeriodLabel" style="font-size:12px;color:rgba(255,255,255,.7)"></div>
@@ -5248,7 +5248,7 @@ function renCoachPayout(){
   const mimRate=+document.getElementById('coachMimPayRate')?.value||ct.mimRate||10;
   let totalMim=0;
 
-  const mimRows=stores.map((store,si)=>{
+  const mimRows=stores.filter(store=>getCoachMimEnabledForStore(store.s)).map((store,si)=>{
     const storeData=mimData?.stores?.[store.s];
     const bans=storeData?(storeData.overrideOrders??storeData.orders??0):0;
     const payout=bans*mimRate;
@@ -5262,6 +5262,11 @@ function renCoachPayout(){
       <td style="padding:7px 10px;text-align:right;font-family:'Poppins',sans-serif;font-weight:800;color:${payout>0?'var(--ok)':'var(--mu)'}">$${payout.toFixed(2)}</td>
     </tr>`;
   }).join('');
+
+  // Hide MIM section entirely if no stores enabled
+  const anyMimEnabled=stores.some(store=>getCoachMimEnabledForStore(store.s));
+  const cpMimSection=document.getElementById('cpMimSection');
+  if(cpMimSection)cpMimSection.style.display=anyMimEnabled?'':'none';
 
   const mimFoot=`<tr style="background:var(--ok)">
     <td colspan="4" style="padding:9px 12px;font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#fff">MIM Spiff Total</td>
@@ -5297,6 +5302,19 @@ function generateCoachPayoutSlip(){
   const storeTotal=document.getElementById('cpTotalBonus')?.textContent||'$0.00';
   const mimTotal=document.getElementById('cpTotalMim')?.textContent||'$0.00';
 
+  // Only show MIM section if at least one store has coach MIM enabled
+  const anyCoachMim=stores.some(s=>getCoachMimEnabledForStore(s.s));
+  const mimSection=anyCoachMim?`
+  <div class="section-hdr">📱 MIM Spiff</div>
+  <table><thead><tr>
+    <th>Store</th><th>Manager</th><th>BANs</th><th>Rate</th><th>MIM Payout</th>
+  </tr></thead><tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>`:'';
+  const grandSection=anyCoachMim?`
+    <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
+    <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
+    <div class="item total" style="margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px"><label>Total Payout</label><span>${grand}</span></div>`:`
+    <div class="item total" style="margin-left:auto"><label>Total Store Bonus</label><span>${grand}</span></div>`;
+
   const html=`<!DOCTYPE html><html><head><title>Coach Payout — ${coach}</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -5331,22 +5349,15 @@ function generateCoachPayoutSlip(){
   <div class="meta">
     <div><label>Coach</label><span>${coach}</span></div>
     <div><label>Store Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
-    <div><label>MIM Spiff Period</label><span>${formatPeriod(mimMn)}</span></div>
+    ${anyCoachMim?`<div><label>MIM Spiff Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
     <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
   </div>
   <div class="section-hdr">🏪 Store Bonus Breakdown</div>
   <table><thead><tr>
     <th>Store</th><th>Tier</th><th>Act %</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Shrink</th><th>ELB</th><th>Act Bonus</th><th>Acc Bonus</th><th>Total</th>
   </tr></thead><tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
-  <div class="section-hdr">📱 MIM Spiff</div>
-  <table><thead><tr>
-    <th>Store</th><th>Manager</th><th>BANs</th><th>Rate</th><th>MIM Payout</th>
-  </tr></thead><tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>
-  <div class="grand">
-    <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
-    <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
-    <div class="item total" style="margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px"><label>Total Payout</label><span>${grand}</span></div>
-  </div>
+  ${mimSection}
+  <div class="grand">${grandSection}</div>
   <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${formatPeriod(bonusMn)}</div>
   </body></html>`;
 
