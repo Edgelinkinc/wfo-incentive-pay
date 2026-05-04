@@ -5293,48 +5293,127 @@ function generateCoachPayoutSlip(){
   const mimMn=document.getElementById('cpMimMonth')?.value||bonusMn;
   if(!coach||!bonusMn){tst2('Select a coach and month first','er');return;}
 
-  // Collect current rendered data
-  const storeTable=document.getElementById('cpStoreRows')?.innerHTML||'';
-  const storeFoot=document.getElementById('cpStoreFoot')?.innerHTML||'';
-  const mimTable=document.getElementById('cpMimRows')?.innerHTML||'';
-  const mimFoot=document.getElementById('cpMimFoot')?.innerHTML||'';
-  const grand=document.getElementById('cpGrandTotal')?.textContent||'$0.00';
-  const storeTotal=document.getElementById('cpTotalBonus')?.textContent||'$0.00';
-  const mimTotal=document.getElementById('cpTotalMim')?.textContent||'$0.00';
+  const payoutDate=localStorage.getItem('wfo_payout_date')||'';
+  const payoutDisplay=payoutDate?new Date(payoutDate+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Not set';
 
-  // Only show MIM section if at least one store has coach MIM enabled
+  const srBs=getSR_BS();
+  const stores=SR.filter(s=>(srBs[s.s]?.coach||s.c)===coach);
+  const ct=T.coach||DT.coach;
+  const elbDQ=T.elbDQ||DT.elbDQ||3368;
+
+  // Build store data same way as renCoachPayout
+  let bsd={};
+  try{bsd=JSON.parse(localStorage.getItem('wfo_coach_sheet_'+bonusMn)||'{}');}catch{}
+  const _uploadFields=['elbRank','actPct','actActual','actTarget','accTotal','totalBoxes'];
+  stores.forEach(s=>{if(bsd[s.s]){const _m=bsd[s.s]._manual||{};_uploadFields.forEach(f=>{if(!_m[f])delete bsd[s.s][f];});}});
+  const elbPeriod=getELBData()?.period;
+  const rtbdiPeriod=getRTBDIStoreData()?.period;
+  if(elbPeriod===bonusMn){
+    const elbData=getELBData()?.data||{};
+    stores.forEach(s=>{const ed=elbData[s.s];if(!ed)return;if(!bsd[s.s])bsd[s.s]={};if(ed.actPct!==undefined)bsd[s.s].actPct=ed.actPct;if(ed.elbRank)bsd[s.s].elbRank=ed.elbRank;if(ed.actActual)bsd[s.s].actActual=ed.actActual;if(ed.actTarget)bsd[s.s].actTarget=ed.actTarget;});
+  }
+  if(rtbdiPeriod===bonusMn){
+    const rtbdiData=getRTBDIStoreData()?.data||{};
+    stores.forEach(s=>{const rd=rtbdiData[s.s];if(!rd)return;if(!bsd[s.s])bsd[s.s]={};if(rd.accTotal!==undefined)bsd[s.s].accTotal=rd.accTotal;if(rd.ppd)bsd[s.s].totalBoxes=rd.ppd;else if(rd.boxes)bsd[s.s].totalBoxes=rd.boxes;});
+  }
+
+  // Build store rows with color coding
+  let totalAct=0,totalAcc=0,totalKick=0;
+  const storeRows=stores.map((store,si)=>{
+    const sd=bsd[store.s]||{};
+    const res=calcStoreCoachBonus(store.s,sd);
+    totalAct+=res.actBonus;totalAcc+=res.accBonus;totalKick+=res.kicker||0;
+    const accPerBox=+sd.totalBoxes>0?(+sd.accTotal/+sd.totalBoxes):0;
+    const actPct=+sd.actPct||0;
+    const elbRank=+sd.elbRank||0;
+    const elbFail=elbRank>0&&elbRank>=elbDQ;
+    const actWin=actPct>=100;
+    const actNear=actPct>=85&&actPct<100;
+    const actMiss=actPct>0&&actPct<85;
+    const hasWin=res.actBonus>0||res.accBonus>0;
+    const rowBg=si%2===0?'#fff':'#FAFAFA';
+    const actClr=actWin?'#00A651':actNear?'#E65100':actMiss?'#D32F2F':'#555';
+    const elbClr=elbFail?'#D32F2F':elbRank>0?'#00A651':'#555';
+    const totalClr=res.total>0?'#E20074':'#999';
+    return`<tr style="background:${rowBg};border-bottom:1px solid #EEEEEE">
+      <td style="padding:8px 10px;font-weight:700;font-size:11px">${X(store.s)}</td>
+      <td style="padding:8px 6px;text-align:center"><span style="font-size:9px;background:#F3E8FF;color:#6E2B8B;padding:2px 6px;border-radius:4px;font-weight:700">Tier ${store.tier}</span></td>
+      <td style="padding:8px 6px;text-align:center;font-weight:800;color:${actClr}">${actPct?actPct.toFixed(1)+'%':'—'}${actWin?'<span style="font-size:8px;margin-left:3px">✓</span>':actFail?'<span style="font-size:8px;margin-left:3px">✗</span>':''}</td>
+      <td style="padding:8px 6px;text-align:right;font-size:11px">${sd.accTotal?'$'+(+sd.accTotal).toLocaleString('en-US',{minimumFractionDigits:2}):'—'}</td>
+      <td style="padding:8px 6px;text-align:center">${sd.totalBoxes||'—'}</td>
+      <td style="padding:8px 6px;text-align:center;font-size:10px">${accPerBox>0?'$'+accPerBox.toFixed(2):'—'}</td>
+      <td style="padding:8px 6px;text-align:center">${sd.shrinkPct?sd.shrinkPct+'%':'—'}</td>
+      <td style="padding:8px 6px;text-align:center;font-weight:700;color:${elbClr}">${elbRank||'—'}${elbFail?'<div style="font-size:8px;color:#D32F2F">DQ</div>':''}</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${res.actBonus>0?'#E20074':'#999'}">$${res.actBonus.toFixed(2)}</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${res.accBonus>0?'#4A1A6B':'#999'}">$${res.accBonus.toFixed(2)}</td>
+      <td style="padding:8px 6px;text-align:right;font-family:sans-serif;font-weight:900;color:${totalClr}">$${res.total.toFixed(2)}</td>
+    </tr>${res.guardrails.length?`<tr style="background:#FFEBEE"><td colspan="11" style="padding:3px 10px;font-size:9px;color:#C62828;font-weight:700">⚠ ${res.guardrails.join(' · ')}</td></tr>`:''}`;
+  }).join('');
+
+  const storeBonus=totalAct+totalAcc+totalKick;
+
+  // MIM rows from data
+  const mimData=getCoachMimPayData(mimMn||bonusMn);
+  const mimRate=+document.getElementById('coachMimPayRate')?.value||ct.mimRate||10;
+  let totalMim=0;
   const anyCoachMim=stores.some(s=>getCoachMimEnabledForStore(s.s));
-  const mimSection=anyCoachMim?`
+  const mimRowsArr=stores.filter(s=>getCoachMimEnabledForStore(s.s)).map((store,si)=>{
+    const storeData=mimData?.stores?.[store.s];
+    const bans=storeData?(storeData.overrideOrders??storeData.orders??0):0;
+    const payout=bans*mimRate;
+    totalMim+=payout;
+    const mgr=srBs[store.s]?.mgr||store.mgr||'—';
+    return`<tr style="background:${si%2===0?'#fff':'#FAFAFA'};border-bottom:1px solid #EEEEEE">
+      <td style="padding:7px 10px;font-weight:700;font-size:11px">${X(store.s)}</td>
+      <td style="padding:7px 8px;font-size:10px;color:#666">${X(mgr)}</td>
+      <td style="padding:7px 8px;text-align:center;font-weight:800;color:${bans>0?'#00A651':'#999'}">${bans||'—'}</td>
+      <td style="padding:7px 8px;text-align:center;color:#555">$${mimRate}/BAN</td>
+      <td style="padding:7px 8px;text-align:right;font-weight:800;color:${payout>0?'#00A651':'#999'}">$${payout.toFixed(2)}</td>
+    </tr>`;
+  });
+  const grand=storeBonus+totalMim;
+
+  const mimSection=anyCoachMim&&mimRowsArr.length?`
   <div class="section-hdr">📱 MIM Spiff</div>
-  <table><thead><tr>
-    <th>Store</th><th>Manager</th><th>BANs</th><th>Rate</th><th>MIM Payout</th>
-  </tr></thead><tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>`:'';
-  const grandSection=anyCoachMim?`
-    <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
-    <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
-    <div class="item total" style="margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px"><label>Total Payout</label><span>${grand}</span></div>`:`
-    <div class="item total" style="margin-left:auto"><label>Total Store Bonus</label><span>${grand}</span></div>`;
+  <table><thead><tr><th>Store</th><th>Manager</th><th>BANs</th><th>Rate</th><th>MIM Payout</th></tr></thead>
+  <tbody>${mimRowsArr.join('')}</tbody>
+  <tfoot><tr style="background:#00796B"><td colspan="4" style="padding:8px 10px;font-weight:800;color:#fff">MIM Spiff Total</td><td style="padding:8px 10px;text-align:right;font-weight:900;color:#fff">$${totalMim.toFixed(2)}</td></tr></tfoot>
+  </table>`:'';
+
+  const grandSection=anyCoachMim&&mimRowsArr.length?`
+    <div class="item"><label>Store Bonus</label><span>$${storeBonus.toFixed(2)}</span></div>
+    <div class="item"><label>MIM Spiff</label><span>$${totalMim.toFixed(2)}</span></div>
+    <div class="item total" style="margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px"><label>Total Payout</label><span>$${grand.toFixed(2)}</span></div>`:`
+    <div class="item total" style="margin-left:auto"><label>Total Store Bonus</label><span>$${storeBonus.toFixed(2)}</span></div>`;
 
   const html=`<!DOCTYPE html><html><head><title>Coach Payout — ${coach}</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1A1A1A;padding:20px;}
-    .header{background:#4A1A6B;color:#fff;padding:16px 22px;border-radius:8px 8px 0 0;}
-    .header h1{font-size:18px;font-weight:800;}
-    .header h2{font-size:13px;font-weight:400;opacity:.8;margin-top:3px;}
-    .meta{background:#F3E8FF;padding:10px 20px;display:flex;gap:24px;flex-wrap:wrap;border-bottom:2px solid #6E2B8B;margin-bottom:16px;}
-    .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;}
+    .header{background:linear-gradient(135deg,#E20074,#4A1A6B);color:#fff;padding:16px 22px;border-radius:8px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+    .header-left h1{font-size:17px;font-weight:900;letter-spacing:.02em;margin-bottom:3px;}
+    .header-left h2{font-size:12px;opacity:.8;}
+    .header-right .amt{font-size:28px;font-weight:900;line-height:1;}
+    .header-right .lbl{font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+    .meta{background:#F3E8FF;padding:10px 18px;display:flex;gap:24px;flex-wrap:wrap;border-radius:8px;margin-bottom:16px;border:1px solid #D8BFFF;}
+    .meta div label{font-size:8px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;margin-bottom:2px;}
     .meta div span{font-size:13px;font-weight:700;}
+    .legend{display:flex;gap:14px;margin-bottom:10px;font-size:10px;flex-wrap:wrap;}
+    .legend span{display:flex;align-items:center;gap:4px;}
+    .dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
     table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
-    th{background:#F3E8FF;color:#6E2B8B;font-weight:700;font-size:9px;text-transform:uppercase;padding:6px 8px;border-bottom:2px solid #6E2B8B;text-align:left;}
-    td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
-    tr:nth-child(even) td{background:#FAFAFA;}
-    .section-hdr{font-family:'Segoe UI',sans-serif;font-weight:800;font-size:13px;color:#6E2B8B;margin:16px 0 8px;}
-    .grand{background:#4A1A6B;color:#fff;padding:16px 22px;border-radius:8px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+    th{background:#F3E8FF;color:#6E2B8B;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #6E2B8B;text-align:left;}
+    td{vertical-align:middle;}
+    .section-hdr{font-weight:800;font-size:13px;color:#4A1A6B;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #E20074;}
+    .grand{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:14px 20px;border-radius:8px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
     .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
-    .grand .item span{font-size:18px;font-weight:800;}
-    .grand .total span{font-size:26px;font-weight:900;color:#E20074;}
-    .footer{margin-top:14px;font-size:9px;color:#666;text-align:center;border-top:1px solid #E8E8E8;padding-top:8px;}
+    .grand .item span{font-size:17px;font-weight:800;}
+    .grand .total span{font-size:24px;font-weight:900;color:#E20074;}
+    .sigs{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin:20px 0 10px;}
+    .sig-line{border-top:2px solid #1A1A1A;padding-top:5px;display:flex;justify-content:space-between;}
+    .sig-line span{font-size:10px;font-weight:700;color:#555;}
+    .sig-line em{font-size:10px;color:#999;font-style:normal;}
+    .footer{font-size:8px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:6px;text-transform:uppercase;letter-spacing:.05em;}
     @media print{.no-print{display:none;}}
   </style>
 </head><body>
@@ -5343,22 +5422,45 @@ function generateCoachPayoutSlip(){
     <button onclick="window.close()" style="background:#666;color:#fff;border:none;padding:8px 14px;border-radius:6px;margin-left:8px;cursor:pointer">✕ Close</button>
   </div>
   <div class="header">
-    <h1>EDGELINK INC — WORK FORCE OPS</h1>
-    <h2>Coach Bonus Payout · ${coach}</h2>
+    <div class="header-left">
+      <h1>EDGELINK INC — WORK FORCE OPS</h1>
+      <h2>Coach Bonus Payout &middot; ${coach}</h2>
+    </div>
+    <div class="header-right" style="text-align:right">
+      <div class="lbl">Total Bonus Earned</div>
+      <div class="amt">$${grand.toFixed(2)}</div>
+    </div>
   </div>
   <div class="meta">
     <div><label>Coach</label><span>${coach}</span></div>
-    <div><label>Store Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
-    ${anyCoachMim?`<div><label>MIM Spiff Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
-    <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
+    <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
+    ${anyCoachMim?`<div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>`:''}
+    <div><label>Payout Date</label><span style="color:${payoutDate?'#E20074':'#999'}">${payoutDisplay}</span></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:#E8F5E9;border:1px solid #00A651"></span>Met goal / Earned</span>
+    <span><span class="dot" style="background:#FFF8E1;border:1px solid #E65100"></span>Near goal (85–99%)</span>
+    <span><span class="dot" style="background:#FFEBEE;border:1px solid #D32F2F"></span>Missed / Guardrail</span>
   </div>
   <div class="section-hdr">🏪 Store Bonus Breakdown</div>
   <table><thead><tr>
-    <th>Store</th><th>Tier</th><th>Act %</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Shrink</th><th>ELB</th><th>Act Bonus</th><th>Acc Bonus</th><th>Total</th>
-  </tr></thead><tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
+    <th>Store</th><th>Tier</th><th style="color:#00A651">Act %</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Shrink</th><th>ELB</th>
+    <th style="text-align:right;color:#E20074">Act $</th><th style="text-align:right;color:#4A1A6B">Acc $</th><th style="text-align:right">Total</th>
+  </tr></thead>
+  <tbody>${storeRows}</tbody>
+  <tfoot><tr style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B)">
+    <td colspan="8" style="padding:9px 10px;font-weight:800;font-size:12px;color:#fff">STORE TOTAL</td>
+    <td style="padding:9px 6px;text-align:right;font-weight:800;color:#fff">$${totalAct.toFixed(2)}</td>
+    <td style="padding:9px 6px;text-align:right;font-weight:800;color:#fff">$${totalAcc.toFixed(2)}</td>
+    <td style="padding:9px 6px;text-align:right;font-weight:900;font-size:14px;color:#E20074">$${storeBonus.toFixed(2)}</td>
+  </tr></tfoot></table>
   ${mimSection}
   <div class="grand">${grandSection}</div>
-  <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${formatPeriod(bonusMn)}</div>
+  <div class="sigs">
+    <div><div class="sig-line"><span>Coach Signature</span><em>Date</em></div></div>
+    <div><div class="sig-line"><span>HR / Owner Approval</span><em>Date</em></div></div>
+  </div>
+  <div class="footer">Confidential &mdash; Edgelink Inc Internal Use Only &middot; Work Force Ops &middot; ${formatPeriod(bonusMn)}</div>
   </body></html>`;
 
   downloadCoachPayoutSlipPDF();
@@ -6078,7 +6180,7 @@ function buildCoachSlipFullHTML(coachName){
     const accPerBox=+sd.totalBoxes>0?(+sd.accTotal/+sd.totalBoxes):0;
     return`<tr><td>${store.s}</td><td style="text-align:center">Tier ${store.tier}</td><td style="text-align:center">${sd.actPct?sd.actPct.toFixed(1)+'%':'—'}</td><td style="text-align:center">${sd.elbRank||'—'}</td><td style="text-align:right">${sd.accTotal?'$'+(+sd.accTotal).toFixed(2):'—'}</td><td style="text-align:center">${sd.totalBoxes||'—'}</td><td style="text-align:center">${accPerBox>0?'$'+accPerBox.toFixed(2):'—'}</td><td style="text-align:right;font-weight:700;color:#6E2B8B">$${res.actBonus.toFixed(2)}</td><td style="text-align:right;font-weight:700;color:#6E2B8B">$${res.accBonus.toFixed(2)}</td><td style="text-align:right;font-weight:800;color:#E20074">$${res.total.toFixed(2)}</td></tr>${res.guardrails.length?`<tr><td colspan="10" style="font-size:10px;color:#D32F2F;padding:2px 8px">⚠ ${res.guardrails.join(' · ')}</td></tr>`:''}`;
   }).join('');
-  const mimBans=stores.reduce((s,st)=>s+(coachSheetData[st.s]?.mimOrders||0),0)||reps.filter(r=>r.c===coachName).reduce((s,r)=>s+(r.mb||0),0);
+  const mimBans=stores.filter(st=>getCoachMimEnabledForStore(st.s)).reduce((s,st)=>s+(coachSheetData[st.s]?.mimOrders||0),0)||reps.filter(r=>r.c===coachName).reduce((s,r)=>s+(r.mb||0),0);
   totalMim=mimBans*(ct.mimRate||10);
   const grandTotal=totalAct+totalAcc+totalMim+totalKick;
   const period=mn?formatPeriod(mn):'—';
@@ -8917,7 +9019,7 @@ function renCoachSheet(){
     // MIM: prefer monthly coach MIM payout data, then rep-level
     const _shMn=document.getElementById('coachSheetMonth')?.value||window._coachSheetCurrentMonth||'';
     const _shMimData=_shMn?getCoachMimPayData(_shMn):null;
-    const mimFromMonthlySheet=_shMimData?stores.reduce((sum,s)=>{
+    const mimFromMonthlySheet=_shMimData?stores.filter(s=>getCoachMimEnabledForStore(s.s)).reduce((sum,s)=>{
       const sd=_shMimData.stores?.[s.s];
       return sum+(sd?(sd.overrideOrders??sd.orders??0):0);
     },0):0;
