@@ -10548,15 +10548,21 @@ function loadEmpBonus(){
   const weekVal=weekSel?.value||wk;
 
   if(weekVal===wk||weekVal==='current'||!weekVal){
-    // Current week — use in-memory reps if available, else load from stored data
-    if(reps.length>0){
+    // Current week — only use in-memory reps if they were saved for the current week
+    const storedCurrent=getWeekData(wk);
+    const currentReps=storedCurrent.reps||[];
+    if(currentReps.length>0){
+      // Use stored current week data
+      window._empViewReps=currentReps;
+      window._empViewCBs=storedCurrent.cbs||[];
+    } else if(reps.length>0&&localStorage.getItem('wfo_current_wk')===wk){
+      // In-memory reps match current week
       window._empViewReps=reps;
       window._empViewCBs=CBs;
     } else {
-      // Tablet/fresh browser — load from stored week data
-      const wd=getWeekData(wk);
-      window._empViewReps=wd.reps||[];
-      window._empViewCBs=wd.cbs||[];
+      // No data for current week yet
+      window._empViewReps=[];
+      window._empViewCBs=[];
     }
     window._empViewWeek=document.getElementById('wkb')?.textContent||'Current Week';
   } else {
