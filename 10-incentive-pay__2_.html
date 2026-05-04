@@ -5634,9 +5634,8 @@ function renMgrPayout(){
 
   let totalBonus=0;
   const storeRows=stores.map((store,si)=>{
-    // mgrSheetData is authoritative (populated by ELB/RTBDI uploads on Actuals tab)
-    // bsd is fallback for manually-entered values not yet uploaded
-    const sd=Object.assign({},bsd[store.s]||{},mgrSheetData[store.s]||{});
+    // Use bsd only — already overlaid with period-matched ELB/RTBDI above
+    const sd=Object.assign({},bsd[store.s]||{});
     const res=calcMgrBonus(store.s,sd,bonusMn);
     totalBonus+=res.bonusOnly||res.total;
     const elbRank=+sd.elb||0;
@@ -13954,8 +13953,8 @@ function exportMomToExcel(){
 
   var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
     +'<head><meta charset="UTF-8">'
-    +'<style>td,th{font-family:Calibri,Arial,sans-serif;font-size:11pt;}</style>'
-    +'</head><body><table border="1" cellspacing="0">';
+    +'<style>td,th{font-family:Calibri,Arial,sans-serif;font-size:11pt;mso-number-format:"\\@";}</style>'
+    +'</head><body><table border="1" cellspacing="0" style="border-collapse:collapse">';
 
   if(activeTab==='mgr'){
     var recMap={};
@@ -14018,9 +14017,9 @@ function exportMomToExcel(){
         html+='<td style="'+tdBase+pipCell+'">'+(pip.length?'🚨 '+pip.join(', '):'✓')+'</td>';
         cells.forEach(function(c){
           if(!c){html+='<td colspan="7" style="'+tdBase+'color:#ccc;text-align:center;">No data</td>';return;}
-          html+='<td style="'+tdBase+'background:'+pctBg(c.actPct)+';color:'+pctFg(c.actPct)+';text-align:center;">'+(c.actTgt>0?c.acts+'/'+c.actTgt:'—')+'</td>';
-          html+='<td style="'+tdBase+'background:'+pctBg(c.btsPct)+';color:'+pctFg(c.btsPct)+';text-align:center;">'+(c.btsTgt>0?c.bts+'/'+c.btsTgt:'—')+'</td>';
-          html+='<td style="'+tdBase+'background:'+pctBg(c.hsiPct)+';color:'+pctFg(c.hsiPct)+';text-align:center;">'+(c.hsiTgt>0?c.hsi+'/'+c.hsiTgt:'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+pctBg(c.actPct)+';color:'+pctFg(c.actPct)+';text-align:center;mso-number-format:\'\\@\';">'+(c.actTgt>0?c.acts+' / '+c.actTgt:'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+pctBg(c.btsPct)+';color:'+pctFg(c.btsPct)+';text-align:center;mso-number-format:\'\\@\';">'+(c.btsTgt>0?c.bts+' / '+c.btsTgt:'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+pctBg(c.hsiPct)+';color:'+pctFg(c.hsiPct)+';text-align:center;mso-number-format:\'\\@\';">'+(c.hsiTgt>0?c.hsi+' / '+c.hsiTgt:'—')+'</td>';
           html+='<td style="'+tdBase+'background:'+pctBg(c.accPct)+';color:'+pctFg(c.accPct)+';text-align:right;">'+(c.accTgt>0?'$'+c.acc.toFixed(0):'—')+'</td>';
           html+='<td style="'+tdBase+'background:'+elbBg(c.elbFail)+';color:'+elbFg(c.elbFail)+';text-align:center;font-weight:bold;">'+(c.elb||'—')+'</td>';
           html+='<td style="'+tdBase+'background:'+attachBg(c.attachFail)+';text-align:center;">'+(c.attach?c.attach.toFixed(1)+'%':'—')+'</td>';
