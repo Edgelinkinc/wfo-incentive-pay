@@ -13926,16 +13926,17 @@ function getMomMgrKey(mn){return 'wfo_mom_mgr_'+mn;}
 function getMomCoachKey(mn){return 'wfo_mom_coach_'+mn;}
 
 function buildMomData(){
-  // Scan all manager and coach sheet keys and build isolated MoM snapshots
   var srBs=getSR_BS();
-  for(var k=0;k<localStorage.length;k++){
-    var key=localStorage.key(k);if(!key)continue;
+  var allKeys=[];
+  for(var k=0;k<localStorage.length;k++){var lk=localStorage.key(k);if(lk)allKeys.push(lk);}
 
-    if(/^wfo_mgr_sheet_\d{4}-\d{2}$/.test(key)){
+  allKeys.forEach(function(key){
+    // Manager sheets
+    if(key.indexOf('wfo_mgr_sheet_2')===0){
       var mn=key.replace('wfo_mgr_sheet_','');
       try{
         var sheetData=JSON.parse(localStorage.getItem(key)||'null');
-        if(!sheetData)continue;
+        if(!sheetData)return;
         var bs=null;try{bs=getBs(mn);}catch(e){}
         var cats=(bs&&bs.categories)||[{id:'acts',name:'Acts'},{id:'hsi',name:'HSI'},{id:'bts',name:'BTS'},{id:'acc',name:'Acc'}];
         var q=(bs&&bs.qualifiers)||{elbCutoff:3368,attachCutoff:60,attachPenalty:25};
@@ -13964,40 +13965,33 @@ function buildMomData(){
           });
           snapshot[store.s]={elb:elb,attach:attach,catData:catData,total:total,tier:tier};
         });
-        if(Object.keys(snapshot).length)
-          localStorage.setItem(getMomMgrKey(mn),JSON.stringify(snapshot));
+        if(Object.keys(snapshot).length)localStorage.setItem(getMomMgrKey(mn),JSON.stringify(snapshot));
       }catch(e){console.warn('MoM mgr build error',mn,e);}
     }
 
-    if(/^wfo_coach_sheet_\d{4}-\d{2}$/.test(key)){
+    // Coach sheets
+    if(key.indexOf('wfo_coach_sheet_2')===0){
       var mn=key.replace('wfo_coach_sheet_','');
       try{
         var sheetData=JSON.parse(localStorage.getItem(key)||'null');
-        if(!sheetData)continue;
+        if(!sheetData)return;
         var snapshot={};
         SR.forEach(function(store){
           var sd=sheetData[store.s];if(!sd)return;
-          var hasData=+sd.actPct||+sd.accTotal||+sd.elbRank;
-          if(!hasData)return;
-          // Calculate bonus using only this store's sd — calcStoreCoachBonus is pure (no globals)
+          if(!+sd.actPct&&!+sd.accTotal&&!+sd.elbRank)return;
           var res=calcStoreCoachBonus(store.s,sd);
           snapshot[store.s]={
-            actPct:+sd.actPct||0,
-            accTotal:+sd.accTotal||0,
+            actPct:+sd.actPct||0,accTotal:+sd.accTotal||0,
             totalBoxes:+sd.totalBoxes||0,
             accPerBox:+sd.accPerBox||(+sd.totalBoxes>0&&+sd.accTotal>0?+sd.accTotal/+sd.totalBoxes:0),
-            elbRank:+sd.elbRank||0,
-            shrinkPct:+sd.shrinkPct||0,
-            actBonus:res.actBonus,
-            accBonus:res.accBonus,
-            total:res.total
+            elbRank:+sd.elbRank||0,shrinkPct:+sd.shrinkPct||0,
+            actBonus:res.actBonus,accBonus:res.accBonus,total:res.total
           };
         });
-        if(Object.keys(snapshot).length)
-          localStorage.setItem(getMomCoachKey(mn),JSON.stringify(snapshot));
+        if(Object.keys(snapshot).length)localStorage.setItem(getMomCoachKey(mn),JSON.stringify(snapshot));
       }catch(e){console.warn('MoM coach build error',mn,e);}
     }
-  }
+  });
 }
 
 
