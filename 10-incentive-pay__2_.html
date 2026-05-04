@@ -5805,8 +5805,9 @@ function loadEmpBonusForWeek(){
 
 
 function loadEmpBonusFromData(repVal){
-  const viewReps=window._empViewReps||reps;
-  const viewCBs=window._empViewCBs||CBs;
+  // Use _empViewReps only — never fall back to global reps (avoids cross-week bleed)
+  const viewReps=window._empViewReps!==undefined?window._empViewReps:[];
+  const viewCBs=window._empViewCBs!==undefined?window._empViewCBs:[];
   const weekLabel=window._empViewWeek||document.getElementById('wkb')?.textContent||'—';
 
   const empCard=document.getElementById('emp-card');
@@ -10528,6 +10529,9 @@ function initEmpView(){
   });
   // Init week picker
   initEmpWeekPicker();
+  // Initialize view reps to empty — prevents bleed from global reps before a week is selected
+  window._empViewReps=[];
+  window._empViewCBs=[];
   // Week label
   const wl=document.getElementById('empWeekLabel');
   if(wl)wl.textContent='Week of '+(document.getElementById('wkb')?.textContent||'—');
