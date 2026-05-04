@@ -13936,127 +13936,161 @@ function exportMomToExcel(){
   var months=getMoMMonths();
   if(!months.length){tst2('Set an end month first','wn');return;}
   var srBs=getSR_BS();
-  var rows=[];
   var activeTab=document.querySelector('#mom-mgr.active')?'mgr':'coach';
+  var label=activeTab==='mgr'?'Managers':'Coaches';
+  var endMn=document.getElementById('momEndMonth')?.value||'';
+  var fname='MoM_'+label+'_'+endMn+'_Last'+months.length+'Months.xls';
+
+  // Color helpers
+  function pctBg(p){return p===null?'':p>=1?'#C6EFCE':p>=0.85?'#FFEB9C':'#FFC7CE';}
+  function pctFg(p){return p===null?'':p>=1?'#276221':p>=0.85?'#9C6500':'#9C0006';}
+  function elbBg(fail){return fail?'#FFC7CE':'';}
+  function elbFg(fail){return fail?'#9C0006':'';}
+  function attachBg(fail){return fail?'#FFEB9C':'';}
+
+  var thStyle='background:#4A1A6B;color:#ffffff;font-weight:bold;padding:6px 8px;border:1px solid #ccc;white-space:nowrap;';
+  var mnStyle='background:#E20074;color:#ffffff;font-weight:bold;padding:6px 8px;border:1px solid #ccc;text-align:center;';
+  var tdBase='padding:5px 7px;border:1px solid #ddd;';
+
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
+    +'<head><meta charset="UTF-8">'
+    +'<style>td,th{font-family:Calibri,Arial,sans-serif;font-size:11pt;}</style>'
+    +'</head><body><table border="1" cellspacing="0">';
 
   if(activeTab==='mgr'){
-    // Header
-    var hdr=['Manager','Store','PIP'];
-    months.forEach(function(mn){
-      var m=formatMn(mn);
-      ['Acts','Acts Tgt','BTS','BTS Tgt','HSI','HSI Tgt','Acc$','Acc$ Tgt','ELB','Attach%','Bonus'].forEach(function(h){hdr.push(m+' '+h);});
-    });
-    rows.push(hdr);
-
-    var mgrFilter=document.getElementById('momMgrFilter')?.value||'';
-    var allMgrs=[...new Set(SR.map(function(s){return srBs[s.s]?.mgr||s.mgr||'';}).filter(Boolean))].sort();
-    var mgrsToShow=mgrFilter?[mgrFilter]:allMgrs;
     var recMap={};
     months.forEach(function(mn){
       try{var d=JSON.parse(localStorage.getItem(getMomMgrKey(mn))||'null');
         if(d)Object.keys(d).forEach(function(store){recMap[store+'_'+mn]=Object.assign({store:store,month:mn},d[store]);});
       }catch(e){}
     });
+    var mgrFilter=document.getElementById('momMgrFilter')?.value||'';
+    var allMgrs=[...new Set(SR.map(function(s){return srBs[s.s]?.mgr||s.mgr||'';}).filter(Boolean))].sort();
+    var mgrsToShow=mgrFilter?[mgrFilter]:allMgrs;
+
+    // Header rows
+    html+='<tr><th style="'+thStyle+'">Manager</th><th style="'+thStyle+'">Store</th><th style="'+thStyle+'">PIP</th>';
+    months.forEach(function(mn){
+      html+='<th colspan="7" style="'+mnStyle+'">'+formatMn(mn)+'</th>';
+    });
+    html+='</tr><tr><th style="'+thStyle+'"></th><th style="'+thStyle+'"></th><th style="'+thStyle+'"></th>';
+    months.forEach(function(){
+      ['Acts','BTS','HSI','Acc$','ELB','Attach%','Bonus'].forEach(function(h){
+        html+='<th style="'+thStyle+'font-size:9pt;">'+h+'</th>';
+      });
+    });
+    html+='</tr>';
 
     mgrsToShow.forEach(function(mgr){
       var stores=SR.filter(function(s){return (srBs[s.s]?.mgr||s.mgr)===mgr;});
       stores.forEach(function(store){
-        // PIP check
-        var cells=months.map(function(mn){return recMap[store.s+'_'+mn]||null;});
+        var cells=months.map(function(mn){
+          var rec=recMap[store.s+'_'+mn]||null;
+          if(!rec)return null;
+          var cd=rec.catData||{};
+          var q={elbCutoff:3368,attachCutoff:60};try{var bs=getBs(mn);if(bs&&bs.qualifiers)q=bs.qualifiers;}catch(e){}
+          var acts=+cd.acts?.act||0,actTgt=+cd.acts?.tgt||0;
+          var bts=+cd.bts?.act||0,btsTgt=+cd.bts?.tgt||0;
+          var hsi=+cd.hsi?.act||0,hsiTgt=+cd.hsi?.tgt||0;
+          var acc=+cd.acc?.act||0,accTgt=+cd.acc?.tgt||0;
+          var elb=+rec.elb||0,attach=+rec.attach||0,bonus=+rec.total||0;
+          return{acts,actTgt,bts,btsTgt,hsi,hsiTgt,acc,accTgt,elb,attach,bonus,
+            elbFail:elb>0&&elb>=q.elbCutoff,attachFail:attach>0&&attach<q.attachCutoff,
+            actPct:actTgt>0?acts/actTgt:null,btsPct:btsTgt>0?bts/btsTgt:null,
+            hsiPct:hsiTgt>0?hsi/hsiTgt:null,accPct:accTgt>0?acc/accTgt:null};
+        });
         var pipReasons=[];
         for(var mi=1;mi<cells.length;mi++){
-          var prev=cells[mi-1],curr=cells[mi];
-          if(prev&&curr){
-            var q={elbCutoff:3368};try{var bs=getBs(months[mi]);if(bs&&bs.qualifiers)q=bs.qualifiers;}catch(e){}
-            if(+prev.elb>=(q.elbCutoff||3368)&&+curr.elb>=(q.elbCutoff||3368))pipReasons.push('ELB');
-            var pPct=prev.catData?.acts?.tgt>0?prev.catData.acts.act/prev.catData.acts.tgt:null;
-            var cPct=curr.catData?.acts?.tgt>0?curr.catData.acts.act/curr.catData.acts.tgt:null;
-            if(pPct!==null&&pPct<0.85&&cPct!==null&&cPct<0.85)pipReasons.push('Acts');
+          var p=cells[mi-1],c=cells[mi];
+          if(p&&c){
+            if(p.elbFail&&c.elbFail)pipReasons.push('ELB');
+            if(p.actPct!==null&&p.actPct<0.85&&c.actPct!==null&&c.actPct<0.85)pipReasons.push('Acts');
+            if(p.btsPct!==null&&p.btsPct<0.85&&c.btsPct!==null&&c.btsPct<0.85)pipReasons.push('BTS');
+            if(p.hsiPct!==null&&p.hsiPct<0.85&&c.hsiPct!==null&&c.hsiPct<0.85)pipReasons.push('HSI');
+            if(p.accPct!==null&&p.accPct<0.85&&c.accPct!==null&&c.accPct<0.85)pipReasons.push('Acc');
           }
         }
-        var row=[mgr,store.s,pipReasons.length?'PIP: '+[...new Set(pipReasons)].join(', '):''];
-        months.forEach(function(mn){
-          var rec=recMap[store.s+'_'+mn];
-          if(!rec){['','','','','','','','','','',''].forEach(function(v){row.push(v);});return;}
-          var cd=rec.catData||{};
-          row.push(+cd.acts?.act||'');
-          row.push(+cd.acts?.tgt||'');
-          row.push(+cd.bts?.act||'');
-          row.push(+cd.bts?.tgt||'');
-          row.push(+cd.hsi?.act||'');
-          row.push(+cd.hsi?.tgt||'');
-          row.push(+cd.acc?.act||'');
-          row.push(+cd.acc?.tgt||'');
-          row.push(+rec.elb||'');
-          row.push(+rec.attach?+rec.attach+'%':'');
-          row.push(+rec.total||0);
+        var pip=[...new Set(pipReasons)];
+        var pipCell=pip.length?'background:#FFC7CE;color:#9C0006;font-weight:bold;':'background:#C6EFCE;color:#276221;';
+        html+='<tr>';
+        html+='<td style="'+tdBase+'font-weight:bold;">'+mgr+'</td>';
+        html+='<td style="'+tdBase+'font-weight:bold;">'+store.s+'</td>';
+        html+='<td style="'+tdBase+pipCell+'">'+(pip.length?'🚨 '+pip.join(', '):'✓')+'</td>';
+        cells.forEach(function(c){
+          if(!c){html+='<td colspan="7" style="'+tdBase+'color:#ccc;text-align:center;">No data</td>';return;}
+          html+='<td style="'+tdBase+'background:'+pctBg(c.actPct)+';color:'+pctFg(c.actPct)+';text-align:center;">'+(c.actTgt>0?c.acts+'/'+c.actTgt:'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+pctBg(c.btsPct)+';color:'+pctFg(c.btsPct)+';text-align:center;">'+(c.btsTgt>0?c.bts+'/'+c.btsTgt:'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+pctBg(c.hsiPct)+';color:'+pctFg(c.hsiPct)+';text-align:center;">'+(c.hsiTgt>0?c.hsi+'/'+c.hsiTgt:'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+pctBg(c.accPct)+';color:'+pctFg(c.accPct)+';text-align:right;">'+(c.accTgt>0?'$'+c.acc.toFixed(0):'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+elbBg(c.elbFail)+';color:'+elbFg(c.elbFail)+';text-align:center;font-weight:bold;">'+(c.elb||'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+attachBg(c.attachFail)+';text-align:center;">'+(c.attach?c.attach.toFixed(1)+'%':'—')+'</td>';
+          html+='<td style="'+tdBase+'text-align:right;font-weight:bold;color:'+(c.bonus>0?'#276221':'#9C0006')+';">$'+c.bonus.toFixed(0)+'</td>';
         });
-        rows.push(row);
+        html+='</tr>';
       });
     });
   } else {
     // Coach tab
-    var hdr=['Coach','Store','PIP'];
-    months.forEach(function(mn){
-      var m=formatMn(mn);
-      ['Act%','Acc$','PPD','$/Box','ELB','Shrink%','Act Bonus','Acc Bonus','Total'].forEach(function(h){hdr.push(m+' '+h);});
-    });
-    rows.push(hdr);
-
     var coachFilter=document.getElementById('momCoachFilter')?.value||'';
     var coachesToShow=coachFilter?[coachFilter]:COACHES.slice().sort();
-
+    html+='<tr><th style="'+thStyle+'">Coach</th><th style="'+thStyle+'">Store</th><th style="'+thStyle+'">PIP</th>';
+    months.forEach(function(mn){html+='<th colspan="9" style="'+mnStyle+'">'+formatMn(mn)+'</th>';});
+    html+='</tr><tr><th style="'+thStyle+'"></th><th style="'+thStyle+'"></th><th style="'+thStyle+'"></th>';
+    months.forEach(function(){
+      ['Act%','Acc$','PPD','$/Box','ELB','Shrink%','ActB','AccB','Total'].forEach(function(h){
+        html+='<th style="'+thStyle+'font-size:9pt;">'+h+'</th>';
+      });
+    });
+    html+='</tr>';
     coachesToShow.forEach(function(coach){
       var stores=SR.filter(function(s){return (srBs[s.s]?.coach||s.c)===coach;});
       stores.forEach(function(store){
         var cells=months.map(function(mn){
           try{var d=JSON.parse(localStorage.getItem(getMomCoachKey(mn))||'null');return d&&d[store.s]?d[store.s]:null;}catch(e){return null;}
         });
+        var elbDQ=T.elbDQ||DT.elbDQ||3368;
         var pipReasons=[];
         for(var mi=1;mi<cells.length;mi++){
-          var prev=cells[mi-1],curr=cells[mi];
-          if(prev&&curr){
-            var elbDQ=T.elbDQ||DT.elbDQ||3368;
-            if(+prev.elbRank>=elbDQ&&+curr.elbRank>=elbDQ)pipReasons.push('ELB');
-            if(+prev.actPct>0&&+prev.actPct<85&&+curr.actPct>0&&+curr.actPct<85)pipReasons.push('Act%');
+          var p=cells[mi-1],c=cells[mi];
+          if(p&&c){
+            if(+p.elbRank>=elbDQ&&+c.elbRank>=elbDQ)pipReasons.push('ELB');
+            if(+p.actPct>0&&+p.actPct<85&&+c.actPct>0&&+c.actPct<85)pipReasons.push('Act%');
           }
         }
-        var row=[coach,store.s,pipReasons.length?'PIP: '+[...new Set(pipReasons)].join(', '):''];
+        var pip=[...new Set(pipReasons)];
+        var pipCell=pip.length?'background:#FFC7CE;color:#9C0006;font-weight:bold;':'background:#C6EFCE;color:#276221;';
+        html+='<tr>';
+        html+='<td style="'+tdBase+'font-weight:bold;">'+coach+'</td>';
+        html+='<td style="'+tdBase+'font-weight:bold;">'+store.s+'</td>';
+        html+='<td style="'+tdBase+pipCell+'">'+(pip.length?'🚨 '+pip.join(', '):'✓')+'</td>';
         cells.forEach(function(c){
-          if(!c){[...Array(9)].forEach(function(){row.push('');});return;}
-          row.push(c.actPct?c.actPct.toFixed(1)+'%':'');
-          row.push(c.accTotal||'');
-          row.push(c.totalBoxes||'');
-          row.push(c.accPerBox?'$'+c.accPerBox.toFixed(2):'');
-          row.push(c.elbRank||'');
-          row.push(c.shrinkPct?c.shrinkPct+'%':'');
-          row.push(c.actBonus||0);
-          row.push(c.accBonus||0);
-          row.push(c.total||0);
+          if(!c){html+='<td colspan="9" style="'+tdBase+'color:#ccc;text-align:center;">No data</td>';return;}
+          var actPct=+c.actPct||0;
+          var actP=actPct>=100?1:actPct>=85?0.9:actPct>0?0:null;
+          var elbFail=+c.elbRank>0&&+c.elbRank>=elbDQ;
+          html+='<td style="'+tdBase+'background:'+pctBg(actP)+';color:'+pctFg(actP)+';text-align:center;font-weight:bold;">'+(actPct?actPct.toFixed(1)+'%':'—')+'</td>';
+          html+='<td style="'+tdBase+'text-align:right;">'+(+c.accTotal?'$'+(+c.accTotal).toFixed(0):'—')+'</td>';
+          html+='<td style="'+tdBase+'text-align:center;">'+(+c.totalBoxes||'—')+'</td>';
+          html+='<td style="'+tdBase+'text-align:center;">'+(+c.accPerBox>0?'$'+(+c.accPerBox).toFixed(2):'—')+'</td>';
+          html+='<td style="'+tdBase+'background:'+elbBg(elbFail)+';color:'+elbFg(elbFail)+';text-align:center;font-weight:bold;">'+(+c.elbRank||'—')+'</td>';
+          html+='<td style="'+tdBase+'text-align:center;">'+(+c.shrinkPct?c.shrinkPct+'%':'—')+'</td>';
+          html+='<td style="'+tdBase+'text-align:right;color:'+(+c.actBonus>0?'#E20074':'#999')+';">$'+(+c.actBonus||0).toFixed(0)+'</td>';
+          html+='<td style="'+tdBase+'text-align:right;color:'+(+c.accBonus>0?'#4A1A6B':'#999')+';">$'+(+c.accBonus||0).toFixed(0)+'</td>';
+          html+='<td style="'+tdBase+'text-align:right;font-weight:bold;color:'+(+c.total>0?'#E20074':'#999')+';">$'+(+c.total||0).toFixed(0)+'</td>';
         });
-        rows.push(row);
+        html+='</tr>';
       });
     });
   }
 
-  // Build CSV and download as .xlsx-compatible format
-  var csv=rows.map(function(r){
-    return r.map(function(v){
-      var s=String(v===null||v===undefined?'':v);
-      if(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)s='"'+s.replace(/"/g,'""')+'"';
-      return s;
-    }).join(',');
-  }).join('\n');
-
-  var label=activeTab==='mgr'?'Managers':'Coaches';
-  var endMn=document.getElementById('momEndMonth')?.value||'';
-  var fname='MoM_'+label+'_'+endMn+'_Last'+getMoMMonths().length+'Months.csv';
-  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  html+='</table></body></html>';
+  var blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8;'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');a.href=url;a.download=fname;a.click();
   URL.revokeObjectURL(url);
-  tst2('✅ M/O/M exported: '+fname,'ok');
+  tst2('✅ M/O/M exported with color coding: '+fname,'ok');
 }
+
 
 function buildMomData(){
   var srBs=getSR_BS();
