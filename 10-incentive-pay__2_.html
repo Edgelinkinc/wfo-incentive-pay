@@ -6410,60 +6410,9 @@ async function downloadCoachPayoutSlipPDF(){
   tst2('Building coach payout PDF…','ok');
   try{
     await ensurePDFLibs();
-    // Grab the already-rendered payout content from the DOM
-    const storeTable=document.getElementById('cpStoreRows')?.innerHTML||'';
-    const storeFoot=document.getElementById('cpStoreFoot')?.innerHTML||'';
-    const mimTable=document.getElementById('cpMimRows')?.innerHTML||'';
-    const mimFoot=document.getElementById('cpMimFoot')?.innerHTML||'';
-    const grand=document.getElementById('cpGrandTotal')?.textContent||'$0.00';
-    const storeTotal=document.getElementById('cpTotalBonus')?.textContent||'$0.00';
-    const mimTotal=document.getElementById('cpTotalMim')?.textContent||'$0.00';
-    const mimMn=document.getElementById('cpMimMonth')?.value||bonusMn;
+    const html=buildCoachSlipFullHTML(coach);
     const period=bonusMn.replace('-','_');
     const coachSafe=sanitizeFilename(coach);
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-      *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
-      .header{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:20px 24px;border-radius:10px 10px 0 0;}
-      .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;}
-      .header h2{font-size:13px;opacity:.8;margin-top:4px;}
-      .meta{display:flex;gap:20px;flex-wrap:wrap;background:#F3E8FF;padding:12px 20px;border-bottom:2px solid #6E2B8B;margin-bottom:16px;}
-      .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;}
-      .meta div span{font-size:14px;font-weight:700;}
-      .sh{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:#6E2B8B;margin:16px 0 8px;}
-      table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
-      th{background:#F3E8FF;color:#6E2B8B;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #6E2B8B;text-align:left;}
-      td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
-      tr:nth-child(even) td{background:#FAFAFA;}
-      .grand{background:#4A1A6B;color:#fff;padding:16px 22px;border-radius:8px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:8px;}
-      .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
-      .grand .item span{font-size:18px;font-weight:800;}
-      .grand .total{margin-left:auto;border-left:1px solid rgba(255,255,255,.3);padding-left:24px;}
-      .grand .total span{font-size:26px;color:#E20074;}
-      .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
-    </style>
-</head><body>
-    <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Payout · ${coach}</h2></div>
-    <div class="meta">
-      <div><label>Coach</label><span>${coach}</span></div>
-      <div><label>Bonus Period</label><span>${formatPeriod(bonusMn)}</span></div>
-      <div><label>MIM Period</label><span>${formatPeriod(mimMn)}</span></div>
-      <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
-    </div>
-    <div class="sh">🏪 Store Bonus Breakdown</div>
-    <table><thead><tr><th>Store</th><th>Tier</th><th>Act %</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Shrink</th><th>ELB</th><th>Act Bonus</th><th>Acc Bonus</th><th>Total</th></tr></thead>
-    <tbody>${storeTable}</tbody><tfoot>${storeFoot}</tfoot></table>
-    <div class="sh">📱 MIM Spiff</div>
-    <table><thead><tr><th>Store</th><th>Manager</th><th>BANs</th><th>Rate</th><th>MIM Payout</th></tr></thead>
-    <tbody>${mimTable}</tbody><tfoot>${mimFoot}</tfoot></table>
-    <div class="grand">
-      <div class="item"><label>Store Bonus</label><span>${storeTotal}</span></div>
-      <div class="item"><label>MIM Spiff</label><span>${mimTotal}</span></div>
-      <div class="item total"><label>Total Payout</label><span>${grand}</span></div>
-    </div>
-    <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${formatPeriod(bonusMn)}</div>
-    </body></html>`;
     const fname=`${coachSafe}_PayoutSlip_${period}.pdf`;
     const blob=await htmlToPDFBlob(html,fname);
     const url=URL.createObjectURL(blob);
@@ -10219,8 +10168,8 @@ function renRepFlyerTo(target){
     <div class="flyer-body">
       <div class="flyer-section"><div class="flyer-sec-hdr">📦 Box Level Ups — Per Activation</div><div class="flyer-sec-sub">Paid on EVERY activation once tier threshold is hit</div><div class="flyer-tiers">${boxHTML}</div></div>
       <div class="flyer-section"><div class="flyer-sec-hdr">🛍️ Accessory Levels — Weekly % of Net Profit</div><div class="flyer-sec-sub">Exact payout = your tier % × your accessory net profit</div><div class="flyer-tiers">${accHTML}</div></div>
-      <div class="flyer-section"><div class="flyer-sec-hdr">⚡ Power Ups — Stack on Everything</div><div class="flyer-powerups">${(function(){var pus=getPUConfig().filter(function(p){return p.active;});if(!pus.length)return'<div style="color:var(--mu);font-size:12px">No active power ups</div>';var icons=['💳','📶','⭐','🔥','💡','🎯'];return pus.map(function(p,i){return'<div class="flyer-pu"><span class="pu-ic">'+icons[i%icons.length]+'</span><div><div class="pu-name">'+p.name+'</div><div class="pu-detail">+$'+p.rate+' per unit</div></div><div class="pu-amt">+$'+p.rate+'</div></div>';}).join('');})()}</div></div>
-      <div class="flyer-section"><div class="flyer-sec-hdr">📱 MIM Payout — Minimum 6 MM BANs to qualify</div>${mimHTML}<div style="font-size:11px;color:var(--da);margin-top:6px;font-weight:700">⚠ Must hit 6 MM BANs minimum — paid via Arcade by your coach</div></div>
+      <div class="flyer-section"><div class="flyer-sec-hdr">⚡ Power Ups — Paid via Arcade</div><div class="flyer-powerups">${(function(){var pus=getPUConfig().filter(function(p){return p.active;});if(!pus.length)return'<div style="color:var(--mu);font-size:12px">No active power ups</div>';var icons=['💳','📶','⭐','🔥','💡','🎯'];return pus.map(function(p,i){return'<div class="flyer-pu"><span class="pu-ic">'+icons[i%icons.length]+'</span><div><div class="pu-name">'+p.name+'</div><div class="pu-detail">+$'+p.rate+' per unit &mdash; paid via Arcade</div></div><div class="pu-amt">+$'+p.rate+'</div></div>';}).join('');})()}</div></div>
+      <div class="flyer-section"><div class="flyer-sec-hdr">📱 MIM Payout</div>${mimHTML}</div>
     </div>
     <div class="flyer-footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops</div>
   </div>`;
@@ -10262,7 +10211,7 @@ function renRepFlyer(){
     const pus=getPUConfig().filter(p=>p.active);
     const icons=['💳','📶','⭐','🔥','💡','🎯'];
     puEl.innerHTML=pus.length
-      ? pus.map((p,i)=>`<div class="flyer-pu"><span class="pu-ic">${icons[i%icons.length]}</span><div><div class="pu-name">${p.name}</div><div class="pu-detail">+$${p.rate} per unit — stacks on Box + Accessory bonus</div></div><div class="pu-amt">+$${p.rate}</div></div>`).join('')
+      ? pus.map((p,i)=>`<div class="flyer-pu"><span class="pu-ic">${icons[i%icons.length]}</span><div><div class="pu-name">${p.name}</div><div class="pu-detail">+$${p.rate} per unit &mdash; paid via Arcade</div></div><div class="pu-amt">+$${p.rate}</div></div>`).join('')
       : '<div style="color:var(--mu);font-size:12px">No active power ups</div>';
   }
 
