@@ -1697,6 +1697,9 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <label>End Month</label>
         <input type="month" id="momEndMonth" onchange="renMoM()" style="padding:8px 10px;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;outline:none"/>
       </div>
+      <div style="margin-top:20px">
+        <button class="btn bp" onclick="refreshMomData()" title="Rebuild M/O/M snapshots from saved sheet data">🔄 Refresh Data</button>
+      </div>
     </div>
   </div>
   <!-- SUB TABS -->
@@ -13921,6 +13924,20 @@ function renMomCoach(){
 
 function getMomMgrKey(mn){return 'wfo_mom_mgr_'+mn;}
 function getMomCoachKey(mn){return 'wfo_mom_coach_'+mn;}
+
+function refreshMomData(){
+  // Clear all existing MoM snapshots so they rebuild fresh
+  var keysToDelete=[];
+  for(var k=0;k<localStorage.length;k++){
+    var lk=localStorage.key(k);
+    if(lk&&(lk.indexOf('wfo_mom_mgr_')===0||lk.indexOf('wfo_mom_coach_')===0))keysToDelete.push(lk);
+  }
+  keysToDelete.forEach(function(k){localStorage.removeItem(k);});
+  tst2('Rebuilding M/O/M data from all saved sheets…','ok');
+  buildMomData();
+  renMoM();
+  tst2('✅ M/O/M data refreshed','ok');
+}
 
 function buildMomData(){
   var srBs=getSR_BS();
