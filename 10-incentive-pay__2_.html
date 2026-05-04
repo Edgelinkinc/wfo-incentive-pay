@@ -14086,18 +14086,26 @@ function buildMomData(){
         var snapshot={};
         SR.forEach(function(store){
           var sd=sheetData[store.s];if(!sd)return;
-          var hasData=cats.some(function(cat){return +sd[cat.id]>0;})||+sd.elb||+sd.attach;
+          // Strip upload-sourced fields if they came from a different period
+          var uploadMn=sd._uploadMn||'';
+          var wrongPeriod=uploadMn&&uploadMn!==mn;
+          var acts=wrongPeriod?0:(+sd.acts||0);
+          var bts=wrongPeriod?0:(+sd.bts||0);
+          var hsi=wrongPeriod?0:(+sd.hsi||0);
+          var acc=wrongPeriod?0:(+sd.acc||0);
+          var elb=wrongPeriod?0:(+sd.elb||0);
+          var attach=wrongPeriod?0:(+sd.attach||0);
+          var hasData=cats.some(function(cat){return +sd[cat.id]>0&&!wrongPeriod;})||elb||attach;
           if(!hasData)return;
           var tier=srBs[store.s]?.tier||store.tier||2;
           var bKey=tier===1?'t1base':tier===2?'t2base':'t3base';
           var uKey=tier===1?'t1up':tier===2?'t2up':'t3up';
-          var elb=+sd.elb||0,attach=+sd.attach||0;
           var elbFail=elb>0&&elb>=(q.elbCutoff||3368);
           var attachFail=attach>0&&attach<(q.attachCutoff||60);
           var catData={};var total=0;
           cats.forEach(function(cat){
             var tgt=(tgts[store.s]&&tgts[store.s][cat.id])||0;
-            var act=+sd[cat.id]||0;
+            var act=wrongPeriod?0:(+sd[cat.id]||0);
             catData[cat.id]={tgt:tgt,act:act};
             if(!tgt||!act||elbFail)return;
             var pct=(act/tgt)*100;
@@ -14120,9 +14128,16 @@ function buildMomData(){
         var snapshot={};
         SR.forEach(function(store){
           var sd=sheetData[store.s];if(!sd)return;
-          if(!+sd.actPct&&!+sd.accTotal&&!+sd.elbRank)return;
+          // Strip upload-sourced fields if they came from a different period
+          var uploadMn=sd._uploadMn||'';
+          var accTotal=uploadMn&&uploadMn!==mn?0:(+sd.accTotal||0);
+          var totalBoxes=uploadMn&&uploadMn!==mn?0:(+sd.totalBoxes||0);
+          var accPerBox=uploadMn&&uploadMn!==mn?0:(+sd.accPerBox||(totalBoxes>0&&accTotal>0?accTotal/totalBoxes:0));
+          var elbRank=uploadMn&&uploadMn!==mn?0:(+sd.elbRank||0);
+          var actPct=uploadMn&&uploadMn!==mn?0:(+sd.actPct||0);
+          if(!actPct&&!accTotal&&!elbRank)return;
           var res=calcStoreCoachBonus(store.s,sd);
-          snapshot[store.s]={actPct:+sd.actPct||0,accTotal:+sd.accTotal||0,totalBoxes:+sd.totalBoxes||0,accPerBox:+sd.accPerBox||(+sd.totalBoxes>0&&+sd.accTotal>0?+sd.accTotal/+sd.totalBoxes:0),elbRank:+sd.elbRank||0,shrinkPct:+sd.shrinkPct||0,actBonus:res.actBonus,accBonus:res.accBonus,total:res.total};
+          snapshot[store.s]={actPct:actPct,accTotal:accTotal,totalBoxes:totalBoxes,accPerBox:accPerBox,elbRank:elbRank,shrinkPct:+sd.shrinkPct||0,actBonus:res.actBonus,accBonus:res.accBonus,total:res.total};
         });
         if(Object.keys(snapshot).length)localStorage.setItem(getMomCoachKey(mn),JSON.stringify(snapshot));
       }catch(e){console.warn('MoM coach build error',mn,e);}
