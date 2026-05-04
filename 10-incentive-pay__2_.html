@@ -6171,60 +6171,141 @@ function buildRepSlipFullHTML(r,c,wk2){
 
 function buildCoachSlipFullHTML(coachName){
   const srBs=getSR_BS();const ct=T.coach||DT.coach;
-  const mn=document.getElementById('coachSheetMonth')?.value||'';
+  const mn=document.getElementById('coachSheetMonth')?.value||document.getElementById('cpBonusMonth')?.value||'';
+  const mimMn=document.getElementById('cpMimMonth')?.value||mn;
   const stores=SR.filter(s=>(srBs[s.s]?.coach||s.c)===coachName);
-  let totalAct=0,totalAcc=0,totalMim=0,totalKick=0;
-  const storeRows=stores.map(store=>{
-    const sd=coachSheetData[store.s]||{};const res=calcStoreCoachBonus(store.s,sd);
+  const elbDQ=T.elbDQ||DT.elbDQ||3368;
+  const payoutDate=localStorage.getItem('wfo_payout_date')||'';
+  const payoutDisplay=payoutDate?new Date(payoutDate+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Not set';
+
+  let totalAct=0,totalAcc=0,totalKick=0;
+  const storeRows=stores.map((store,si)=>{
+    const sd=coachSheetData[store.s]||{};
+    const res=calcStoreCoachBonus(store.s,sd);
     totalAct+=res.actBonus;totalAcc+=res.accBonus;totalKick+=res.kicker||0;
     const accPerBox=+sd.totalBoxes>0?(+sd.accTotal/+sd.totalBoxes):0;
-    return`<tr><td>${store.s}</td><td style="text-align:center">Tier ${store.tier}</td><td style="text-align:center">${sd.actPct?sd.actPct.toFixed(1)+'%':'—'}</td><td style="text-align:center">${sd.elbRank||'—'}</td><td style="text-align:right">${sd.accTotal?'$'+(+sd.accTotal).toFixed(2):'—'}</td><td style="text-align:center">${sd.totalBoxes||'—'}</td><td style="text-align:center">${accPerBox>0?'$'+accPerBox.toFixed(2):'—'}</td><td style="text-align:right;font-weight:700;color:#6E2B8B">$${res.actBonus.toFixed(2)}</td><td style="text-align:right;font-weight:700;color:#6E2B8B">$${res.accBonus.toFixed(2)}</td><td style="text-align:right;font-weight:800;color:#E20074">$${res.total.toFixed(2)}</td></tr>${res.guardrails.length?`<tr><td colspan="10" style="font-size:10px;color:#D32F2F;padding:2px 8px">⚠ ${res.guardrails.join(' · ')}</td></tr>`:''}`;
+    const actPct=+sd.actPct||0;
+    const elbRank=+sd.elbRank||0;
+    const elbFail=elbRank>0&&elbRank>=elbDQ;
+    const actWin=actPct>=100;const actNear=actPct>=85&&actPct<100;const actMiss=actPct>0&&actPct<85;
+    const rowBg=elbFail?'#FFF3F3':actWin&&res.total>0?'#F0FFF4':actNear?'#FFFBF0':actMiss?'#FFF3F3':'#fff';
+    const actClr=actWin?'#00A651':actNear?'#E65100':actMiss?'#D32F2F':'#555';
+    const elbClr=elbFail?'#D32F2F':elbRank>0?'#00A651':'#555';
+    return`<tr style="background:${rowBg};border-bottom:1px solid #E8E8E8">
+      <td style="padding:8px 10px;font-weight:700;font-size:11px">${store.s}</td>
+      <td style="padding:8px 6px;text-align:center;font-size:9px;background:#F3E8FF;color:#6E2B8B;font-weight:700">Tier ${store.tier}</td>
+      <td style="padding:8px 6px;text-align:center;font-weight:800;color:${actClr}">${actPct?actPct.toFixed(1)+'%':'—'}</td>
+      <td style="padding:8px 6px;text-align:right;font-size:11px">${sd.accTotal?'$'+(+sd.accTotal).toLocaleString('en-US',{minimumFractionDigits:2}):'—'}</td>
+      <td style="padding:8px 6px;text-align:center">${sd.totalBoxes||'—'}</td>
+      <td style="padding:8px 6px;text-align:center;font-size:10px">${accPerBox>0?'$'+accPerBox.toFixed(2):'—'}</td>
+      <td style="padding:8px 6px;text-align:center">${sd.shrinkPct?sd.shrinkPct+'%':'—'}</td>
+      <td style="padding:8px 6px;text-align:center;font-weight:700;color:${elbClr}">${elbRank||'—'}${elbFail?'<br><span style="font-size:8px;color:#D32F2F">DQ</span>':''}</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${res.actBonus>0?'#E20074':'#999'}">$${res.actBonus.toFixed(2)}</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${res.accBonus>0?'#4A1A6B':'#999'}">$${res.accBonus.toFixed(2)}</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:900;color:${res.total>0?'#E20074':'#999'}">$${res.total.toFixed(2)}</td>
+    </tr>${res.guardrails.length?`<tr style="background:#FFEBEE"><td colspan="11" style="padding:3px 10px;font-size:9px;color:#C62828;font-weight:700">⚠ ${res.guardrails.join(' · ')}</td></tr>`:''}`;
   }).join('');
-  const mimBans=stores.filter(st=>getCoachMimEnabledForStore(st.s)).reduce((s,st)=>s+(coachSheetData[st.s]?.mimOrders||0),0)||reps.filter(r=>r.c===coachName).reduce((s,r)=>s+(r.mb||0),0);
-  totalMim=mimBans*(ct.mimRate||10);
-  const grandTotal=totalAct+totalAcc+totalMim+totalKick;
+
+  const storeBonus=totalAct+totalAcc+totalKick;
+  const anyCoachMim=stores.some(s=>getCoachMimEnabledForStore(s.s));
+  const mimData=getCoachMimPayData(mimMn||mn);
+  let totalMim=0;
+  const mimRows=stores.filter(s=>getCoachMimEnabledForStore(s.s)).map((store,si)=>{
+    const storeData=mimData?.stores?.[store.s];
+    const bans=storeData?(storeData.overrideOrders??storeData.orders??0):0;
+    const payout=bans*(ct.mimRate||10);
+    totalMim+=payout;
+    const mgr=srBs[store.s]?.mgr||store.mgr||'—';
+    return`<tr style="background:${si%2===0?'#fff':'#FAFAFA'};border-bottom:1px solid #E8E8E8">
+      <td style="padding:7px 10px;font-weight:700">${store.s}</td>
+      <td style="padding:7px 8px;color:#555;font-size:10px">${mgr}</td>
+      <td style="padding:7px 8px;text-align:center;font-weight:800;color:${bans>0?'#00A651':'#999'}">${bans||'—'}</td>
+      <td style="padding:7px 8px;text-align:center;color:#555">$${ct.mimRate||10}/BAN</td>
+      <td style="padding:7px 8px;text-align:right;font-weight:800;color:${payout>0?'#00A651':'#999'}">$${payout.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  const grand=storeBonus+totalMim;
   const period=mn?formatPeriod(mn):'—';
+
+  const mimSection=anyCoachMim&&mimRows?`
+    <div style="font-weight:800;font-size:13px;color:#4A1A6B;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #E20074">📱 MIM Spiff</div>
+    <table><thead><tr style="background:#F3E8FF">
+      <th style="padding:7px 8px;color:#6E2B8B;font-size:9px;text-transform:uppercase;border-bottom:2px solid #6E2B8B">Store</th>
+      <th style="padding:7px 8px;color:#6E2B8B;font-size:9px;text-transform:uppercase;border-bottom:2px solid #6E2B8B">Manager</th>
+      <th style="padding:7px 8px;color:#6E2B8B;font-size:9px;text-transform:uppercase;border-bottom:2px solid #6E2B8B;text-align:center">BANs</th>
+      <th style="padding:7px 8px;color:#6E2B8B;font-size:9px;text-transform:uppercase;border-bottom:2px solid #6E2B8B;text-align:center">Rate</th>
+      <th style="padding:7px 8px;color:#6E2B8B;font-size:9px;text-transform:uppercase;border-bottom:2px solid #6E2B8B;text-align:right">MIM Payout</th>
+    </tr></thead><tbody>${mimRows}</tbody>
+    <tfoot><tr style="background:#00796B"><td colspan="4" style="padding:8px 10px;font-weight:800;color:#fff">MIM Total</td><td style="padding:8px 10px;text-align:right;font-weight:900;color:#fff">$${totalMim.toFixed(2)}</td></tr></tfoot>
+    </table>`:'';
+
   return`<!DOCTYPE html><html><head><meta charset="utf-8">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Nunito',sans-serif;font-size:12px;color:#1A1A1A;padding:24px;background:#fff;}
-    .header{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:20px 24px;border-radius:10px 10px 0 0;margin-bottom:0;}
-    .header h1{font-family:'Poppins',sans-serif;font-size:18px;font-weight:900;}
-    .header h2{font-size:13px;opacity:.8;margin-top:4px;}
-    .meta{display:flex;gap:20px;flex-wrap:wrap;background:#F3E8FF;padding:12px 20px;border-bottom:2px solid #6E2B8B;margin-bottom:16px;}
-    .meta div label{font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;}
-    .meta div span{font-size:14px;font-weight:700;}
+    .header{background:linear-gradient(135deg,#E20074,#4A1A6B);color:#fff;padding:18px 24px;border-radius:10px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+    .header-left h1{font-family:'Poppins',sans-serif;font-size:17px;font-weight:900;margin-bottom:3px;}
+    .header-left h2{font-size:12px;opacity:.8;}
+    .header-right .amt{font-size:28px;font-weight:900;font-family:'Poppins',sans-serif;}
+    .header-right .lbl{font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+    .meta{display:flex;gap:20px;flex-wrap:wrap;background:#F3E8FF;padding:10px 18px;border-radius:8px;margin-bottom:14px;border:1px solid #D8BFFF;}
+    .meta div label{font-size:8px;font-weight:700;text-transform:uppercase;color:#6E2B8B;display:block;margin-bottom:2px;}
+    .meta div span{font-size:13px;font-weight:700;}
+    .legend{display:flex;gap:12px;margin-bottom:10px;font-size:10px;flex-wrap:wrap;}
+    .legend span{display:flex;align-items:center;gap:4px;}
+    .dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
     table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px;}
     th{background:#F3E8FF;color:#6E2B8B;font-weight:700;font-size:9px;text-transform:uppercase;padding:7px 8px;border-bottom:2px solid #6E2B8B;}
-    td{padding:6px 8px;border-bottom:1px solid #E8E8E8;}
-    tr:nth-child(even) td{background:#FAFAFA;}
-    .totals{display:flex;gap:16px;flex-wrap:wrap;background:#F3E8FF;padding:12px 20px;border-top:2px solid #6E2B8B;border-radius:0 0 10px 10px;align-items:center;}
-    .totals .tot{display:flex;flex-direction:column;}
-    .totals .tot label{font-size:9px;text-transform:uppercase;color:#6E2B8B;font-weight:700;}
-    .totals .tot span{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;}
-    .totals .grand{margin-left:auto;background:#4A1A6B;color:#fff;padding:10px 20px;border-radius:8px;}
-    .totals .grand label{opacity:.7;}
-    .totals .grand span{font-size:22px;color:#E20074;}
-    .footer{font-size:9px;color:#999;text-align:center;margin-top:14px;border-top:1px solid #eee;padding-top:8px;}
+    .grand{background:linear-gradient(135deg,#4A1A6B,#6E2B8B);color:#fff;padding:14px 20px;border-radius:8px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+    .grand .item label{font-size:9px;opacity:.7;font-weight:700;text-transform:uppercase;display:block;}
+    .grand .item span{font-size:16px;font-weight:800;}
+    .grand .total span{font-size:24px;font-weight:900;color:#E20074;}
+    .sigs{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin:20px 0 10px;}
+    .sig-line{border-top:2px solid #1A1A1A;padding-top:5px;display:flex;justify-content:space-between;}
+    .sig-line span{font-size:10px;font-weight:700;color:#555;}
+    .sig-line em{font-size:10px;color:#999;font-style:normal;}
+    .footer{font-size:8px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:6px;text-transform:uppercase;letter-spacing:.05em;}
+    .sh{font-weight:800;font-size:13px;color:#4A1A6B;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #E20074;}
   </style>
 </head><body>
-  <div class="header"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Pay Slip · ${coachName}</h2></div>
+  <div class="header">
+    <div class="header-left"><h1>EDGELINK INC — WORK FORCE OPS</h1><h2>Coach Bonus Payout &middot; ${coachName}</h2></div>
+    <div class="header-right" style="text-align:right"><div class="lbl">Total Bonus Earned</div><div class="amt">$${grand.toFixed(2)}</div></div>
+  </div>
   <div class="meta">
     <div><label>Coach</label><span>${coachName}</span></div>
-    <div><label>Period</label><span>${period}</span></div>
+    <div><label>Bonus Period</label><span>${period}</span></div>
     <div><label>Stores</label><span>${stores.length}</span></div>
-    <div><label>Generated</label><span>${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span></div>
+    <div><label>Payout Date</label><span style="color:${payoutDate?'#E20074':'#999'}">${payoutDisplay}</span></div>
   </div>
-  <table><thead><tr><th>Store</th><th>Tier</th><th>Act %</th><th>ELB Rank</th><th>Acc $</th><th>PPD</th><th>Acc/Box</th><th>Act Bonus</th><th>Acc Bonus</th><th>Total</th></tr></thead>
-  <tbody>${storeRows}</tbody></table>
-  <div class="totals">
-    <div class="tot"><label>Act Bonus</label><span>$${totalAct.toFixed(2)}</span></div>
-    <div class="tot"><label>Acc Bonus</label><span>$${totalAcc.toFixed(2)}</span></div>
-    <div class="tot"><label>MIM (${mimBans} BANs)</label><span>$${totalMim.toFixed(2)}</span></div>
-    <div class="tot"><label>Kicker</label><span>$${totalKick.toFixed(2)}</span></div>
-    <div class="tot grand"><label>TOTAL PAYOUT</label><span>$${grandTotal.toFixed(2)}</span></div>
+  <div class="legend">
+    <span><span class="dot" style="background:#F0FFF4;border:1px solid #00A651"></span>Met goal / Earned</span>
+    <span><span class="dot" style="background:#FFFBF0;border:1px solid #E65100"></span>Near goal (85–99%)</span>
+    <span><span class="dot" style="background:#FFF3F3;border:1px solid #D32F2F"></span>Missed / Guardrail</span>
   </div>
-  <div class="footer">CONFIDENTIAL — Edgelink Inc Internal Use Only · Work Force Ops · ${period}</div>
+  <div class="sh">🏪 Store Bonus Breakdown</div>
+  <table><thead><tr>
+    <th>Store</th><th>Tier</th><th style="text-align:center">Act %</th><th style="text-align:right">Acc $</th>
+    <th style="text-align:center">PPD</th><th style="text-align:center">Acc/Box</th><th style="text-align:center">Shrink</th><th style="text-align:center">ELB</th>
+    <th style="text-align:right;color:#E20074">Act $</th><th style="text-align:right;color:#4A1A6B">Acc $</th><th style="text-align:right">Total</th>
+  </tr></thead><tbody>${storeRows}</tbody>
+  <tfoot><tr style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B)">
+    <td colspan="8" style="padding:9px 10px;font-family:'Poppins',sans-serif;font-weight:800;font-size:12px;color:#fff">STORE TOTAL</td>
+    <td style="padding:9px 6px;text-align:right;font-weight:800;color:#fff">$${totalAct.toFixed(2)}</td>
+    <td style="padding:9px 6px;text-align:right;font-weight:800;color:#fff">$${totalAcc.toFixed(2)}</td>
+    <td style="padding:9px 6px;text-align:right;font-family:'Poppins',sans-serif;font-weight:900;font-size:14px;color:#E20074">$${storeBonus.toFixed(2)}</td>
+  </tr></tfoot></table>
+  ${mimSection}
+  <div class="grand">
+    ${anyCoachMim&&mimRows?`<div class="item"><label>Store Bonus</label><span>$${storeBonus.toFixed(2)}</span></div><div class="item"><label>MIM Spiff</label><span>$${totalMim.toFixed(2)}</span></div>`:''}
+    <div class="item total" style="margin-left:auto;${anyCoachMim&&mimRows?'border-left:1px solid rgba(255,255,255,.3);padding-left:20px':''}"><label>Total Payout</label><span>$${grand.toFixed(2)}</span></div>
+  </div>
+  <div class="sigs">
+    <div><div class="sig-line"><span>Coach Signature</span><em>Date</em></div></div>
+    <div><div class="sig-line"><span>HR / Owner Approval</span><em>Date</em></div></div>
+  </div>
+  <div class="footer">Confidential &mdash; Edgelink Inc Internal Use Only &middot; Work Force Ops &middot; ${period}</div>
   </body></html>`;
 }
 
