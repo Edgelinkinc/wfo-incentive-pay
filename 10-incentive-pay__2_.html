@@ -13736,7 +13736,8 @@ function getMoMMonths(){
 }
 
 function formatMn(mn){
-  var d=new Date(mn+'-01');
+  var parts=mn.split('-');
+  var d=new Date(+parts[0],+parts[1]-1,1);
   return d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
 }
 
@@ -13965,7 +13966,7 @@ function buildMomData(){
       }catch(e){console.warn('MoM mgr build error',mn,e);}
     }
 
-    // Coach sheets
+    // Coach sheets — from period sheet data
     if(key.indexOf('wfo_coach_sheet_2')===0){
       var mn=key.replace('wfo_coach_sheet_','');
       try{
@@ -13976,18 +13977,40 @@ function buildMomData(){
           var sd=sheetData[store.s];if(!sd)return;
           if(!+sd.actPct&&!+sd.accTotal&&!+sd.elbRank)return;
           var res=calcStoreCoachBonus(store.s,sd);
-          snapshot[store.s]={
-            actPct:+sd.actPct||0,accTotal:+sd.accTotal||0,
-            totalBoxes:+sd.totalBoxes||0,
-            accPerBox:+sd.accPerBox||(+sd.totalBoxes>0&&+sd.accTotal>0?+sd.accTotal/+sd.totalBoxes:0),
-            elbRank:+sd.elbRank||0,shrinkPct:+sd.shrinkPct||0,
-            actBonus:res.actBonus,accBonus:res.accBonus,total:res.total
-          };
+          snapshot[store.s]={actPct:+sd.actPct||0,accTotal:+sd.accTotal||0,totalBoxes:+sd.totalBoxes||0,accPerBox:+sd.accPerBox||(+sd.totalBoxes>0&&+sd.accTotal>0?+sd.accTotal/+sd.totalBoxes:0),elbRank:+sd.elbRank||0,shrinkPct:+sd.shrinkPct||0,actBonus:res.actBonus,accBonus:res.accBonus,total:res.total};
         });
         if(Object.keys(snapshot).length)localStorage.setItem(getMomCoachKey(mn),JSON.stringify(snapshot));
       }catch(e){console.warn('MoM coach build error',mn,e);}
     }
   });
+
+  // Also read coach data from wfo_coach_recs (written by Save button on Coach Actuals)
+  try{
+    var coachRecs=JSON.parse(localStorage.getItem('wfo_coach_recs')||'[]');
+    var byPeriod={};
+    coachRecs.forEach(function(rec){
+      if(!rec.period||!rec.storeBreakdown)return;
+      if(!byPeriod[rec.period])byPeriod[rec.period]={};
+      (rec.storeBreakdown||[]).forEach(function(sb){
+        if(!sb.store)return;
+        // Only write if not already populated from sheet data
+        if(!byPeriod[rec.period][sb.store]){
+          byPeriod[rec.period][sb.store]={
+            actPct:+sb.actPct||0,accTotal:+sb.accTotal||0,
+            totalBoxes:+sb.totalBoxes||0,accPerBox:+sb.accPerBox||0,
+            elbRank:+sb.elbRank||0,shrinkPct:+sb.shrinkPct||0,
+            actBonus:+sb.actBonus||0,accBonus:+sb.accBonus||0,total:+sb.total||0
+          };
+        }
+      });
+    });
+    Object.keys(byPeriod).forEach(function(mn){
+      var existing=null;
+      try{existing=JSON.parse(localStorage.getItem(getMomCoachKey(mn))||'null');}catch(e){}
+      var merged=Object.assign({},byPeriod[mn],existing||{});
+      if(Object.keys(merged).length)localStorage.setItem(getMomCoachKey(mn),JSON.stringify(merged));
+    });
+  }catch(e){console.warn('MoM coach_recs merge error',e);}
 }
 
 </script>
