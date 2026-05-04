@@ -2471,6 +2471,12 @@ body.admin-unlocked #sbStaffSection{display:block!important}
             <div id="aBsMimStatus" style="margin-top:10px;font-size:11px;color:var(--mu)">All tiers: MIM spiff OFF</div>
           </div>
           <div style="margin-bottom:14px">
+            <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:var(--se);margin-bottom:4px">💵 Coach MIM Spiff — Per Store</div>
+            <div style="font-size:11px;color:var(--mu);margin-bottom:12px">Enable or disable Coach MIM payout for each store. Disabled stores are completely hidden from coach MIM slips and excluded from totals.</div>
+            <div id="coachMimStoreToggles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px"></div>
+            <button class="btn bp sm" style="margin-top:10px" onclick="requirePin(saveCoachMimStoreToggles)">💾 Save Coach MIM Settings</button>
+          </div>
+          <div style="margin-bottom:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
               <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:var(--se)">📦 Categories &amp; Payout Rules</div>
               <button class="btn bp sm" onclick="addAdminBsCat()">+ Add Category</button>
@@ -4478,6 +4484,47 @@ function getBacksheet(tier, storeName, monthOverride){
   return result;
 }
 
+
+// ── COACH MIM PER-STORE TOGGLE ──
+function getCoachMimStoreConfig(){
+  try{return JSON.parse(localStorage.getItem('wfo_coach_mim_stores')||'{}');}catch{return{};}
+}
+function saveCoachMimStoreConfig(cfg){
+  localStorage.setItem('wfo_coach_mim_stores',JSON.stringify(cfg));
+}
+function getCoachMimEnabledForStore(storeName){
+  const cfg=getCoachMimStoreConfig();
+  // Default: enabled (existing behavior preserved unless explicitly disabled)
+  return cfg[storeName]?.enabled!==false;
+}
+function renderCoachMimToggles(){
+  const el=document.getElementById('coachMimStoreToggles');
+  if(!el)return;
+  const cfg=getCoachMimStoreConfig();
+  el.innerHTML=SR.map(function(store){
+    const enabled=cfg[store.s]?.enabled!==false;
+    return '<div style="background:#fff;border:1px solid '+(enabled?'var(--pr)':'var(--bo)')+';border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+      +'<div><div style="font-weight:700;font-size:11px;color:var(--se)">'+store.s+'</div>'
+      +'<div style="font-size:9px;color:var(--mu)">'+(store.c||'TBD')+'</div></div>'
+      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:600;color:'+(enabled?'var(--pr)':'var(--mu)')+'">'
+      +'<input type="checkbox" id="cmt_'+store.s.replace(/[^a-zA-Z0-9]/g,'_')+'" '+(enabled?'checked':'')+' style="width:15px;height:15px;accent-color:var(--pr)"/>'
+      +(enabled?'On':'Off')
+      +'</label></div>';
+  }).join('');
+}
+function saveCoachMimStoreToggles(){
+  const cfg={};
+  SR.forEach(function(store){
+    const id='cmt_'+store.s.replace(/[^a-zA-Z0-9]/g,'_');
+    const el=document.getElementById(id);
+    if(el)cfg[store.s]={enabled:el.checked};
+  });
+  saveCoachMimStoreConfig(cfg);
+  renderCoachMimToggles();
+  renCoachMimPay();
+  tst2('✅ Coach MIM store settings saved','ok');
+}
+
 function getMgrMimForStore(storeName, month){
   const store=SR.find(s=>s.s===storeName);if(!store)return{enabled:false,rate:0};
   const bs=getBs(month)||getOrCreateBs(month);
@@ -4964,6 +5011,8 @@ function renCoachMimPay(){
   const srBs=getSR_BS();let totalBans=0,totalPayout=0,totalStores=0;
   const byCoach={};COACHES.forEach(c=>{byCoach[c]={stores:[],totalBans:0,totalPayout:0};});
   SR.forEach(store=>{
+    // Skip stores where Coach MIM is disabled
+    if(!getCoachMimEnabledForStore(store.s))return;
     const coach=srBs[store.s]?.coach||store.c||'TBD';
     const sd=data.stores[store.s];if(!sd)return;
     const bans=sd.overrideOrders??sd.orders??0;const payout=bans*rate;
@@ -8250,7 +8299,7 @@ function swAdmin(tab,btn){
   if(tab==='history'){renWkHist();}
   if(tab==='actions'){renPendingActions();refreshHomeStatus();}
   if(tab==='changelog'){renderChangeLog();}
-  if(tab==='backsheet'){loadELBMapToUI();const mn=document.getElementById('aBsMonth');if(mn&&!mn.value){const n=new Date();mn.value=n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'));}loadAdminBsMonth();}
+  if(tab==='backsheet'){loadELBMapToUI();const mn=document.getElementById('aBsMonth');if(mn&&!mn.value){const n=new Date();mn.value=n.getFullYear()+'-'+(String(n.getMonth()+1).padStart(2,'0'));}loadAdminBsMonth();if(typeof renderCoachMimToggles==='function')renderCoachMimToggles();}
 }
 
 function initAdminCenter(){
@@ -12832,6 +12881,7 @@ function spSaveConfig(){
       coachRoster: localStorage.getItem('wfo_coach_roster'),
       mgrRecs: localStorage.getItem('wfo_mgr_recs'),
       coachRecs: localStorage.getItem('wfo_coach_recs'),
+      coachMimStores: localStorage.getItem('wfo_coach_mim_stores'),
       tierHistory: localStorage.getItem('wfo_tier_history')
     };
     return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
@@ -12899,6 +12949,7 @@ function spLoadConfig(){
       if(config.coachRoster)localStorage.setItem('wfo_coach_roster',config.coachRoster);
       if(config.mgrRecs)localStorage.setItem('wfo_mgr_recs',config.mgrRecs);
       if(config.coachRecs)localStorage.setItem('wfo_coach_recs',config.coachRecs);
+      if(config.coachMimStores)localStorage.setItem('wfo_coach_mim_stores',config.coachMimStores);
       if(config.tierHistory)localStorage.setItem('wfo_tier_history',config.tierHistory);
       // Restore per-month backsheet targets
       if(config.bsMonths){
