@@ -8174,10 +8174,7 @@ function loadCoachSheetForPeriod(mn){
         const entry=coachSheetData[key];
         if(entry&&typeof entry==='object'){
           const manual=entry._manual||{};
-          const uploadMn=entry._uploadMn||'';
-          _upFields.forEach(f=>{
-            if(!manual[f]&&uploadMn!==mn)delete entry[f];
-          });
+          _upFields.forEach(f=>{if(!manual[f])delete entry[f];});
         }
       });
     }else coachSheetData={};
@@ -8215,18 +8212,12 @@ function loadMgrSheetForPeriod(mn){
     const saved=JSON.parse(localStorage.getItem(getMgrSheetKey(mn))||'null');
     if(saved){
       mgrSheetData=saved;
-      // Only strip upload-sourced fields if they were saved from a DIFFERENT period
-      // If _uploadMn matches mn, the upload data is valid for this period — keep it
       const _mUpFields=['acts','bts','hsi','attach','elb','acc'];
       Object.keys(mgrSheetData).forEach(key=>{
         const entry=mgrSheetData[key];
         if(entry&&typeof entry==='object'){
           const manual=entry._manual||{};
-          const uploadMn=entry._uploadMn||'';
-          _mUpFields.forEach(f=>{
-            // Keep if manually entered OR if upload was for this same period
-            if(!manual[f]&&uploadMn!==mn)delete entry[f];
-          });
+          _mUpFields.forEach(f=>{if(!manual[f])delete entry[f];});
         }
       });
     }else mgrSheetData={};
