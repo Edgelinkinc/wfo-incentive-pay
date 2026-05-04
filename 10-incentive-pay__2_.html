@@ -4074,7 +4074,7 @@ function renCoachOv(){
     // MIM from monthly Coach MIM Payout data
     const _mimD=_ovMimMn?getCoachMimPayData(_ovMimMn):null;
     const mimBans=_mimD
-      ?stores.reduce((sum,s)=>{const sd=_mimD.stores?.[s.s];return sum+(sd?(sd.overrideOrders??sd.orders??0):0);},0)
+      ?stores.filter(s=>getCoachMimEnabledForStore(s.s)).reduce((sum,s)=>{const sd=_mimD.stores?.[s.s];return sum+(sd?(sd.overrideOrders??sd.orders??0):0);},0)
       :reps.filter(r=>r.c===coach).reduce((s,r)=>s+(r.mb||0),0);
     const mimSpiff=mimBans*(ct.mimRate||10);
     const gross=actBonus+accBonus;const total=gross+mimSpiff+kicker;
@@ -4190,7 +4190,7 @@ function generateCoachSlipPDF(coachName){
     const accPerBox=sd.totalBoxes>0?(sd.accTotal/sd.totalBoxes):0;
     return`<tr><td>${store.s}</td><td style="text-align:center">Tier ${store.tier}</td><td style="text-align:center">${sd.actPct?sd.actPct.toFixed(1)+'%':'—'}</td><td style="text-align:center">${sd.elbRank||'—'}</td><td style="text-align:right">${sd.accTotal?'$'+sd.accTotal.toFixed(2):'—'}</td><td style="text-align:center">${sd.totalBoxes||'—'}</td><td style="text-align:center">${accPerBox>0?'$'+accPerBox.toFixed(2):'—'}</td><td style="text-align:center">${sd.shrinkPct?sd.shrinkPct+'%':'—'}</td><td style="text-align:right;font-weight:700;color:#6E2B8B">$${res.actBonus.toFixed(2)}</td><td style="text-align:right;font-weight:700;color:#6E2B8B">$${res.accBonus.toFixed(2)}</td><td style="text-align:right;font-weight:800;color:#E20074">$${res.total.toFixed(2)}</td></tr>${res.guardrails.length?`<tr><td colspan="11" style="font-size:10px;color:#D32F2F;padding:2px 8px">⚠ ${res.guardrails.join(' · ')}</td></tr>`:''}`;
   }).join('');
-  const mimFromStores=stores.reduce((sum,s)=>sum+(coachSheetData[s.s]?.mimOrders||0),0);
+  const mimFromStores=stores.filter(s=>getCoachMimEnabledForStore(s.s)).reduce((sum,s)=>sum+(coachSheetData[s.s]?.mimOrders||0),0);
   const mimFromReps=reps.filter(r=>r.c===coachName).reduce((s,r)=>s+(r.mb||0),0);
   const mimBans=mimFromStores||mimFromReps;totalMim=mimBans*(ct.mimRate||10);
   const grandTotal=totalAct+totalAcc+totalMim+totalKick;
