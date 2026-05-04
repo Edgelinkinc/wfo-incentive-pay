@@ -2017,7 +2017,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <button class="sub-tab" onclick="swAdmin('history',this)">📋 History</button>
         <button class="sub-tab" onclick="swAdmin('actions',this)">⚠️ Pending Actions</button>
         <button class="sub-tab" onclick="swAdmin('changelog',this)">📋 Change Log</button>
-        <button class="sub-tab" onclick="openPerfGradeModal()" style="white-space:nowrap">🎓 Grade Setup</button>
+        <button class="sub-tab" onclick="requirePin(openPerfGradeModal)" style="white-space:nowrap">🎓 Grade Setup</button>
       </div>
 
       <!-- LOCK CONTROLS -->
@@ -2835,7 +2835,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn bp sm" onclick="exportPerfCSV()">⬇ Export</button>
       <button class="btn bo sm" onclick="printPerfReport()">🖨 Print</button>
-      <button class="btn bo sm" onclick="openPerfGradeModal()">⚙️ Grade Setup</button>
+      <button class="btn bo sm" onclick="requirePin(openPerfGradeModal)">⚙️ Grade Setup</button>
     </div>
   </div>
 
@@ -2851,7 +2851,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn bp sm" onclick="openPerfGradeModal()">⚙️ Open Grade Setup</button>
+      <button class="btn bp sm" onclick="requirePin(openPerfGradeModal)">⚙️ Open Grade Setup</button>
       <button onclick="document.getElementById('perfSetupHint').style.display='none'" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--mu)">✕</button>
     </div>
   </div>
