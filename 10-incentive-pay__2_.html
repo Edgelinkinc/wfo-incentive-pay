@@ -4235,7 +4235,7 @@ function applyRTBDIToMgrSheet(){
     if(v.accTotal)mgrSheetData[storeName]['acc']=v.accTotal;
     if(uploadMn)mgrSheetData[storeName]['_uploadMn']=uploadMn;
   });
-  if(uploadMn){saveMgrSheetForPeriod(uploadMn);setTimeout(function(){autoSaveMgrRecords(uploadMn);},100);}
+  if(uploadMn)saveMgrSheetForPeriod(uploadMn);
 }
 
 // ── PDF PAY SLIPS ──
@@ -4656,7 +4656,7 @@ function applyELBToCoachSheet(){
     if(d.actTarget)sd.actTarget=d.actTarget;
     if(uploadMn)sd._uploadMn=uploadMn;
   });
-  if(uploadMn){saveCoachSheetForPeriod(uploadMn);setTimeout(function(){autoSaveCoachRecords(uploadMn);},100);}
+  if(uploadMn)saveCoachSheetForPeriod(uploadMn);
 }
 function applyELBToMgrSheet(){
   const elb=getELBData();
@@ -4672,7 +4672,7 @@ function applyELBToMgrSheet(){
     if(d.elbRank)sd['elb']=d.elbRank;
     if(uploadMn)sd['_uploadMn']=uploadMn;
   });
-  if(uploadMn){saveMgrSheetForPeriod(uploadMn);setTimeout(function(){autoSaveMgrRecords(uploadMn);},100);}
+  if(uploadMn)saveMgrSheetForPeriod(uploadMn);
 }
 
 // ── ELB UPLOAD + PARSER ──
@@ -4831,7 +4831,7 @@ function applyRTBDIToCoachSheet(){
     if(v.ppd)sd.totalBoxes=v.ppd;else if(v.boxes)sd.totalBoxes=v.boxes;
     if(uploadMn)sd._uploadMn=uploadMn;
   });
-  if(uploadMn){saveCoachSheetForPeriod(uploadMn);setTimeout(function(){autoSaveCoachRecords(uploadMn);},100);}
+  if(uploadMn)saveCoachSheetForPeriod(uploadMn);
 }
 function pRTBDI_Store(file){
   const fnEl=document.getElementById('fnRTBDIStore');
@@ -13709,7 +13709,8 @@ function initMoMPage(){
   var mgrSel=document.getElementById('momMgrFilter');
   if(mgrSel){
     mgrSel.innerHTML='<option value="">All Managers</option>';
-    var mgrs=[...new Set(SR.map(function(s){return s.mgr||'';}).filter(Boolean))].sort();
+    var srBs=getSR_BS();
+    var mgrs=[...new Set(SR.map(function(s){return srBs[s.s]?.mgr||s.mgr||'';}).filter(Boolean))].sort();
     mgrs.forEach(function(m){mgrSel.innerHTML+='<option value="'+m+'">'+m+'</option>';});
   }
   // Populate coach filter
@@ -13718,7 +13719,101 @@ function initMoMPage(){
     coachSel.innerHTML='<option value="">All Coaches</option>';
     COACHES.sort().forEach(function(c){coachSel.innerHTML+='<option value="'+c+'">'+c+'</option>';});
   }
+  // Auto-migrate: scan localStorage for existing sheet data and generate records
+  // This ensures data shows in MoM without requiring manual Save clicks
+  migrateSheetDataToRecords();
   renMoM();
+}
+
+function migrateSheetDataToRecords(){
+  // Scan all wfo_mgr_sheet_YYYY-MM and wfo_coach_sheet_YYYY-MM keys in localStorage
+  // and auto-generate records for any months that don't already have them
+  var mgrExisting=JSON.parse(localStorage.getItem('wfo_mgr_recs')||'[]');
+  var coachExisting=JSON.parse(localStorage.getItem('wfo_coach_recs')||'[]');
+  var mgrChanged=false,coachChanged=false;
+
+  for(var k=0;k<localStorage.length;k++){
+    var key=localStorage.key(k);
+    if(!key)continue;
+
+    // Manager sheets
+    if(/^wfo_mgr_sheet_\d{4}-\d{2}$/.test(key)){
+      var mn=key.replace('wfo_mgr_sheet_','');
+      try{
+        var sheetData=JSON.parse(localStorage.getItem(key)||'null');
+        if(!sheetData)continue;
+        var bs=null;try{bs=getBs(mn)||getOrCreateBs(mn);}catch(e){}
+        var cats=(bs&&bs.categories)||[{id:'acts',name:'Acts'},{id:'hsi',name:'HSI'},{id:'bts',name:'BTS'},{id:'acc',name:'Acc'}];
+        var q=(bs&&bs.qualifiers)||{elbCutoff:3368,attachCutoff:60,attachPenalty:25};
+        var srBs=getSR_BS();
+        SR.forEach(function(store){
+          var sd=sheetData[store.s];if(!sd)return;
+          var hasData=cats.some(function(cat){return +sd[cat.id]>0;});
+          if(!hasData&&!+sd.elb&&!+sd.attach)return;
+          // Skip if manual record already exists
+          var existing=mgrExisting.find(function(r){return r.store===store.s&&r.month===mn&&!r.autoSaved;});
+          if(existing)return;
+          var tier=srBs[store.s]?.tier||store.tier||2;
+          var bKey=tier===1?'t1base':tier===2?'t2base':'t3base';
+          var uKey=tier===1?'t1up':tier===2?'t2up':'t3up';
+          var elb=+sd.elb||0,attach=+sd.attach||0;
+          var elbFail=elb>0&&elb>=(q.elbCutoff||3368);
+          var attachFail=attach>0&&attach<(q.attachCutoff||60);
+          var total=0,dqs=[],catData={};
+          if(elbFail)dqs.push('ELB DQ');if(attachFail)dqs.push('Attach penalty');
+          cats.forEach(function(cat){
+            var tgt=(bs&&bs.targets&&bs.targets[store.s]&&bs.targets[store.s][cat.id])||0;
+            var act=+sd[cat.id]||0;
+            catData[cat.id]={name:cat.name||cat.id,tgt:tgt,act:act};
+            if(!tgt||!act||elbFail)return;
+            var pct=(act/tgt)*100;
+            var b=pct>=(cat.upThresh||125)?cat[uKey]:pct>=(cat.baseThresh||100)?cat[bKey]:0;
+            if(attachFail&&b)b=b*(1-(q.attachPenalty||25)/100);
+            total+=b;
+          });
+          var mgr=srBs[store.s]?.mgr||store.mgr||'';
+          var rec={id:store.s+'_'+mn,store:store.s,month:mn,manager:mgr,tier:tier,elb:elb,attach:attach,catData:catData,total:total,dqs:dqs,savedAt:new Date().toLocaleString(),autoSaved:true};
+          var idx=mgrExisting.findIndex(function(r){return r.store===store.s&&r.month===mn;});
+          if(idx>=0){if(mgrExisting[idx].autoSaved)mgrExisting[idx]=rec;}
+          else mgrExisting.unshift(rec);
+          mgrChanged=true;
+        });
+      }catch(e){console.warn('mgr migrate error',mn,e);}
+    }
+
+    // Coach sheets
+    if(/^wfo_coach_sheet_\d{4}-\d{2}$/.test(key)){
+      var mn=key.replace('wfo_coach_sheet_','');
+      try{
+        var sheetData=JSON.parse(localStorage.getItem(key)||'null');
+        if(!sheetData)continue;
+        var srBs=getSR_BS();
+        COACHES.forEach(function(coach){
+          var stores=SR.filter(function(s){return (srBs[s.s]?.coach||s.c)===coach;});
+          if(!stores.length)return;
+          var hasAny=stores.some(function(s){var sd=sheetData[s.s]||{};return +sd.actPct>0||+sd.accTotal>0||+sd.elbRank>0;});
+          if(!hasAny)return;
+          // Skip if manual record exists
+          var existing=coachExisting.find(function(r){return r.coach===coach&&r.period===mn&&!r.autoSaved;});
+          if(existing)return;
+          var coachActTotal=0,coachAccTotal=0,storeBreakdown=[];
+          stores.forEach(function(store){
+            var sd=sheetData[store.s]||{};
+            var res=calcStoreCoachBonus(store.s,sd);
+            coachActTotal+=res.actBonus;coachAccTotal+=res.accBonus;
+            storeBreakdown.push({store:store.s,actPct:+sd.actPct||0,accTotal:+sd.accTotal||0,accPerBox:+sd.accPerBox||(+sd.totalBoxes>0&&+sd.accTotal>0?+sd.accTotal/+sd.totalBoxes:0),shrinkPct:+sd.shrinkPct||0,elbRank:+sd.elbRank||0,totalBoxes:+sd.totalBoxes||0,actBonus:res.actBonus,accBonus:res.accBonus,total:res.total});
+          });
+          var rec={id:Date.now()+Math.random(),coach:coach,period:mn,storeBreakdown:storeBreakdown,actBonus:coachActTotal,accBonus:coachAccTotal,mimSpiff:0,kicker:0,total:coachActTotal+coachAccTotal,guardrails:[],coAcc:0,savedAt:new Date().toLocaleString(),autoSaved:true};
+          var idx=coachExisting.findIndex(function(r){return r.coach===coach&&r.period===mn;});
+          if(idx>=0){if(coachExisting[idx].autoSaved)coachExisting[idx]=rec;}
+          else coachExisting.unshift(rec);
+          coachChanged=true;
+        });
+      }catch(e){console.warn('coach migrate error',mn,e);}
+    }
+  }
+  if(mgrChanged)localStorage.setItem('wfo_mgr_recs',JSON.stringify(mgrExisting));
+  if(coachChanged)localStorage.setItem('wfo_coach_recs',JSON.stringify(coachExisting));
 }
 
 function getMoMMonths(){
