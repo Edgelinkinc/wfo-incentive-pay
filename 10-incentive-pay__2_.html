@@ -12259,14 +12259,36 @@ function spInit(){
         authority: 'https://login.microsoftonline.com/' + _spConfig.tenantId,
         redirectUri: window.location.origin + window.location.pathname.replace(/[^/]*$/, '')
       },
-      cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
+      cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:false},
+      system:{
+        allowNativeBroker:false,
+        windowHashTimeout:9000,
+        iframeHashTimeout:9000,
+        loadFrameTimeout:9000
+      }
     });
-    // Check if already signed in
-    var accounts = _msalApp.getAllAccounts();
-    if(accounts.length > 0){
-      _spAccount = accounts[0];
-      spUpdateUI(true);
-    }
+    // CRITICAL: Always call handleRedirectPromise on page load
+    // This clears any pending redirect state and prevents MSAL from looping
+    _msalApp.handleRedirectPromise().then(function(resp){
+      if(resp&&resp.account){
+        _spAccount=resp.account;
+        _msalApp.setActiveAccount(_spAccount);
+        spUpdateUI(true);
+      } else {
+        var accounts=_msalApp.getAllAccounts();
+        if(accounts.length>0){
+          _spAccount=accounts[0];
+          _msalApp.setActiveAccount(_spAccount);
+          spUpdateUI(true);
+        }
+      }
+    }).catch(function(e){
+      console.log('MSAL handleRedirectPromise error:',e);
+      // Clear stale interaction state
+      Object.keys(sessionStorage).forEach(function(k){
+        if(k.indexOf('msal.')===0||k.indexOf('msal|')===0)sessionStorage.removeItem(k);
+      });
+    });
   }catch(e){
     console.log('MSAL init error:',e);
   }
@@ -12335,15 +12357,23 @@ function spGetToken(){
   if(!_msalApp||!_spAccount)return Promise.reject('Not signed in');
   return _msalApp.acquireTokenSilent({scopes:_spScopes,account:_spAccount})
     .then(function(r){_spToken=r.accessToken;return r.accessToken;})
-    .catch(function(){
-      // Use popup instead of redirect — redirect causes full page reload losing all state
-      return _msalApp.acquireTokenPopup({scopes:_spScopes,account:_spAccount})
-        .then(function(r){_spToken=r.accessToken;return r.accessToken;})
-        .catch(function(e){
-          // If popup fails too, clear account and notify user
-          _spAccount=null;_spToken=null;
-          tst2('SharePoint session expired — click the cloud icon to sign back in','wn');
-          return Promise.reject(e);
+    .catch(function(e){
+      // Try silent SSO via hidden iframe before showing any UI
+      return _msalApp.ssoSilent({scopes:_spScopes,loginHint:_spAccount.username})
+        .then(function(r){
+          _spAccount=r.account;_spToken=r.accessToken;
+          _msalApp.setActiveAccount(_spAccount);
+          return r.accessToken;
+        })
+        .catch(function(){
+          // Last resort — popup (never redirect, never full page reload)
+          return _msalApp.acquireTokenPopup({scopes:_spScopes,account:_spAccount})
+            .then(function(r){_spToken=r.accessToken;return r.accessToken;})
+            .catch(function(e2){
+              _spAccount=null;_spToken=null;
+              tst2('SharePoint session expired — click the cloud icon to sign back in','wn');
+              return Promise.reject(e2);
+            });
         });
     });
 }
