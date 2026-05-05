@@ -12746,11 +12746,26 @@ function ghLoadPublicData(){
         localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
       }
 
-      // Reload to re-render with new data
-      // Skip reload if admin is signed in OR if currently viewing admin page
-      var onAdminPage=document.body.classList.contains('admin-active')||sessionStorage.getItem('wfo_page')==='pg-admin';
-      if(!_spAccount&&!_pinUnlocked&&!onAdminPage){
-        window.location.reload();
+      // Soft refresh — reload data into memory without disrupting the current page
+      if(changed&&!_spAccount){
+        // Reload reps and week data silently
+        try{
+          var latestWk=localIdx[0];
+          if(latestWk){
+            var latestData=JSON.parse(localStorage.getItem('wfo_week_'+latestWk)||'{}');
+            if(latestData.reps&&latestData.reps.length>0&&!_pinUnlocked){
+              reps=latestData.reps;
+              CBs=latestData.cbs||[];
+              wk=latestWk;
+              localStorage.setItem('wfo_current_wk',wk);
+              clearTimeout(_renTimer);_renTimer=setTimeout(function(){
+                renR();
+                initHomePage();
+                if(typeof initEmpWeekPicker==='function')initEmpWeekPicker();
+              },200);
+            }
+          }
+        }catch(e){}
       }
     })
     .catch(function(){
