@@ -12336,7 +12336,15 @@ function spGetToken(){
   return _msalApp.acquireTokenSilent({scopes:_spScopes,account:_spAccount})
     .then(function(r){_spToken=r.accessToken;return r.accessToken;})
     .catch(function(){
-      return _msalApp.acquireTokenRedirect({scopes:_spScopes,account:_spAccount});
+      // Use popup instead of redirect — redirect causes full page reload losing all state
+      return _msalApp.acquireTokenPopup({scopes:_spScopes,account:_spAccount})
+        .then(function(r){_spToken=r.accessToken;return r.accessToken;})
+        .catch(function(e){
+          // If popup fails too, clear account and notify user
+          _spAccount=null;_spToken=null;
+          tst2('SharePoint session expired — click the cloud icon to sign back in','wn');
+          return Promise.reject(e);
+        });
     });
 }
 
