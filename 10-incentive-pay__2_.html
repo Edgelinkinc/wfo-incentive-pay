@@ -12747,8 +12747,9 @@ function ghLoadPublicData(){
       }
 
       // Reload to re-render with new data
-      // Skip reload only if admin is actively signed in (their session has priority)
-      if(!_spAccount){
+      // Skip reload if admin is signed in OR if currently viewing admin page
+      var onAdminPage=document.body.classList.contains('admin-active')||sessionStorage.getItem('wfo_page')==='pg-admin';
+      if(!_spAccount&&!_pinUnlocked&&!onAdminPage){
         window.location.reload();
       }
     })
