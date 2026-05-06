@@ -13153,6 +13153,7 @@ function spSaveConfig(){
       currentWeek: wkKey(localStorage.getItem('wfo_current_wk')||wk||new Date().toISOString().split('T')[0]),
       tiers: localStorage.getItem('wfo_tiers'),
       puConfig: localStorage.getItem('wfo_pu_config'),
+      puInGross: localStorage.getItem('wfo_pu_in_gross'),
       customRoster: localStorage.getItem('wfo_custom_roster'),
       nameOverrides: localStorage.getItem('wfo_name_overrides'),
       srBs: localStorage.getItem('wfo_store_roster'),
@@ -13160,6 +13161,19 @@ function spSaveConfig(){
       perfMetrics: localStorage.getItem('wfo_perf_metrics'),
       perfThresholds: localStorage.getItem('wfo_perf_thresholds'),
       elbMap: localStorage.getItem('wfo_elb_map'),
+      // Home screen
+      announcements: localStorage.getItem('wfo_announcements'),
+      weeklyNote: localStorage.getItem('wfo_weekly_note'),
+      changeLog: localStorage.getItem('wfo_change_log'),
+      importantDates: localStorage.getItem('wfo_important_dates'),
+      dates: localStorage.getItem('wfo_dates'),
+      contacts: localStorage.getItem('wfo_contacts'),
+      // Payouts
+      payoutDate: localStorage.getItem('wfo_payout_date'),
+      chargebacks: localStorage.getItem('wfo_chargebacks'),
+      spiffs: localStorage.getItem('wfo_spiffs'),
+      assign: localStorage.getItem('wfo_assign'),
+      wkHist: localStorage.getItem('wfo_wk_hist'),
       // Save all per-month backsheet targets (wfo_bs_YYYY-MM)
       bsMonths: (function(){
         var bsData={};
@@ -13177,6 +13191,34 @@ function spSaveConfig(){
       coachSheets: (function(){
         var d={};
         Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_coach_sheet_')===0;})
+          .forEach(function(k){d[k]=localStorage.getItem(k);});
+        return d;
+      })(),
+      // M/O/M snapshots
+      momMgr: (function(){
+        var d={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_mom_mgr_')===0;})
+          .forEach(function(k){d[k]=localStorage.getItem(k);});
+        return d;
+      })(),
+      momCoach: (function(){
+        var d={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_mom_coach_')===0;})
+          .forEach(function(k){d[k]=localStorage.getItem(k);});
+        return d;
+      })(),
+      // Coach MIM pay per store
+      coachMimPay: (function(){
+        var d={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_coach_mim_pay_')===0;})
+          .forEach(function(k){d[k]=localStorage.getItem(k);});
+        return d;
+      })(),
+      // Daily snapshots
+      dailyIndex: localStorage.getItem('wfo_daily_index'),
+      dailyData: (function(){
+        var d={};
+        Object.keys(localStorage).filter(function(k){return k.indexOf('wfo_daily_')===0&&k!=='wfo_daily_index';})
           .forEach(function(k){d[k]=localStorage.getItem(k);});
         return d;
       })(),
@@ -13253,6 +13295,44 @@ function spLoadConfig(){
       if(config.coachRecs)localStorage.setItem('wfo_coach_recs',config.coachRecs);
       if(config.coachMimStores)localStorage.setItem('wfo_coach_mim_stores',config.coachMimStores);
       if(config.tierHistory)localStorage.setItem('wfo_tier_history',config.tierHistory);
+      // Home screen
+      if(config.announcements)localStorage.setItem('wfo_announcements',config.announcements);
+      if(config.weeklyNote)localStorage.setItem('wfo_weekly_note',config.weeklyNote);
+      if(config.changeLog)localStorage.setItem('wfo_change_log',config.changeLog);
+      if(config.importantDates)localStorage.setItem('wfo_important_dates',config.importantDates);
+      if(config.dates)localStorage.setItem('wfo_dates',config.dates);
+      if(config.contacts)localStorage.setItem('wfo_contacts',config.contacts);
+      // Payouts
+      if(config.payoutDate)localStorage.setItem('wfo_payout_date',config.payoutDate);
+      if(config.chargebacks)localStorage.setItem('wfo_chargebacks',config.chargebacks);
+      if(config.spiffs)localStorage.setItem('wfo_spiffs',config.spiffs);
+      if(config.assign)localStorage.setItem('wfo_assign',config.assign);
+      if(config.wkHist)localStorage.setItem('wfo_wk_hist',config.wkHist);
+      if(config.puInGross)localStorage.setItem('wfo_pu_in_gross',config.puInGross);
+      // M/O/M snapshots
+      if(config.momMgr){
+        Object.entries(config.momMgr).forEach(function(kv){
+          if(kv[0].indexOf('wfo_mom_mgr_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
+      if(config.momCoach){
+        Object.entries(config.momCoach).forEach(function(kv){
+          if(kv[0].indexOf('wfo_mom_coach_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
+      // Coach MIM pay per store
+      if(config.coachMimPay){
+        Object.entries(config.coachMimPay).forEach(function(kv){
+          if(kv[0].indexOf('wfo_coach_mim_pay_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
+      // Daily snapshots
+      if(config.dailyIndex)localStorage.setItem('wfo_daily_index',config.dailyIndex);
+      if(config.dailyData){
+        Object.entries(config.dailyData).forEach(function(kv){
+          if(kv[0].indexOf('wfo_daily_')===0)localStorage.setItem(kv[0],kv[1]);
+        });
+      }
       // Restore per-month backsheet targets
       if(config.bsMonths){
         Object.entries(config.bsMonths).forEach(function(kv){
