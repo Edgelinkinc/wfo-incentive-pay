@@ -3873,6 +3873,12 @@ function gBT(t){
   return box.find(function(x){return t>=x.mn&&t<=x.mx;})||null;
 }
 function cBx(t){const x=gBT(t);return x?t*x.r:0;}
+function cBxAdj(ta,tb){
+  // Tier determined by PPD minus tablets; rate applied to full PPD
+  var adjPpd=Math.max(0,(ta||0)-(tb||0));
+  var x=gBT(adjPpd);
+  return{amt:x?(ta||0)*x.r:0,tier:x,adjPpd:adjPpd,ta:ta||0,tb:tb||0};
+}
 function bBd(t){
   const x=gBT(t);
   if(!x)return{l:'No Tier',c:'bno'};
@@ -3928,7 +3934,7 @@ function cRp(r, wkOverride){
   if(_tBackup){T=_tBackup;}
   return _result;
 }
-function _cRp_inner(r){const bx=cBx(r.ta||0),ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,ac,pu,mi,sp,gr,arc,cb,nt};}
+function _cRp_inner(r){const bxRes=cBxAdj(r.ta||0,r.tb||0),bx=bxRes.amt,ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,bxRes,ac,pu,mi,sp,gr,arc,cb,nt};}
 
 // ── RESTORED REP TABLE CRUD FUNCTIONS ──
 
@@ -3980,7 +3986,7 @@ function renR(fS,fC,srch,fState){
   const cntEl=document.getElementById("repCountLbl");if(cntEl)cntEl.textContent=fil.length+" rep"+(fil.length!==1?"s":"")+(srch?" matching":"")+(" - "+reps.length+" total");
   let tG=0,tA=0,tC=0,tN=0,tB=0,tAc=0,tSp=0;
   document.getElementById("rb").innerHTML=fil.map((r)=>{
-    const i=reps.indexOf(r),c=cRp(r),bT=bBd(r.ta||0),aT=aBd(r.ap||0);
+    const i=reps.indexOf(r),c=cRp(r),bT=bBd(c.bxRes.adjPpd),aT=aBd(r.ap||0);
     const bts=(r.tb||0)+(r.wt||0),al=r.al||[],at=arcT(r),ng=c.nt<0,top=(r.ta||0)>=25;
     tG+=c.gr;tA+=c.arc;tC+=c.cb;tN+=c.nt;tB+=c.bx;tAc+=c.ac;tSp+=c.sp.tot;
     return`<tr class="${ng?"row-neg":top?"row-top":""}" style="cursor:pointer" onclick="openRepPanel(${i})">
@@ -4039,7 +4045,7 @@ function renRepOv(){
   if(!reps.length){emp.style.display="block";tbl.style.display="none";return;}
   emp.style.display="none";tbl.style.display="block";
   body.innerHTML=reps.map(r=>{
-    const c=cRp(r),bT=bBd(r.ta||0),ng=c.nt<0,top=(r.ta||0)>=25;
+    const c=cRp(r),bT=bBd(c.bxRes.adjPpd),ng=c.nt<0,top=(r.ta||0)>=25;
     return`<tr class="${ng?"row-neg":top?"row-top":""}">
       <td><div style="font-weight:700;color:var(--se)">${X(r.n)}</div></td>
       <td style="font-size:10px;color:var(--mu)">${r.ri||"—"}</td>
@@ -5831,14 +5837,21 @@ function loadEmpBonusFromData(repVal){
   if(empEmpty)empEmpty.style.display='none';
 
   const s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-  const bxTier=bBd(r.ta||0);
+  const bxTier=bBd(c.bxRes.adjPpd);
   const acTier=aBd(r.ap||0);
 
   s('empName',dispName(r));
   s('empInfo',(r.s||'No Store')+' · '+(r.c||'No Coach'));
   s('empWeekDisp','Week of '+weekLabel);
   s('empBx','$'+c.bx.toFixed(2));
-  s('empBxDetail',(r.ta||0)+' acts · '+bxTier.l+' tier · $'+bxTier.r+'/act');
+  // Show PPD adjustment if tablets exist
+  var bxDetail='';
+  if((r.tb||0)>0){
+    bxDetail=(r.ta||0)+' acts · −'+(r.tb||0)+' tablets → '+c.bxRes.adjPpd+' adj PPD · '+bxTier.l+' tier · $'+bxTier.r+'/act';
+  } else {
+    bxDetail=(r.ta||0)+' acts · '+bxTier.l+' tier · $'+bxTier.r+'/act';
+  }
+  s('empBxDetail',bxDetail);
   s('empAc','$'+c.ac.toFixed(2));
   s('empAcDetail','$'+(r.ap||0).toFixed(2)+' net · '+acTier.l+' · '+acTier.p+'%');
   s('empPu','$'+c.pu.t.toFixed(2));
@@ -6808,7 +6821,7 @@ function doExp(){
   if(!reps.length){tst2("No reps.","wn");return;}
   const wd=wk||new Date().toISOString().split("T")[0];
   const hd=["NTID","Rep Name","Store","Coach","Week","PPD","New","React","Upg","Tablet","Watch","BTS","HSI","Affirm","Hrs","Acc Net $","Box Rate","Box $","Acc %","Acc $","Affirm $","HSI $","PU Total $","MM BANs","MIM Lines","MIM $","Spiffs $","GROSS $","Arcade $","CB $","NET OWED $","Status"];
-  const rows=reps.map(r=>{const c=cRp(r),bt=gBT(r.ta||0),at=gAT(r.ap||0);return[r.ri||"",r.n,r.s,r.c,wd,r.ta||0,r.na||0,r.ra||0,r.up||0,r.tb||0,r.wt||0,(r.tb||0)+(r.wt||0),r.hs||0,r.af||0,r.hr||0,(r.ap||0).toFixed(2),bt?bt.r:0,c.bx.toFixed(2),at?at.p+"%":"0%",c.ac.toFixed(2),c.pu.a.toFixed(2),c.pu.h.toFixed(2),c.pu.t.toFixed(2),r.mb||0,r.ml||0,c.mi.p.toFixed(2),c.sp.tot.toFixed(2),c.gr.toFixed(2),c.arc.toFixed(2),c.cb.toFixed(2),c.nt.toFixed(2),c.nt<0?"CARRY":"OK"];});
+  const rows=reps.map(r=>{const c=cRp(r),bt=c.bxRes.tier,at=gAT(r.ap||0);return[r.ri||"",r.n,r.s,r.c,wd,r.ta||0,r.na||0,r.ra||0,r.up||0,r.tb||0,r.wt||0,(r.tb||0)+(r.wt||0),r.hs||0,r.af||0,r.hr||0,(r.ap||0).toFixed(2),bt?bt.r:0,c.bx.toFixed(2),at?at.p+"%":"0%",c.ac.toFixed(2),c.pu.a.toFixed(2),c.pu.h.toFixed(2),c.pu.t.toFixed(2),r.mb||0,r.ml||0,c.mi.p.toFixed(2),c.sp.tot.toFixed(2),c.gr.toFixed(2),c.arc.toFixed(2),c.cb.toFixed(2),c.nt.toFixed(2),c.nt<0?"CARRY":"OK"];});
   dlC([hd,...rows],"WFO_RepPayout_"+wd+".csv");tst2("Payroll CSV exported.","ok");
 }
 function doSum(){if(!reps.length){tst2("No reps.","wn");return;}const wd=wk||"week";const hd=["NTID","Rep","Store","Coach","PPD","Gross $","Arcade $","CB $","Net $"];const rows=reps.map(r=>{const c=cRp(r);return[r.ri||"",r.n,r.s,r.c,r.ta||0,c.gr.toFixed(2),c.arc.toFixed(2),c.cb.toFixed(2),c.nt.toFixed(2)];});dlC([hd,...rows],"WFO_RepSummary_"+wd+".csv");}
@@ -7663,13 +7676,13 @@ function slipStyle(){return `<style>
   }
 </style>`;}
 function buildSlipHTML(r,c,wk2){
-  const bT=bBd(r.ta||0),aT=aBd(r.ap||0),repCBs=CBs.filter(x=>x.rp===r.n);
+  const bT=bBd(c.bxRes.adjPpd),aT=aBd(r.ap||0),repCBs=CBs.filter(x=>x.rp===r.n);
   return`<div class="slip"><div style="background:linear-gradient(135deg,#E20074 0%,#6E2B8B 60%,#4A1A6B 100%);padding:26px 34px;color:#fff"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:11px;align-items:center"><div style="width:42px;height:42px;background:rgba(255,255,255,.15);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px">⚡</div><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:17px;text-transform:uppercase;letter-spacing:.04em">Edgelink Inc</div><div style="font-size:10px;opacity:.65;letter-spacing:.08em;text-transform:uppercase;margin-top:2px">Work Force Ops - Incentive Pay</div></div></div><div style="text-align:right"><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px">Weekly Bonus Slip</div><div style="font-size:11px;opacity:.7;margin-top:2px">Week of ${wk2}</div></div></div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)"><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px">${X(r.n)}</div><div style="font-size:12px;opacity:.72;margin-top:4px;display:flex;gap:13px"><span>${X(r.s||"—")}</span><span>Coach: ${X(r.c||"—")}</span>${r.ri?`<span>NTID: ${r.ri}</span>`:""}</div></div><div style="text-align:right"><div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Net Owed</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:40px;color:${c.nt<0?"#FFB3D1":"#fff"}">$${c.nt.toFixed(2)}</div><div style="font-size:10px;opacity:.7;margin-top:3px">${c.nt<0?"Carry forward":"Approved"}</div></div></div></div>
 <div style="flex:1;padding:22px 34px"><div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #E8E8E8;border-radius:11px;overflow:hidden;margin-bottom:20px">${[["Total PPD",r.ta||0,"activations",true],["New Acts",r.na||0,"new voice",false],["BTS",(r.tb||0)+(r.wt||0),"tablet+watch",false],["HSI",r.hs||0,"home internet",false],["Acc Net","$"+(r.ap||0).toFixed(0),"net profit",false]].map((s,i)=>`<div style="padding:11px 13px;text-align:center;border-right:${i<4?"1px solid #E8E8E8":"none"};background:${s[3]?"linear-gradient(135deg,#FFF0F7,#F3E8FF)":"#fff"}"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:3px">${s[0]}</div><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:19px;color:${s[3]?"#E20074":"#4A1A6B"}">${s[1]}</div><div style="font-size:9px;color:#bbb;margin-top:1px">${s[2]}</div></div>`).join("")}</div>
 ${c.nt<0?`<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px"><div style="font-size:22px">⚠️</div><div><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#D32F2F;margin-bottom:2px">Negative Balance - Carry Forward</div><div style="font-size:12px;color:#C62828">$${c.nt.toFixed(2)} carries to next week and will be deducted before payout.</div></div></div>`:""}
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Earnings Breakdown<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-${[["Box Level Ups",bT.l,c.bx,(r.ta||0)+" PPD x tier","#E20074"],["Accessory Payout",aT.l,c.ac,aT.p+"% of $"+(r.ap||0).toFixed(2),"#6E2B8B"],["Power Ups","Affirm+HSI",c.pu.t,"Af $"+c.pu.a.toFixed(0)+" HSI $"+c.pu.h.toFixed(0),"#00897B"],["MIM Incentive","Arcade Paid",c.mi.p,(r.ml||0)+" MIM lines","#00A651"]].map(([lbl,badge,amt,det,clr])=>`<div style="border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px;position:relative;overflow:hidden"><div style="posit"></div><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">${badge}</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">${lbl}</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A;margin-bottom:3px">$${amt.toFixed(2)}</div><div style="font-size:10px;color:#999">${det}</div></div>`).join("")}
+${[["Box Level Ups",bT.l,c.bx,(r.tb||0)>0?(r.ta||0)+" PPD − "+(r.tb||0)+" tablets = "+c.bxRes.adjPpd+" adj":(r.ta||0)+" PPD × tier","#E20074"],["Accessory Payout",aT.l,c.ac,aT.p+"% of $"+(r.ap||0).toFixed(2),"#6E2B8B"],["Power Ups","Affirm+HSI",c.pu.t,"Af $"+c.pu.a.toFixed(0)+" HSI $"+c.pu.h.toFixed(0),"#00897B"],["MIM Incentive","Arcade Paid",c.mi.p,(r.ml||0)+" MIM lines","#00A651"]].map(([lbl,badge,amt,det,clr])=>`<div style="border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px;position:relative;overflow:hidden"><div style="posit"></div><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">${badge}</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">${lbl}</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A;margin-bottom:3px">$${amt.toFixed(2)}</div><div style="font-size:10px;color:#999">${det}</div></div>`).join("")}
 ${c.sp.tot>0?`<div style="grid-column:1/-1;border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#FF69B4"></div><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">Active Spiff</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">Spiff Bonuses</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A">$${c.sp.tot.toFixed(2)}</div></div>`:""}
 </div>
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Payout Summary<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
