@@ -3535,6 +3535,7 @@ function dispLast(r){return r.lastName||'';}
 
 
 let T=lT(),reps=lReps(),CBs=lCBs(),sps=lSp(),wk="",cbST="",wkLocked=false;
+var _arcTimer;
 let lbMode="company",sumMode="store",mgrCalcs={},coachCalcs={};
 let _sortKey="",_sortDir=-1,_renTimer=null;
 let _lbReps=null,_lbWk=null,_sumReps=null,_sumWk=null;
@@ -4100,7 +4101,8 @@ function renR(fS,fC,srch,fState){
         <input class="ni niw" type="number" value="${r.arcPay||0}" min="0" step="0.01"
           style="width:72px;font-weight:700;color:#059669"
           onclick="event.stopPropagation()"
-          onchange="event.stopPropagation();uR(${i},'arcPay',+this.value);upK()"
+          oninput="event.stopPropagation();reps[${i}].arcPay=+this.value;saveSession();clearTimeout(_arcTimer);_arcTimer=setTimeout(()=>{upK();},800)"
+          onchange="event.stopPropagation();reps[${i}].arcPay=+this.value;saveSession();"
           title="Arcade Gross for this rep"/>
       </td>
       <td style="text-align:center">
