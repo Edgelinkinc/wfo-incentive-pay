@@ -1002,24 +1002,24 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </div>
     </div>
 
-    <!-- POWER UPS / SPIFFS — informational, paid via Arcade -->
-    <div id="empPuSpCard" class="kc" style="border-left:4px solid #00897B;margin-bottom:10px">
+    <!-- ARCADE GROSS — POWER UPS & SPIFFS (combined) -->
+    <div id="empArcGrossCard" class="kc" style="border-left:4px solid #059669;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div class="kl" style="margin:0">Power Ups / Spiffs</div>
-        <span style="font-size:10px;background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:20px;font-weight:700">paid via Arcade</span>
+        <div class="kl" style="margin:0">Arcade Gross — Power Ups &amp; Spiffs</div>
+        <span style="font-size:10px;background:#E8F5E9;color:#166534;padding:2px 8px;border-radius:20px;font-weight:700">paid via Arcade</span>
       </div>
-      <div id="empSpList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
+      <!-- Itemized power ups and spiffs -->
+      <div id="empSpList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px"></div>
+      <!-- Manual arcade gross entry -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid rgba(0,0,0,.06)">
+        <span style="font-size:12px;color:var(--mu)">Arcade Gross (manual)</span>
+        <span class="kv" id="empArcGross" style="color:#059669;margin:0;font-size:16px">$—</span>
+      </div>
       <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(0,0,0,.06);padding-top:6px">
-        <span style="font-size:11px;color:var(--mu)">Total (not in payout)</span>
+        <span style="font-size:11px;color:var(--mu)">Power Ups &amp; Spiffs total (not in net)</span>
         <span class="ks" id="empPuSpTotal" style="margin:0;font-weight:700">$0.00</span>
       </div>
-    </div>
-
-    <!-- ARCADE GROSS -->
-    <div id="empArcGrossCard" class="kc" style="border-left:4px solid #059669;margin-bottom:14px">
-      <div class="kl">Arcade Gross</div>
-      <div class="kv" id="empArcGross" style="color:#059669">$—</div>
-      <div class="ks">included in gross · deducted from net</div>
+      <div class="ks" style="margin-top:4px">arcade gross included in gross · deducted from net</div>
     </div>
 
     <!-- LEGACY CARDS (pre-4/27/26) -->
@@ -5887,7 +5887,7 @@ function loadEmpBonusFromData(repVal){
   }
 
   // Show/hide new vs legacy cards
-  ['empArcGrossCard','empPuSpCard'].forEach(function(id){
+  ['empArcGrossCard'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.style.display=isNewStructure?'':'none';
   });
   var legacyCards=document.getElementById('empLegacyCards');
@@ -7772,8 +7772,27 @@ function buildSlipHTML(r,c,wk2){
 ${c.nt<0?`<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px"><div style="font-size:22px">⚠️</div><div><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#D32F2F;margin-bottom:2px">Negative Balance - Carry Forward</div><div style="font-size:12px;color:#C62828">$${c.nt.toFixed(2)} carries to next week and will be deducted before payout.</div></div></div>`:""}
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Earnings Breakdown<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-${[["Box Level Ups",bT.l,c.bx,(r.tb||0)>0?(r.ta||0)+" PPD − "+(r.tb||0)+" tablets = "+c.bxRes.adjPpd+" adj":(r.ta||0)+" PPD × tier","#E20074"],["Accessory Payout",aT.l,c.ac,aT.p+"% of $"+(r.ap||0).toFixed(2),"#6E2B8B"],["Power Ups","Affirm+HSI",c.pu.t,"Af $"+c.pu.a.toFixed(0)+" HSI $"+c.pu.h.toFixed(0),"#00897B"],["MIM Incentive","Arcade Paid",c.mi.p,(r.ml||0)+" MIM lines","#00A651"]].map(([lbl,badge,amt,det,clr])=>`<div style="border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px;position:relative;overflow:hidden"><div style="posit"></div><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">${badge}</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">${lbl}</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A;margin-bottom:3px">$${amt.toFixed(2)}</div><div style="font-size:10px;color:#999">${det}</div></div>`).join("")}
-${c.sp.tot>0?`<div style="grid-column:1/-1;border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#FF69B4"></div><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">Active Spiff</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">Spiff Bonuses</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A">$${c.sp.tot.toFixed(2)}</div></div>`:""}
+${[["Box Incentive",bT.l,c.bx,(r.tb||0)>0?(r.ta||0)+" PPD − "+(r.tb||0)+" tablets = "+c.bxRes.adjPpd+" adj":(r.ta||0)+" PPD × tier","#E20074"],["Accessory Bonus",aT.l,c.ac,aT.p+"% of $"+(r.ap||0).toFixed(2),"#6E2B8B"]].map(([lbl,badge,amt,det,clr])=>`<div style="border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px"><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">${badge}</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">${lbl}</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A;margin-bottom:3px">$${amt.toFixed(2)}</div><div style="font-size:10px;color:#999">${det}</div></div>`).join("")}
+<div style="grid-column:1/-1;border:2px solid #059669;border-radius:10px;padding:13px 15px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669">Arcade Gross — Power Ups &amp; Spiffs</div>
+    <div style="font-size:9px;background:#E8F5E9;color:#166534;padding:2px 8px;border-radius:20px;font-weight:700">paid via Arcade</div>
+  </div>
+  ${(()=>{
+    var items=[];
+    if(c.pu&&c.pu.breakdown){Object.values(c.pu.breakdown).forEach(function(p){if((p.earned||0)>0)items.push(p.name+': $'+p.earned.toFixed(2));});}
+    if(c.sp&&c.sp.list&&c.sp.list.length){c.sp.list.forEach(function(sp){if((sp.p||0)>0)items.push((sp.n||sp.nm||'Spiff')+': $'+(sp.p||0).toFixed(2));});}
+    return items.length?items.map(s=>`<div style="font-size:11px;color:#555;margin-bottom:3px">• ${s}</div>`).join(''):'<div style="font-size:11px;color:#aaa">No active power ups or spiffs</div>';
+  })()}
+  <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E8F5E9;display:flex;justify-content:space-between">
+    <span style="font-size:11px;color:#555">Arcade Gross (manual):</span>
+    <span style="font-weight:700;color:#059669">$${(r.arcPay||0).toFixed(2)}</span>
+  </div>
+  <div style="margin-top:4px;display:flex;justify-content:space-between">
+    <span style="font-size:10px;color:#888">Power Ups &amp; Spiffs total (not in net):</span>
+    <span style="font-size:10px;color:#888">$${((c.pu?.total||0)+(c.sp?.tot||0)).toFixed(2)}</span>
+  </div>
+</div>
 </div>
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Payout Summary<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
 <div style="border:1px solid #E8E8E8;border-radius:11px;overflow:hidden;margin-bottom:20px">
