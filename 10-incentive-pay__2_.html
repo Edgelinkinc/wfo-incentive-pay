@@ -1043,7 +1043,38 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 
     <!-- CHARGEBACKS -->
     <div id="empCbSection" style="display:none;background:#FFEBEE;border:1px solid var(--da);border-radius:10px;padding:12px 16px;margin-bottom:14px">
-      <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--da);margin-bottom:8px">⚡ Chargebacks This Week</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:12px;color:var(--da)">⚡ Chargebacks</div>
+        <span style="font-size:10px;background:#FFEBEE;color:var(--da);padding:2px 8px;border-radius:20px;font-weight:700">balance owed</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,.6);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--da);margin-bottom:2px">Prior balance</div>
+          <div id="empCbPrior" style="font-size:14px;font-weight:700;color:var(--da)">$0.00</div>
+        </div>
+        <div style="background:rgba(255,255,255,.6);border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--da);margin-bottom:2px">New this week</div>
+          <div id="empCbNew" style="font-size:14px;font-weight:700;color:var(--da)">$0.00</div>
+        </div>
+        <div style="background:#D32F2F;border-radius:8px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:rgba(255,255,255,.8);margin-bottom:2px">Total balance</div>
+          <div id="empCbTotal" style="font-size:14px;font-weight:700;color:#fff">$0.00</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:var(--da)">This week's bonus (Box + Acc)</span>
+          <span id="empCbBonusBase" style="color:var(--da)">$0.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700">
+          <span style="color:var(--da)">Deducted this week (25%)</span>
+          <span id="empCbDeducted" style="color:var(--da)">−$0.00</span>
+        </div>
+        <div style="border-top:1px solid rgba(211,47,47,.3);padding-top:6px;display:flex;justify-content:space-between;font-size:12px;font-weight:700">
+          <span style="color:var(--da)">Remaining balance (rolls to next week)</span>
+          <span id="empCbRemaining" style="color:var(--da)">$0.00</span>
+        </div>
+      </div>
       <div id="empCbList"></div>
     </div>
 
@@ -1052,6 +1083,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       <div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Net Owed This Week</div>
       <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:36px" id="empNet">$—</div>
       <div style="font-size:11px;opacity:.7;margin-top:4px">Gross $<span id="empGross">—</span> − Arcade $<span id="empArcAmt">—</span> − CB $<span id="empCbAmt">—</span></div>
+      <div id="empCbRolloverWarn" style="display:none;margin-top:8px;background:rgba(211,47,47,.3);border-radius:8px;padding:6px 10px;font-size:11px">⚠ $<span id="empCbRolloverAmt">0</span> CB balance rolls to next week</div>
     </div>
 
     <!-- ACTIONS -->
@@ -1169,7 +1201,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
               <th class="gc">MIM Lines</th>
               <th class="gc">Spiffs $</th><th class="gc">GROSS $</th>
               <th class="ga">Arcade Gross</th>
-              <th class="gn">Net Owed</th><th class="gn">Actions</th>
+              <th class="gn">CB Bal</th><th class="gn">Net Owed</th><th class="gn">Actions</th>
             </tr></thead>
             <tbody id="rb"></tbody><tfoot id="rf"></tfoot>
           </table></div>
@@ -3953,6 +3985,29 @@ function cPU(r){
 function cMI(l){if((l||0)<=0)return{p:0};let p=0;const s=T.mi;if(l>=1)p+=s[0];for(let i=1;i<Math.min(l,s.length);i++)p+=s[i];return{p};}
 function arcT(r){return(r.al||[]).reduce((s,t)=>s+(t.a||0),0);}
 function cbT(n){return CBs.filter(c=>c.rp===n&&!c.voided).reduce((s,c)=>s+(c.a||0),0);}
+
+function getCBBalance(r){
+  var key=r.ri||r.n;
+  try{var b=JSON.parse(localStorage.getItem('wfo_cb_balances')||'{}');return +(b[key]||0);}catch{return 0;}
+}
+function saveCBBalance(r,amount){
+  var key=r.ri||r.n;
+  try{
+    var b=JSON.parse(localStorage.getItem('wfo_cb_balances')||'{}');
+    if(amount<=0.005)delete b[key];else b[key]=+amount.toFixed(2);
+    localStorage.setItem('wfo_cb_balances',JSON.stringify(b));
+  }catch(e){}
+}
+function calcCBInfo(r){
+  var priorBal=getCBBalance(r);
+  var newCBs=CBs.filter(function(c){return c.rp===r.n&&!c.voided;}).reduce(function(s,c){return s+(c.a||0);},0);
+  var totalBal=+(priorBal+newCBs).toFixed(2);
+  var bonusBase=+(cBxAdj(r.ta||0,r.tb||0).amt+cAc(r.ap||0)).toFixed(2);
+  var deduction=+Math.min(bonusBase*0.25,totalBal).toFixed(2);
+  var remaining=+(totalBal-deduction).toFixed(2);
+  return{priorBal:+priorBal.toFixed(2),newCBs:+newCBs.toFixed(2),totalBal,bonusBase,deduction,remaining};
+}
+
 function actSp(wd){const d=wd||(wk?new Date(wk+"T12:00:00"):new Date());return sps.filter(s=>{if(!s.on)return false;const st=new Date(s.sd+"T12:00:00"),en=s.ed?new Date(s.ed+"T12:00:00"):null;return d>=st&&(!en||d<=en);});}
 function cSp(r){const wd=wk?new Date(wk+"T12:00:00"):new Date();let tot=0,det=[];actSp(wd).forEach(sp=>{if(sp.sc==="store"&&sp.sv&&r.s!==sp.sv)return;if(sp.sc==="coach"&&sp.sv&&r.c!==sp.sv)return;let pay=0;if(sp.ty==="flat_per_rep")pay=sp.a;else if(sp.ty==="flat_per_unit")pay=sp.a;else if(sp.ty==="pct_gross"){const g=cBx(r.ta||0)+cAc(r.ap||0)+cPU(r).t+cMI(r.ml).p;pay=g*sp.a/100;}tot+=pay;det.push({n:sp.nm,p:pay});});return{tot,det};}
 function cRp(r, wkOverride){
@@ -3969,7 +4024,7 @@ function cRp(r, wkOverride){
   if(_tBackup){T=_tBackup;}
   return _result;
 }
-function _cRp_inner(r){const bxRes=cBxAdj(r.ta||0,r.tb||0),bx=bxRes.amt,ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r),cb=cbT(r.n),nt=gr-arc-cb;return{bx,bxRes,ac,pu,mi,sp,gr,arc,cb,nt};}
+function _cRp_inner(r){const bxRes=cBxAdj(r.ta||0,r.tb||0),bx=bxRes.amt,ac=cAc(r.ap||0),pu=cPU(r),mi=cMI(r.ml),sp=cSp(r);const puAmt=(typeof _puInGross!=="undefined"&&!_puInGross)?0:pu.t;const gr=bx+ac+puAmt+mi.p+sp.tot,arc=arcT(r);const cbInfo=calcCBInfo(r),cb=cbInfo.deduction,nt=gr-arc-cb;return{bx,bxRes,ac,pu,mi,sp,gr,arc,cb,cbInfo,nt};}
 
 // ── RESTORED REP TABLE CRUD FUNCTIONS ──
 
@@ -4048,6 +4103,9 @@ function renR(fS,fC,srch,fState){
           onchange="event.stopPropagation();uR(${i},'arcPay',+this.value);upK()"
           title="Arcade Gross for this rep"/>
       </td>
+      <td style="text-align:center">
+        ${c.cbInfo.remaining>0?`<div style="font-size:11px;font-weight:700;color:var(--da)">$${c.cbInfo.remaining.toFixed(2)}</div><div style="font-size:9px;color:var(--mu)">rolls over</div>`:`<span style="color:var(--ok);font-size:11px">✓ Clear</span>`}
+      </td>
       <td>
         <div class="pn${ng?" neg":""}">$${c.nt.toFixed(2)}</div>
         ${ng?`<div class="cy">Carry fwd</div>`:""}
@@ -4059,7 +4117,7 @@ function renR(fS,fC,srch,fState){
       </td>
     </tr>`;
   }).join("");
-  document.getElementById("rf").innerHTML=fil.length?`<tr><td colspan="14" style="color:var(--se)">TOTALS ${fil.length} reps</td><td style="color:var(--pr)">$${tB.toFixed(2)}</td><td></td><td style="color:var(--se)">$${tAc.toFixed(2)}</td><td colspan="3"></td><td style="color:var(--ac)">$${tSp.toFixed(2)}</td><td style="color:var(--pr);font-weight:800">$${tG.toFixed(2)}</td><td style="color:var(--ok)">-$${tA.toFixed(2)}</td><td style="color:var(--dk);font-weight:800">$${tN.toFixed(2)}</td><td></td></tr>`:"";
+  document.getElementById("rf").innerHTML=fil.length?`<tr><td colspan="15" style="color:var(--se)">TOTALS ${fil.length} reps</td><td style="color:var(--pr)">$${tB.toFixed(2)}</td><td></td><td style="color:var(--se)">$${tAc.toFixed(2)}</td><td colspan="3"></td><td style="color:var(--ac)">$${tSp.toFixed(2)}</td><td style="color:var(--pr);font-weight:800">$${tG.toFixed(2)}</td><td style="color:var(--ok)">-$${tA.toFixed(2)}</td><td style="color:var(--dk);font-weight:800">$${tN.toFixed(2)}</td><td></td></tr>`:"";
   upK();syncCR();renRepOv();renMimTables();
 }
 
@@ -5871,15 +5929,37 @@ function loadEmpBonusFromData(repVal){
   // Default to new structure if week unknown or on/after cutover
   const isNewStructure=!viewWkDate||viewWkDate>=CUTOVER;
 
+  const viewCbTotal=viewCBs.filter(cb=>cb.rp===r.n||cb.rp===r.ri).reduce((s,cb)=>s+(cb.a||0),0);
+  // Use calcCBInfo but with viewCBs for historical week accuracy
+  var cbInfo=c.cbInfo;
+  // For historical weeks, recalc with viewCBs
+  if(viewWkDate!==wk){
+    var priorBal=getCBBalance(r);
+    var bonusBase=c.bx+c.ac;
+    var totalBal=+(priorBal+viewCbTotal).toFixed(2);
+    var deduction=+Math.min(bonusBase*0.25,totalBal).toFixed(2);
+    cbInfo={priorBal:+priorBal.toFixed(2),newCBs:+viewCbTotal.toFixed(2),totalBal,bonusBase:+bonusBase.toFixed(2),deduction,remaining:+(totalBal-deduction).toFixed(2)};
+  }
+
+  // Show/hide CB section
+  var cbSection=document.getElementById('empCbSection');
+  if(cbSection)cbSection.style.display=cbInfo.totalBal>0||viewCbTotal>0?'block':'none';
+  s('empCbPrior','$'+cbInfo.priorBal.toFixed(2));
+  s('empCbNew','$'+cbInfo.newCBs.toFixed(2));
+  s('empCbTotal','$'+cbInfo.totalBal.toFixed(2));
+  s('empCbBonusBase','$'+cbInfo.bonusBase.toFixed(2));
+  s('empCbDeducted','−$'+cbInfo.deduction.toFixed(2));
+  s('empCbRemaining','$'+cbInfo.remaining.toFixed(2));
+
   // Gross / Net — split by cutover date
   var dispGross,dispNet,dispArcAmt;
   if(isNewStructure){
     dispGross=c.bx+c.ac+arcGross;
-    dispNet=c.bx+c.ac-c.cb;
+    dispNet=c.bx+c.ac-cbInfo.deduction;
     dispArcAmt=arcGross;
   } else {
     dispGross=c.gr;
-    dispNet=net;
+    dispNet=c.gr-arc-cbInfo.deduction;
     dispArcAmt=arc;
   }
 
@@ -5906,28 +5986,8 @@ function loadEmpBonusFromData(repVal){
   s('empAc','$'+c.ac.toFixed(2));
   s('empAcDetail','$'+(r.ap||0).toFixed(2)+' net · '+acTier.l+' · '+acTier.p+'%');
 
-  // Power Ups / Spiffs — read from full pu.breakdown + sp.list
-  var puSpList=document.getElementById('empSpList');
-  var puSpItems=[];
-  // All configured power ups (from tier updater)
-  if(c.pu&&c.pu.breakdown){
-    Object.values(c.pu.breakdown).forEach(function(pu){
-      if((pu.earned||0)>0)puSpItems.push({nm:pu.name,amt:pu.earned});
-    });
-  }
-  // Active spiffs
-  if(c.sp&&c.sp.list&&c.sp.list.length){
-    c.sp.list.forEach(function(sp){if((sp.p||sp.amt||0)>0)puSpItems.push({nm:sp.n||sp.nm,amt:sp.p||sp.amt||0});});
-  }
-  if(puSpList){
-    puSpList.innerHTML=puSpItems.length?puSpItems.map(function(item){
-      return '<div style="display:flex;justify-content:space-between;align-items:center">'
-        +'<span style="font-size:13px;color:var(--tx)">'+item.nm+'</span>'
-        +'<span style="font-size:13px;font-weight:700;color:var(--tx)">$'+item.amt.toFixed(2)+'</span>'
-        +'</div>';
-    }).join(''):'<span style="font-size:12px;color:var(--mu)">No active spiffs this week</span>';
-  }
-  var puSpTotal=(c.pu.t||0)+(c.sp?.tot||0);
+  // Arcade Gross total (power ups + spiffs — no itemization on slip)
+  var puSpTotal=(c.pu.total||0)+(c.sp?.tot||0);
   s('empPuSpTotal','$'+puSpTotal.toFixed(2));
 
   // Arcade Gross (manual)
@@ -5953,13 +6013,14 @@ function loadEmpBonusFromData(repVal){
   s('empNet','$'+Math.max(0,dispNet).toFixed(2));
   s('empGross',dispGross.toFixed(2));
   s('empArcAmt',dispArcAmt.toFixed(2));
-  s('empCbAmt',c.cb.toFixed(2));
+  s('empCbAmt',cbInfo.deduction.toFixed(2));
+  var rollWarn=document.getElementById('empCbRolloverWarn');
+  var rollAmt=document.getElementById('empCbRolloverAmt');
+  if(rollWarn)rollWarn.style.display=cbInfo.remaining>0?'block':'none';
+  if(rollAmt)rollAmt.textContent=cbInfo.remaining.toFixed(2);
   if(typeof injectEmpGradeBadge==='function')injectEmpGradeBadge(r);
 
   const myCBs=viewCBs.filter(cb=>cb.rp===r.n||cb.rp===r.ri);
-  const cbSection=document.getElementById('empCbSection');
-  const cbList=document.getElementById('empCbList');
-  if(cbSection)cbSection.style.display=myCBs.length?'block':'none';
   if(cbList)cbList.innerHTML=myCBs.map(cb=>{
     const cbDtFmt=cb.dt?(new Date(cb.dt+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})):'';
     const submittedFmt=cb.at||'';
@@ -7775,12 +7836,7 @@ ${[["Box Incentive",bT.l,c.bx,(r.tb||0)>0?(r.ta||0)+" PPD − "+(r.tb||0)+" tabl
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#059669">Arcade Gross — Power Ups &amp; Spiffs</div>
     <div style="font-size:9px;background:#E8F5E9;color:#166534;padding:2px 8px;border-radius:20px;font-weight:700">paid via Arcade</div>
   </div>
-  ${(()=>{
-    var items=[];
-    if(c.pu&&c.pu.breakdown){Object.values(c.pu.breakdown).forEach(function(p){if((p.earned||0)>0)items.push(p.name+': $'+p.earned.toFixed(2));});}
-    if(c.sp&&c.sp.list&&c.sp.list.length){c.sp.list.forEach(function(sp){if((sp.p||0)>0)items.push((sp.n||sp.nm||'Spiff')+': $'+(sp.p||0).toFixed(2));});}
-    return items.length?items.map(s=>`<div style="font-size:11px;color:#555;margin-bottom:3px">• ${s}</div>`).join(''):'<div style="font-size:11px;color:#aaa">No active power ups or spiffs</div>';
-  })()}
+  <div style="font-size:11px;color:#555;margin-bottom:4px">Paid via Arcade — see your Arcade account for breakdown</div>
   <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E8F5E9;display:flex;justify-content:space-between">
     <span style="font-size:11px;color:#555">Arcade Gross (manual):</span>
     <span style="font-weight:700;color:#059669">$${(r.arcPay||0).toFixed(2)}</span>
@@ -9982,12 +10038,17 @@ function lockWk(){
   if(!reps.length){tst2('No rep data to lock.','er');return;}
   if(!confirm('Lock week of '+document.getElementById('wkb').textContent+' and mark as paid?'))return;
   wkLocked = true;
+  // Save CB rollover balances for each rep
+  reps.forEach(function(r){
+    var info=calcCBInfo(r);
+    saveCBBalance(r,info.remaining);
+  });
   // Roll any pending CBs to next week queue
   const openCBs = CBs.filter(c=>!c.locked);
   // Save locked week
   saveCurrentWeek();
   updLk();renR();renWkHist();
-  tst2('Week locked and marked paid ✅','ok');
+  tst2('Week locked — CB balances saved for rollover ✅','ok');
 }
 
 // ── OVERRIDE saveSession to save per-week ──
@@ -13357,7 +13418,8 @@ function spSaveConfig(){
       mgrRecs: localStorage.getItem('wfo_mgr_recs'),
       coachRecs: localStorage.getItem('wfo_coach_recs'),
       coachMimStores: localStorage.getItem('wfo_coach_mim_stores'),
-      tierHistory: localStorage.getItem('wfo_tier_history')
+      tierHistory: localStorage.getItem('wfo_tier_history'),
+      cbBalances: localStorage.getItem('wfo_cb_balances')
     };
     return fetch('https://graph.microsoft.com/v1.0/me/drive/root:/WFO%20Dashboard/'+_spConfigFile+':/content',{
       method:'PUT',
@@ -13426,6 +13488,7 @@ function spLoadConfig(){
       if(config.coachRecs)localStorage.setItem('wfo_coach_recs',config.coachRecs);
       if(config.coachMimStores)localStorage.setItem('wfo_coach_mim_stores',config.coachMimStores);
       if(config.tierHistory)localStorage.setItem('wfo_tier_history',config.tierHistory);
+      if(config.cbBalances)localStorage.setItem('wfo_cb_balances',config.cbBalances);
       // Home screen
       if(config.announcements)localStorage.setItem('wfo_announcements',config.announcements);
       if(config.weeklyNote)localStorage.setItem('wfo_weekly_note',config.weeklyNote);
