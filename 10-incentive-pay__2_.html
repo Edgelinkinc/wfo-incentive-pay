@@ -1003,7 +1003,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     </div>
 
     <!-- POWER UPS / SPIFFS — informational, paid via Arcade -->
-    <div class="kc" style="border-left:4px solid #00897B;margin-bottom:10px">
+    <div id="empPuSpCard" class="kc" style="border-left:4px solid #00897B;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div class="kl" style="margin:0">Power Ups / Spiffs</div>
         <span style="font-size:10px;background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:20px;font-weight:700">paid via Arcade</span>
@@ -1016,10 +1016,39 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     </div>
 
     <!-- ARCADE GROSS -->
-    <div class="kc" style="border-left:4px solid #059669;margin-bottom:14px">
+    <div id="empArcGrossCard" class="kc" style="border-left:4px solid #059669;margin-bottom:14px">
       <div class="kl">Arcade Gross</div>
       <div class="kv" id="empArcGross" style="color:#059669">$—</div>
       <div class="ks">included in gross · deducted from net</div>
+    </div>
+
+    <!-- LEGACY CARDS (pre-4/27/26) -->
+    <div id="empLegacyCards" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="kc" style="border-left:4px solid #00897B">
+        <div class="kl">Power Ups</div>
+        <div class="kv" id="empPu" style="color:#00897B">$—</div>
+        <div class="ks" id="empPuDetail">—</div>
+      </div>
+      <div class="kc" style="border-left:4px solid var(--ok)">
+        <div class="kl">MIM Spiff</div>
+        <div class="kv" id="empMim" style="color:var(--ok)">$—</div>
+        <div class="ks" id="empMimDetail">—</div>
+      </div>
+      <div class="kc" style="border-left:4px solid var(--ac)">
+        <div class="kl">Spiffs</div>
+        <div class="kv" id="empSp" style="color:var(--ac)">$—</div>
+        <div class="ks" id="empSpDetail">0 active</div>
+      </div>
+      <div class="kc" style="border-left:4px solid var(--da)">
+        <div class="kl">Arcade (MIM paid)</div>
+        <div class="kv" id="empArc" style="color:var(--da)">-$—</div>
+        <div class="ks">coach-paid</div>
+      </div>
+      <div class="kc" style="border-left:4px solid #FF8F00">
+        <div class="kl">Arcade (Power Ups)</div>
+        <div class="kv" id="empArcPay" style="color:#FF8F00">$—</div>
+        <div class="ks">paid via Arcade</div>
+      </div>
     </div>
 
     <!-- CHARGEBACKS -->
@@ -5852,10 +5881,29 @@ function loadEmpBonusFromData(repVal){
   const acTier=aBd(r.ap||0);
   const arcGross=+(r.arcPay||0);
 
-  // New gross = box + acc + arcade gross
-  const newGross=c.bx+c.ac+arcGross;
-  // Net = gross - arcade gross - chargebacks
-  const newNet=newGross-arcGross-c.cb;
+  // Cutover: new payout structure effective 2026-04-27
+  const CUTOVER='2026-04-27';
+  const viewWkDate=window._empViewWkDate||wk||'';
+  const isNewStructure=viewWkDate>=CUTOVER;
+
+  // Gross / Net — split by cutover date
+  var dispGross,dispNet,dispArcAmt;
+  if(isNewStructure){
+    dispGross=c.bx+c.ac+arcGross;
+    dispNet=c.bx+c.ac-c.cb;
+    dispArcAmt=arcGross;
+  } else {
+    dispGross=c.gr;
+    dispNet=net;
+    dispArcAmt=arc;
+  }
+
+  // Show/hide new vs legacy cards
+  ['empArcGrossCard','empPuSpCard'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display=isNewStructure?'':'none';
+  });
+  var legacyCards=document.getElementById('empLegacyCards');
+  if(legacyCards)legacyCards.style.display=isNewStructure?'none':'';
 
   s('empName',dispName(r));
   s('empInfo',(r.s||'No Store')+' · '+(r.c||'No Coach'));
@@ -5895,10 +5943,26 @@ function loadEmpBonusFromData(repVal){
   // Arcade Gross (manual)
   s('empArcGross','$'+arcGross.toFixed(2));
 
+  // Legacy cards (pre-cutover)
+  if(!isNewStructure){
+    s('empPu','$'+c.pu.t.toFixed(2));
+    s('empPuDetail',(r.af||0)+' Affirm ($'+(c.pu.a||0).toFixed(0)+') · '+(r.hs||0)+' HSI ($'+(c.pu.h||0).toFixed(0)+')');
+    s('empMim','$'+c.mi.p.toFixed(2));
+    const mimQual=(r.mb||0)>=6;
+    s('empMimDetail',(r.mb||0)+' BANs · '+(r.ml||0)+' lines'+(mimQual?'':' ⚠ Need 6 BANs'));
+    s('empSp','$'+spTotal.toFixed(2));
+    s('empSpDetail',c.sp?.list?.length?c.sp.list.map(sp=>sp.nm).join(', '):'No active spiffs');
+    s('empArc','-$'+arc.toFixed(2));
+    s('empArcPay','$'+(r.arcPay||0).toFixed(2));
+    // show legacy grid as grid
+    var lg=document.getElementById('empLegacyCards');
+    if(lg)lg.style.display='grid';
+  }
+
   // Net / Gross
-  s('empNet','$'+Math.max(0,newNet).toFixed(2));
-  s('empGross',newGross.toFixed(2));
-  s('empArcAmt',arcGross.toFixed(2));
+  s('empNet','$'+Math.max(0,dispNet).toFixed(2));
+  s('empGross',dispGross.toFixed(2));
+  s('empArcAmt',dispArcAmt.toFixed(2));
   s('empCbAmt',c.cb.toFixed(2));
   if(typeof injectEmpGradeBadge==='function')injectEmpGradeBadge(r);
 
@@ -10615,6 +10679,7 @@ function loadEmpBonus(){
       window._empViewCBs=[];
     }
     window._empViewWeek=document.getElementById('wkb')?.textContent||'Current Week';
+    window._empViewWkDate=wk;
   } else {
     // Load from stored week data
     const weekData=getWeekData(weekVal);
@@ -10627,6 +10692,7 @@ function loadEmpBonus(){
     window._empViewCBs=weekData.cbs||[];
     window._empViewWeek='Week of '+start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+
       ' \u2013 '+end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    window._empViewWkDate=weekVal;
   }
   loadEmpBonusFromData(val);
 }
