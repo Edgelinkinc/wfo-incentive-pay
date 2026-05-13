@@ -974,41 +974,52 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 
     <!-- BREAKDOWN CARDS -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <!-- BOX INCENTIVE with tablet adjustment -->
       <div class="kc" style="border-left:4px solid var(--pr)">
-        <div class="kl">Box Bonus</div>
+        <div class="kl">Box Incentive</div>
         <div class="kv" id="empBx" style="color:var(--pr)">$—</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin:6px 0 4px">
+          <div style="background:rgba(0,0,0,.04);border-radius:6px;padding:4px;text-align:center">
+            <div style="font-size:9px;color:var(--mu)">PPD</div>
+            <div id="empBxPpd" style="font-size:14px;font-weight:700;color:var(--tx)">—</div>
+          </div>
+          <div style="background:rgba(0,0,0,.04);border-radius:6px;padding:4px;text-align:center">
+            <div style="font-size:9px;color:var(--mu)">Tablets</div>
+            <div id="empBxTab" style="font-size:14px;font-weight:700;color:#D97706">—</div>
+          </div>
+          <div style="background:var(--pr);border-radius:6px;padding:4px;text-align:center">
+            <div style="font-size:9px;color:rgba(255,255,255,.8)">Adj PPD</div>
+            <div id="empBxAdj" style="font-size:14px;font-weight:700;color:#fff">—</div>
+          </div>
+        </div>
         <div class="ks" id="empBxDetail">—</div>
       </div>
+      <!-- ACCESSORY BONUS -->
       <div class="kc" style="border-left:4px solid var(--se)">
         <div class="kl">Accessory Bonus</div>
         <div class="kv" id="empAc" style="color:var(--se)">$—</div>
         <div class="ks" id="empAcDetail">—</div>
       </div>
-      <div class="kc" style="border-left:4px solid #00897B">
-        <div class="kl">Power Ups</div>
-        <div class="kv" id="empPu" style="color:#00897B">$—</div>
-        <div class="ks" id="empPuDetail">—</div>
+    </div>
+
+    <!-- POWER UPS / SPIFFS — informational, paid via Arcade -->
+    <div class="kc" style="border-left:4px solid #00897B;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="kl" style="margin:0">Power Ups / Spiffs</div>
+        <span style="font-size:10px;background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:20px;font-weight:700">paid via Arcade</span>
       </div>
-      <div class="kc" style="border-left:4px solid var(--ok)">
-        <div class="kl">MIM Spiff</div>
-        <div class="kv" id="empMim" style="color:var(--ok)">$—</div>
-        <div class="ks" id="empMimDetail">—</div>
+      <div id="empSpList" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(0,0,0,.06);padding-top:6px">
+        <span style="font-size:11px;color:var(--mu)">Total (not in payout)</span>
+        <span class="ks" id="empPuSpTotal" style="margin:0;font-weight:700">$0.00</span>
       </div>
-      <div class="kc" style="border-left:4px solid var(--ac)">
-        <div class="kl">Spiffs</div>
-        <div class="kv" id="empSp" style="color:var(--ac)">$—</div>
-        <div class="ks" id="empSpDetail">0 active</div>
-      </div>
-      <div class="kc" style="border-left:4px solid var(--da)">
-        <div class="kl">Arcade (MIM paid)</div>
-        <div class="kv" id="empArc" style="color:var(--da)">-$—</div>
-        <div class="ks">coach-paid</div>
-      </div>
-      <div class="kc" style="border-left:4px solid #FF8F00">
-        <div class="kl">Arcade (Power Ups)</div>
-        <div class="kv" id="empArcPay" style="color:#FF8F00">$—</div>
-        <div class="ks">paid via Arcade</div>
-      </div>
+    </div>
+
+    <!-- ARCADE GROSS -->
+    <div class="kc" style="border-left:4px solid #059669;margin-bottom:14px">
+      <div class="kl">Arcade Gross</div>
+      <div class="kv" id="empArcGross" style="color:#059669">$—</div>
+      <div class="ks">included in gross · deducted from net</div>
     </div>
 
     <!-- CHARGEBACKS -->
@@ -5839,34 +5850,56 @@ function loadEmpBonusFromData(repVal){
   const s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   const bxTier=bBd(c.bxRes.adjPpd);
   const acTier=aBd(r.ap||0);
+  const arcGross=+(r.arcPay||0);
+
+  // New gross = box + acc + arcade gross
+  const newGross=c.bx+c.ac+arcGross;
+  // Net = gross - arcade gross - chargebacks
+  const newNet=newGross-arcGross-c.cb;
 
   s('empName',dispName(r));
   s('empInfo',(r.s||'No Store')+' · '+(r.c||'No Coach'));
   s('empWeekDisp','Week of '+weekLabel);
+
+  // Box Incentive
   s('empBx','$'+c.bx.toFixed(2));
-  // Show PPD adjustment if tablets exist
-  var bxDetail='';
-  if((r.tb||0)>0){
-    bxDetail=(r.ta||0)+' acts · −'+(r.tb||0)+' tablets → '+c.bxRes.adjPpd+' adj PPD · '+bxTier.l+' tier · $'+bxTier.r+'/act';
-  } else {
-    bxDetail=(r.ta||0)+' acts · '+bxTier.l+' tier · $'+bxTier.r+'/act';
-  }
-  s('empBxDetail',bxDetail);
+  s('empBxPpd',r.ta||0);
+  const el_tab=document.getElementById('empBxTab');
+  if(el_tab)el_tab.textContent=(r.tb||0)>0?'−'+(r.tb||0):'—';
+  s('empBxAdj',c.bxRes.adjPpd);
+  s('empBxDetail',bxTier?bxTier.l+' tier · '+(r.ta||0)+' acts × $'+bxTier.r:'No tier');
+
+  // Accessory Bonus
   s('empAc','$'+c.ac.toFixed(2));
   s('empAcDetail','$'+(r.ap||0).toFixed(2)+' net · '+acTier.l+' · '+acTier.p+'%');
-  s('empPu','$'+c.pu.t.toFixed(2));
-  s('empPuDetail',(r.af||0)+' Affirm ($'+(c.pu.a||0).toFixed(0)+') · '+(r.hs||0)+' HSI ($'+(c.pu.h||0).toFixed(0)+')');
-  s('empMim','$'+c.mi.p.toFixed(2));
-  const mimQual=(r.mb||0)>=6;
-  s('empMimDetail',(r.mb||0)+' BANs · '+(r.ml||0)+' lines'+(mimQual?'':' ⚠ Need 6 BANs'));
-  s('empSp','$'+spTotal.toFixed(2));
-  s('empSpDetail',c.sp?.list?.length?c.sp.list.map(sp=>sp.nm).join(', '):'No active spiffs');
-  s('empArc','-$'+arc.toFixed(2));
-  s('empArcPay','$'+(r.arcPay||0).toFixed(2));
-  s('empNet','$'+net.toFixed(2));
-  s('empGross',c.gr.toFixed(2));
-  s('empArcAmt',arc.toFixed(2));
-  s('empCbAmt',cbTotal.toFixed(2));
+
+  // Power Ups / Spiffs — combined list, informational only
+  var puSpList=document.getElementById('empSpList');
+  var puSpItems=[];
+  if((c.pu.a||0)>0)puSpItems.push({nm:'Affirm Power Up',amt:c.pu.a});
+  if((c.pu.h||0)>0)puSpItems.push({nm:'HSI Power Up',amt:c.pu.h});
+  if(c.sp&&c.sp.list&&c.sp.list.length){
+    c.sp.list.forEach(function(sp){if(sp.amt>0)puSpItems.push({nm:sp.nm,amt:sp.amt});});
+  }
+  if(puSpList){
+    puSpList.innerHTML=puSpItems.length?puSpItems.map(function(item){
+      return '<div style="display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:13px;color:var(--tx)">'+item.nm+'</span>'
+        +'<span style="font-size:13px;font-weight:700;color:var(--tx)">$'+item.amt.toFixed(2)+'</span>'
+        +'</div>';
+    }).join(''):'<span style="font-size:12px;color:var(--mu)">No active spiffs this week</span>';
+  }
+  var puSpTotal=(c.pu.t||0)+(c.sp?.tot||0);
+  s('empPuSpTotal','$'+puSpTotal.toFixed(2));
+
+  // Arcade Gross (manual)
+  s('empArcGross','$'+arcGross.toFixed(2));
+
+  // Net / Gross
+  s('empNet','$'+Math.max(0,newNet).toFixed(2));
+  s('empGross',newGross.toFixed(2));
+  s('empArcAmt',arcGross.toFixed(2));
+  s('empCbAmt',c.cb.toFixed(2));
   if(typeof injectEmpGradeBadge==='function')injectEmpGradeBadge(r);
 
   const myCBs=viewCBs.filter(cb=>cb.rp===r.n||cb.rp===r.ri);
