@@ -3913,10 +3913,10 @@ function gBT(t){
 }
 function cBx(t){const x=gBT(t);return x?t*x.r:0;}
 function cBxAdj(ta,tb){
-  // Tier determined by PPD minus tablets; rate applied to full PPD
+  // Tier determined by PPD minus tablets; rate applied to adjusted PPD
   var adjPpd=Math.max(0,(ta||0)-(tb||0));
   var x=gBT(adjPpd);
-  return{amt:x?(ta||0)*x.r:0,tier:x,adjPpd:adjPpd,ta:ta||0,tb:tb||0};
+  return{amt:x?adjPpd*x.r:0,tier:x,adjPpd:adjPpd,ta:ta||0,tb:tb||0};
 }
 function bBd(t){
   const x=gBT(t);
@@ -5872,7 +5872,8 @@ function loadEmpBonusFromData(repVal){
   // Cutover: new payout structure effective 2026-04-27
   const CUTOVER='2026-04-27';
   const viewWkDate=window._empViewWkDate||wk||'';
-  const isNewStructure=viewWkDate>=CUTOVER;
+  // Default to new structure if week unknown or on/after cutover
+  const isNewStructure=!viewWkDate||viewWkDate>=CUTOVER;
 
   // Gross / Net — split by cutover date
   var dispGross,dispNet,dispArcAmt;
@@ -5903,7 +5904,7 @@ function loadEmpBonusFromData(repVal){
   const el_tab=document.getElementById('empBxTab');
   if(el_tab)el_tab.textContent=(r.tb||0)>0?'−'+(r.tb||0):'—';
   s('empBxAdj',c.bxRes.adjPpd);
-  s('empBxDetail',bxTier?bxTier.l+' tier · '+(r.ta||0)+' acts × $'+(c.bxRes.tier?.r||'—'):'No tier');
+  s('empBxDetail',bxTier?bxTier.l+' tier · '+c.bxRes.adjPpd+' adj acts × $'+(c.bxRes.tier?.r||'—'):'No tier');
 
   // Accessory Bonus
   s('empAc','$'+c.ac.toFixed(2));
@@ -10654,6 +10655,7 @@ function initEmpView(){
   // Initialize view reps to empty — prevents bleed from global reps before a week is selected
   window._empViewReps=[];
   window._empViewCBs=[];
+  window._empViewWkDate=wk||'';
   // Week label
   const wl=document.getElementById('empWeekLabel');
   if(wl)wl.textContent='Week of '+(document.getElementById('wkb')?.textContent||'—');
