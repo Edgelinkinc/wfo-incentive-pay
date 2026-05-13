@@ -5903,7 +5903,10 @@ function loadEmpBonusFromData(repVal){
   const empCard=document.getElementById('emp-card');
   const empEmpty=document.getElementById('emp-empty');
 
-  const r=viewReps.find(x=>(x.ri||x.n)===repVal);
+  // For current week, read from live reps so arcPay and other edits are reflected immediately
+  const isCurrentWk=!window._empViewWkDate||window._empViewWkDate===wk;
+  const searchArr=isCurrentWk&&reps.length?reps:viewReps;
+  const r=searchArr.find(x=>(x.ri||x.n)===repVal)||viewReps.find(x=>(x.ri||x.n)===repVal);
   if(!r){
     if(empCard)empCard.style.display='none';
     if(empEmpty){empEmpty.style.display='block';
