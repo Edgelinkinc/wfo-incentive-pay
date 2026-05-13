@@ -3931,7 +3931,14 @@ function getDefaultPUs(){
   ];
 }
 function cPU(r){
-  var pus=getPUConfig().filter(function(p){return p.active;});
+  var wd=wk?new Date(wk+'T12:00:00'):new Date();
+  var pus=getPUConfig().filter(function(p){
+    if(!p.active)return false;
+    // Date range check — if no start date, always active
+    if(p.sd){var st=new Date(p.sd+'T12:00:00');if(wd<st)return false;}
+    if(p.ed){var en=new Date(p.ed+'T12:00:00');if(wd>en)return false;}
+    return true;
+  });
   var breakdown={};var totalAll=0;var totalInGross=0;
   pus.forEach(function(p){
     var earned=(r[p.field]||0)*p.rate;
@@ -3939,7 +3946,6 @@ function cPU(r){
     totalAll+=earned;
     if(p.inGross)totalInGross+=earned;
   });
-  // Legacy compat fields
   var af=breakdown['pu_af']?breakdown['pu_af'].earned:0;
   var h=breakdown['pu_hs']?breakdown['pu_hs'].earned:0;
   return{a:af,h:h,t:totalInGross,total:totalAll,breakdown:breakdown};
@@ -12211,13 +12217,17 @@ function savePUConfig(){
     var rateEl=row.querySelector('.pu-rate-inp');
     var activeEl=row.querySelector('.pu-active-chk');
     var grossEl=row.querySelector('.pu-gross-chk');
+    var sdEl=row.querySelector('.pu-sd-inp');
+    var edEl=row.querySelector('.pu-ed-inp');
     updated.push({
       id:id,
       name:nameEl?nameEl.value:existing.name,
       field:fieldEl?fieldEl.value:existing.field,
       rate:rateEl?+rateEl.value:existing.rate,
       active:activeEl?activeEl.checked:existing.active,
-      inGross:grossEl?grossEl.checked:existing.inGross
+      inGross:grossEl?grossEl.checked:existing.inGross,
+      sd:sdEl?sdEl.value:existing.sd||'',
+      ed:edEl?edEl.value:existing.ed||''
     });
   });
   if(updated.length) localStorage.setItem('wfo_pu_config',JSON.stringify(updated));
@@ -12235,23 +12245,18 @@ function renderPUList(){
     var fOpts=fieldOpts.replace('value="'+p.field+'"','value="'+p.field+'" selected');
     return'<div class="pu-row" data-id="'+p.id+'" style="background:#FAFAFA;border:1px solid var(--bo);border-radius:9px;padding:10px 12px;margin-bottom:8px">'
       +'<div style="display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px;align-items:center;flex-wrap:wrap">'
-      // Name
       +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">Name</div>'
       +'<input class="pu-name-inp" type="text" value="'+p.name+'" style="width:100%;padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:12px;font-family:\'Nunito\',sans-serif;outline:none" onfocus="this.style.borderColor=\'var(--pr)\'" onblur="this.style.borderColor=\'var(--bo)\'"/></div>'
-      // Field
       +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">Data Field</div>'
       +'<select class="pu-field-sel" style="padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:12px;font-family:\'Nunito\',sans-serif;outline:none">'+fOpts+'</select></div>'
-      // Rate
       +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">$ per unit</div>'
       +'<input class="pu-rate-inp" type="number" value="'+p.rate+'" min="0" step="0.5" style="width:70px;padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:13px;font-weight:700;text-align:center;font-family:\'Nunito\',sans-serif;outline:none"/></div>'
-      // Active toggle
       +'<div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:5px">Active</div>'
       +'<label style="position:relative;display:inline-block;width:36px;height:20px">'
       +'<input class="pu-active-chk" type="checkbox" '+(p.active?'checked':'')+' style="opacity:0;width:0;height:0" onchange="updPUToggleStyle(this)">'
       +'<span class="pu-slider" style="position:absolute;cursor:pointer;inset:0;background:'+(p.active?'var(--ok)':'#ccc')+';border-radius:20px;transition:.2s"></span>'
       +'<span style="position:absolute;content:\'\';height:14px;width:14px;left:'+(p.active?'19px':'3px')+';bottom:3px;background:#fff;border-radius:50%;transition:.2s;pointer-events:none"></span>'
       +'</label></div>'
-      // In Gross toggle
       +'<div style="text-align:center"><div style="font-size:9px;font-weight:700;color:var(--se);text-transform:uppercase;margin-bottom:5px;white-space:nowrap">In Gross</div>'
       +'<label style="position:relative;display:inline-block;width:36px;height:20px">'
       +'<input class="pu-gross-chk" type="checkbox" '+(p.inGross?'checked':'')+' style="opacity:0;width:0;height:0" onchange="updPUToggleStyle(this)">'
@@ -12260,9 +12265,19 @@ function renderPUList(){
       +'</label>'
       +'<div style="font-size:8px;color:var(--mu);margin-top:2px">'+(p.inGross?'adds to gross':'arcade paid')+'</div>'
       +'</div>'
-      // Delete
       +'<button onclick="deletePU(\''+p.id+'\')" class="btn bd xs" style="align-self:flex-end;margin-bottom:2px" title="Remove this power-up">✕</button>'
-      +'</div></div>';
+      +'</div>'
+      // Start/End date row
+      +'<div style="display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--bo)">'
+      +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">Start Date</div>'
+      +'<input class="pu-sd-inp" type="date" value="'+(p.sd||'')+'" style="padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:12px;font-family:\'Nunito\',sans-serif;outline:none" onfocus="this.style.borderColor=\'var(--pr)\'" onblur="this.style.borderColor=\'var(--bo)\'"/></div>'
+      +'<div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:3px">End Date <span style="font-weight:400">(blank = always on)</span></div>'
+      +'<input class="pu-ed-inp" type="date" value="'+(p.ed||'')+'" style="padding:5px 8px;border:1px solid var(--bo);border-radius:6px;font-size:12px;font-family:\'Nunito\',sans-serif;outline:none" onfocus="this.style.borderColor=\'var(--pr)\'" onblur="this.style.borderColor=\'var(--bo)\'"/></div>'
+      +'<div style="font-size:10px;color:var(--mu);align-self:flex-end;padding-bottom:4px">'
+      +(p.sd?('Active: '+p.sd+(p.ed?' → '+p.ed:' (ongoing)')):'No date range — always active')
+      +'</div>'
+      +'</div>'
+      +'</div>';
   }).join('');
 
   if(!pus.length){
