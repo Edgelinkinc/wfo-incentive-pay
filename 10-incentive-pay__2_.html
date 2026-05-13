@@ -1146,7 +1146,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
     <div class="kc"><div class="kl">Total Reps</div><div class="kv" id="kR">—</div><div class="ks">this week</div></div>
     <div class="kc kcg"><div class="kl">Rep Gross</div><div class="kv" id="kG">$—</div><div class="ks">before deductions</div></div>
     <div class="kc kca"><div class="kl">Spiffs</div><div class="kv" id="kS">$—</div><div class="ks" id="kSs">0 active</div></div>
-    <div class="kc kct"><div class="kl">Arcade MIM</div><div class="kv" id="kA">$—</div><div class="ks">coach-paid</div></div>
+    <div class="kc kct"><div class="kl">Arcade Gross</div><div class="kv" id="kA">$—</div><div class="ks">total entered</div></div>
     <div class="kc kcr"><div class="kl">Chargebacks</div><div class="kv" id="kC">$—</div><div class="ks" id="kCs">0 this week</div></div>
     <div class="kc kcp"><div class="kl">Rep Net Owed</div><div class="kv" id="kN">$—</div><div class="ks">gross-arc-CB</div></div>
     <div class="kc kcw"><div class="kl">Top Earner Zone</div><div class="kv" id="kT">—</div><div class="ks">$200+ gross</div></div>
@@ -1176,9 +1176,9 @@ body.admin-unlocked #sbStaffSection{display:block!important}
               <th class="gc">Box Tier</th><th class="gc">Box $</th>
               <th class="gc">Acc Tier</th><th class="gc">Acc $</th>
               <th class="gc" id="puColHdr" title="Power-ups: Affirm $5 + HSI $5. Toggle whether PU is added to Gross (ON) or shown as info only (OFF = already paid via Arcade)">PU $ ⚡</th>
-              <th class="gc">BANs</th><th class="gc">MIM Lines</th><th class="gc">MIM $</th>
+              <th class="gc">MIM Lines</th>
               <th class="gc">Spiffs $</th><th class="gc">GROSS $</th>
-              <th class="ga">Arcade</th>
+              <th class="ga">Arcade Gross</th>
               <th class="gn">Net Owed</th><th class="gn">Actions</th>
             </tr></thead>
             <tbody id="rb"></tbody><tfoot id="rf"></tfoot>
@@ -1196,7 +1196,6 @@ body.admin-unlocked #sbStaffSection{display:block!important}
             <input class="ni" type="number" id="nAF" placeholder="affirm" min="0"/>
             <input class="ni" type="number" id="nHR" placeholder="hrs" min="0" step="0.1"/>
             <input class="ni niw" type="number" id="nAP" placeholder="acc net $" min="0" step="0.01"/>
-            <input class="ni" type="number" id="nMB" placeholder="BANs" min="0"/>
             <input class="ni" type="number" id="nML" placeholder="lines" min="0"/>
             <button class="btn bp sm" onclick="addRep()">+ Add Rep</button>
             <button class="btn bo sm" onclick="requirePin(clrAll)">🗑 Clear All</button>
@@ -4028,7 +4027,7 @@ function renR(fS,fC,srch,fState){
   document.getElementById("rb").innerHTML=fil.map((r)=>{
     const i=reps.indexOf(r),c=cRp(r),bT=bBd(c.bxRes.adjPpd),aT=aBd(r.ap||0);
     const bts=(r.tb||0)+(r.wt||0),al=r.al||[],at=arcT(r),ng=c.nt<0,top=(r.ta||0)>=25;
-    tG+=c.gr;tA+=c.arc;tC+=c.cb;tN+=c.nt;tB+=c.bx;tAc+=c.ac;tSp+=c.sp.tot;
+    tG+=c.gr;tA+=(r.arcPay||0);tC+=c.cb;tN+=c.nt;tB+=c.bx;tAc+=c.ac;tSp+=c.sp.tot;
     return`<tr class="${ng?"row-neg":top?"row-top":""}" style="cursor:pointer" onclick="openRepPanel(${i})">
       <td><div style="font-weight:700;color:var(--se);font-size:12px">${X(dispName(r))}</div><div style="font-size:9px;color:var(--mu)">${r.lastName?X(r.lastName):""}</div>${r.ri?`<div style="font-size:9px;color:var(--mu);font-family:monospace">${r.ri}</div>`:""}<div style="font-size:10px;color:var(--mu)">${X(r.state||"")} ${X(r.s||"—")}</div><div style="font-size:10px;color:var(--mu)">${X(r.c||"—")}</div></td>
       <td style="text-align:center;font-weight:700;color:var(--se)">${r.ta||0}</td>
@@ -4043,26 +4042,15 @@ function renR(fS,fC,srch,fState){
       <td><span class="bdg ${aT.c}">${aT.l}</span></td>
       <td><strong style="color:var(--se)">$${c.ac.toFixed(2)}</strong><div class="pb">${aT.p}% of net</div></td>
       `+buildPUCell(r)+`
-      <td class="edit-cell"><input class="ni" type="number" value="${r.mb||0}" min="0" onchange="uR(${i},'mb',+this.value)"/><span class="edit-hint">✎</span></td>
       <td class="edit-cell"><input class="ni" type="number" value="${r.ml||0}" min="0" onchange="uR(${i},'ml',+this.value)"/><span class="edit-hint">✎</span></td>
-      <td><strong style="color:var(--ok)">$${c.mi.p.toFixed(2)}</strong></td>
       <td>${c.sp.tot>0?`<strong style="color:var(--ac)">$${c.sp.tot.toFixed(2)}</strong>`:`<span style="color:var(--mu)">$0</span>`}</td>
       <td><div class="pt">$${c.gr.toFixed(2)}</div></td>
       <td>
-        <div style="font-weight:700;color:var(--ok);font-size:12px">-$${at.toFixed(2)}</div>
-        <button class="arc-btn" onclick="tgA(${i})">${al.length?al.length+" txn":"+ Log MIM"}</button>
-        <div class="arc-log" id="al_${i}">
-          <div class="arc-log-t">Arcade MIM Transactions</div>
-          <div id="alT${i}">${al.map((t,ti)=>`<div class="arc-tx"><span>${t.dt}</span><span>${t.ln}L</span><strong style="color:var(--ok)">$${t.a.toFixed(2)}</strong><span style="font-size:10px;color:var(--mu)">${t.nt||""}</span><button class="btn bd xs" onclick="requirePin(()=>rmA(${i},${ti}))">x</button></div>`).join("")}</div>
-          <div class="arc-add">
-            <input type="date" id="ad${i}" style="width:108px"/>
-            <input type="number" id="al2${i}" placeholder="Lines" min="1" style="width:52px"/>
-            <input type="number" id="aa${i}" placeholder="$ paid" min="0" step="0.01" style="width:66px"/>
-            <input type="text" id="an${i}" placeholder="Note" style="width:80px"/>
-            <button class="btn bok xs" onclick="requirePin(()=>adA(${i}))">+ Add</button>
-          </div>
-          <div class="arc-tot">Total: $${at.toFixed(2)}</div>
-        </div>
+        <input class="ni niw" type="number" value="${r.arcPay||0}" min="0" step="0.01"
+          style="width:72px;font-weight:700;color:#059669"
+          onclick="event.stopPropagation()"
+          onchange="event.stopPropagation();uR(${i},'arcPay',+this.value);upK()"
+          title="Arcade Gross for this rep"/>
       </td>
       <td>
         <div class="pn${ng?" neg":""}">$${c.nt.toFixed(2)}</div>
@@ -4075,7 +4063,7 @@ function renR(fS,fC,srch,fState){
       </td>
     </tr>`;
   }).join("");
-  document.getElementById("rf").innerHTML=fil.length?`<tr><td colspan="14" style="color:var(--se)">TOTALS ${fil.length} reps</td><td style="color:var(--pr)">$${tB.toFixed(2)}</td><td></td><td style="color:var(--se)">$${tAc.toFixed(2)}</td><td colspan="4"></td><td style="color:var(--ac)">$${tSp.toFixed(2)}</td><td style="color:var(--pr);font-weight:800">$${tG.toFixed(2)}</td><td style="color:var(--ok)">-$${tA.toFixed(2)}</td><td style="color:var(--dk);font-weight:800">$${tN.toFixed(2)}</td><td></td></tr>`:"";
+  document.getElementById("rf").innerHTML=fil.length?`<tr><td colspan="14" style="color:var(--se)">TOTALS ${fil.length} reps</td><td style="color:var(--pr)">$${tB.toFixed(2)}</td><td></td><td style="color:var(--se)">$${tAc.toFixed(2)}</td><td colspan="3"></td><td style="color:var(--ac)">$${tSp.toFixed(2)}</td><td style="color:var(--pr);font-weight:800">$${tG.toFixed(2)}</td><td style="color:var(--ok)">-$${tA.toFixed(2)}</td><td style="color:var(--dk);font-weight:800">$${tN.toFixed(2)}</td><td></td></tr>`:"";
   upK();syncCR();renRepOv();renMimTables();
 }
 
@@ -4539,7 +4527,7 @@ function upK(){
     let tG=0,tA=0,tC=0,tN=0,tB=0,tAc=0,tSp=0,tTop=0;
     reps.forEach(r=>{
       const c=cRp(r);
-      tG+=c.gr;tA+=c.arc;tC+=c.cb;tN+=c.nt;tB+=c.bx;tAc+=c.ac;tSp+=c.sp.tot;
+      tG+=c.gr;tA+=(r.arcPay||0);tC+=c.cb;tN+=c.nt;tB+=c.bx;tAc+=c.ac;tSp+=c.sp.tot;
       if((r.ta||0)>=25)tTop++;
     });
     const actSpiffs=actSp(wk?new Date(wk+'T12:00:00'):new Date());
@@ -5915,19 +5903,24 @@ function loadEmpBonusFromData(repVal){
   const el_tab=document.getElementById('empBxTab');
   if(el_tab)el_tab.textContent=(r.tb||0)>0?'−'+(r.tb||0):'—';
   s('empBxAdj',c.bxRes.adjPpd);
-  s('empBxDetail',bxTier?bxTier.l+' tier · '+(r.ta||0)+' acts × $'+bxTier.r:'No tier');
+  s('empBxDetail',bxTier?bxTier.l+' tier · '+(r.ta||0)+' acts × $'+(c.bxRes.tier?.r||'—'):'No tier');
 
   // Accessory Bonus
   s('empAc','$'+c.ac.toFixed(2));
   s('empAcDetail','$'+(r.ap||0).toFixed(2)+' net · '+acTier.l+' · '+acTier.p+'%');
 
-  // Power Ups / Spiffs — combined list, informational only
+  // Power Ups / Spiffs — read from full pu.breakdown + sp.list
   var puSpList=document.getElementById('empSpList');
   var puSpItems=[];
-  if((c.pu.a||0)>0)puSpItems.push({nm:'Affirm Power Up',amt:c.pu.a});
-  if((c.pu.h||0)>0)puSpItems.push({nm:'HSI Power Up',amt:c.pu.h});
+  // All configured power ups (from tier updater)
+  if(c.pu&&c.pu.breakdown){
+    Object.values(c.pu.breakdown).forEach(function(pu){
+      if((pu.earned||0)>0)puSpItems.push({nm:pu.name,amt:pu.earned});
+    });
+  }
+  // Active spiffs
   if(c.sp&&c.sp.list&&c.sp.list.length){
-    c.sp.list.forEach(function(sp){if(sp.amt>0)puSpItems.push({nm:sp.nm,amt:sp.amt});});
+    c.sp.list.forEach(function(sp){if((sp.p||sp.amt||0)>0)puSpItems.push({nm:sp.n||sp.nm,amt:sp.p||sp.amt||0});});
   }
   if(puSpList){
     puSpList.innerHTML=puSpItems.length?puSpItems.map(function(item){
