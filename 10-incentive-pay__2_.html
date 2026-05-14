@@ -9699,7 +9699,7 @@ function showUploadPrompt(fn, src, content){
         <div><div>Merge / Update</div><div style="font-size:11px;font-weight:400;opacity:.8">Match by NTID — update numbers, keep assignments and arcade logs</div></div>
       </button>
     </div>
-    <button onclick="document.getElementById('uploadPromptModal').remove()" style="width:100%;padding:10px;background:transparent;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:var(--mu)">Cancel</button>
+    <button onclick="window._weekConfirmPending=false;document.getElementById('uploadPromptModal').remove()" style="width:100%;padding:10px;background:transparent;border:2px solid var(--bo);border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;color:var(--mu)">Cancel</button>
   </div>`;
   document.body.appendChild(modal);
 
@@ -9967,8 +9967,14 @@ function loadWeek(date){
 
 // ── SAVE CURRENT WEEK ──
 function saveCurrentWeek(){
-  // Block saves while waiting for week confirm — prevents new data writing to wrong slot
-  if(window._weekConfirmPending) return;
+  // If week confirm is pending, it means a CSV was just uploaded but week not confirmed yet
+  // Don't block indefinitely — if wk is set and confirm is stale, clear the flag
+  if(window._weekConfirmPending){
+    // Only block if there's actually a confirm modal open
+    if(document.getElementById('wkConfirmModal')){return;}
+    // No modal = stale flag — clear it
+    window._weekConfirmPending=false;
+  }
   if(!wk) return;
   localStorage.setItem("wfo_current_wk",wk);
   // Auto-backup to SharePoint if signed in (debounced)
