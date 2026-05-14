@@ -7832,9 +7832,20 @@ function slipStyle(){return `<style>
 </style>`;}
 function buildSlipHTML(r,c,wk2){
   const bT=bBd(c.bxRes.adjPpd),aT=aBd(r.ap||0),repCBs=CBs.filter(x=>x.rp===r.n);
-  return`<div class="slip"><div style="background:linear-gradient(135deg,#E20074 0%,#6E2B8B 60%,#4A1A6B 100%);padding:26px 34px;color:#fff"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:11px;align-items:center"><div style="width:42px;height:42px;background:rgba(255,255,255,.15);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px">⚡</div><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:17px;text-transform:uppercase;letter-spacing:.04em">Edgelink Inc</div><div style="font-size:10px;opacity:.65;letter-spacing:.08em;text-transform:uppercase;margin-top:2px">Work Force Ops - Incentive Pay</div></div></div><div style="text-align:right"><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px">Weekly Bonus Slip</div><div style="font-size:11px;opacity:.7;margin-top:2px">Week of ${wk2}</div></div></div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)"><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px">${X(r.n)}</div><div style="font-size:12px;opacity:.72;margin-top:4px;display:flex;gap:13px"><span>${X(r.s||"—")}</span><span>Coach: ${X(r.c||"—")}</span>${r.ri?`<span>NTID: ${r.ri}</span>`:""}</div></div><div style="text-align:right"><div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Net Owed</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:40px;color:${c.nt<0?"#FFB3D1":"#fff"}">$${c.nt.toFixed(2)}</div><div style="font-size:10px;opacity:.7;margin-top:3px">${c.nt<0?"Carry forward":"Approved"}</div></div></div></div>
+  const CUTOVER='2026-04-27';
+  const slipWk=wk2||wk||'';
+  // Determine week date from wk2 label or use stored view date
+  const slipWkDate=window._empViewWkDate||wk||'';
+  const isNew=!slipWkDate||slipWkDate>=CUTOVER;
+  const arcGross=+(r.arcPay||0);
+  const cbDeduct=c.cbInfo?c.cbInfo.deduction:c.cb;
+  const cbRemaining=c.cbInfo?c.cbInfo.remaining:0;
+  // New structure gross/net
+  const dispGross=isNew?(c.bx+c.ac+arcGross):c.gr;
+  const dispNet=isNew?(c.bx+c.ac-cbDeduct):c.nt;
+  return`<div class="slip"><div style="background:linear-gradient(135deg,#E20074 0%,#6E2B8B 60%,#4A1A6B 100%);padding:26px 34px;color:#fff"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:11px;align-items:center"><div style="width:42px;height:42px;background:rgba(255,255,255,.15);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px">⚡</div><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:17px;text-transform:uppercase;letter-spacing:.04em">Edgelink Inc</div><div style="font-size:10px;opacity:.65;letter-spacing:.08em;text-transform:uppercase;margin-top:2px">Work Force Ops - Incentive Pay</div></div></div><div style="text-align:right"><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px">Weekly Bonus Slip</div><div style="font-size:11px;opacity:.7;margin-top:2px">Week of ${wk2}</div></div></div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)"><div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px">${X(r.n)}</div><div style="font-size:12px;opacity:.72;margin-top:4px;display:flex;gap:13px"><span>${X(r.s||"—")}</span><span>Coach: ${X(r.c||"—")}</span>${r.ri?`<span>NTID: ${r.ri}</span>`:""}</div></div><div style="text-align:right"><div style="font-size:9px;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">Net Owed</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:40px;color:${dispNet<0?"#FFB3D1":"#fff"}">$${Math.max(0,dispNet).toFixed(2)}</div><div style="font-size:10px;opacity:.7;margin-top:3px">${dispNet<0?"Carry forward":"Approved"}</div></div></div></div>
 <div style="flex:1;padding:22px 34px"><div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #E8E8E8;border-radius:11px;overflow:hidden;margin-bottom:20px">${[["Total PPD",r.ta||0,"activations",true],["New Acts",r.na||0,"new voice",false],["BTS",(r.tb||0)+(r.wt||0),"tablet+watch",false],["HSI",r.hs||0,"home internet",false],["Acc Net","$"+(r.ap||0).toFixed(0),"net profit",false]].map((s,i)=>`<div style="padding:11px 13px;text-align:center;border-right:${i<4?"1px solid #E8E8E8":"none"};background:${s[3]?"linear-gradient(135deg,#FFF0F7,#F3E8FF)":"#fff"}"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:3px">${s[0]}</div><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:19px;color:${s[3]?"#E20074":"#4A1A6B"}">${s[1]}</div><div style="font-size:9px;color:#bbb;margin-top:1px">${s[2]}</div></div>`).join("")}</div>
-${c.nt<0?`<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px"><div style="font-size:22px">⚠️</div><div><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#D32F2F;margin-bottom:2px">Negative Balance - Carry Forward</div><div style="font-size:12px;color:#C62828">$${c.nt.toFixed(2)} carries to next week and will be deducted before payout.</div></div></div>`:""}
+${dispNet<0?`<div style="background:#FFEBEE;border:2px solid #D32F2F;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px"><div style="font-size:22px">⚠️</div><div><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:#D32F2F;margin-bottom:2px">Negative Balance - Carry Forward</div><div style="font-size:12px;color:#C62828">$${dispNet.toFixed(2)} carries to next week.</div></div></div>`:""}
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Earnings Breakdown<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
 ${[["Box Incentive",bT.l,c.bx,(r.tb||0)>0?(r.ta||0)+" PPD − "+(r.tb||0)+" tablets = "+c.bxRes.adjPpd+" adj":(r.ta||0)+" PPD × tier","#E20074"],["Accessory Bonus",aT.l,c.ac,aT.p+"% of $"+(r.ap||0).toFixed(2),"#6E2B8B"]].map(([lbl,badge,amt,det,clr])=>`<div style="border:1px solid #E8E8E8;border-radius:10px;padding:13px 15px"><div style="display:inline-block;background:#FFF0F7;color:#E20074;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;margin-bottom:5px">${badge}</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:4px">${lbl}</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#1A1A1A;margin-bottom:3px">$${amt.toFixed(2)}</div><div style="font-size:10px;color:#999">${det}</div></div>`).join("")}
@@ -7846,39 +7857,17 @@ ${[["Box Incentive",bT.l,c.bx,(r.tb||0)>0?(r.ta||0)+" PPD − "+(r.tb||0)+" tabl
   <div style="font-size:11px;color:#555;margin-bottom:4px">Paid via Arcade — see your Arcade account for breakdown</div>
   <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E8F5E9;display:flex;justify-content:space-between">
     <span style="font-size:11px;color:#555">Arcade Gross (manual):</span>
-    <span style="font-weight:700;color:#059669">$${(r.arcPay||0).toFixed(2)}</span>
-  </div>
-  <div style="margin-top:4px;display:flex;justify-content:space-between">
-    <span style="font-size:10px;color:#888">Power Ups &amp; Spiffs total (not in net):</span>
-    <span style="font-size:10px;color:#888">$${((c.pu?.total||0)+(c.sp?.tot||0)).toFixed(2)}</span>
+    <span style="font-weight:700;color:#059669">$${arcGross.toFixed(2)}</span>
   </div>
 </div>
 </div>
 <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#6E2B8B;margin-bottom:9px;display:flex;align-items:center;gap:8px">Payout Summary<div style="flex:1;height:2px;background:linear-gradient(90deg,#E20074,transparent)"></div></div>
 <div style="border:1px solid #E8E8E8;border-radius:11px;overflow:hidden;margin-bottom:20px">
-<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF0F7"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Gross Incentive Pay</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:18px;color:#E20074">$${c.gr.toFixed(2)}</div></div>
-${c.cb>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF8F8"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Chargebacks</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${c.cb.toFixed(2)}</div></div>${repCBs.map(cb=>{
-    const fmt=dt=>{try{const d=new Date(dt+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return '';}};
-    const cbDtStr=cb.dt?fmt(cb.dt):'';
-    const submStr=cb.at||'';
-    return `<div style="padding:8px 17px 8px 32px;border-bottom:1px solid #F0F0F0;background:#FAFAFA">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <span style="font-size:12px;color:#C62828;font-weight:700">${X(cb.tp)}</span>
-          ${cb.rf?`<span style="font-size:11px;color:#999"> — Ref: ${X(cb.rf)}</span>`:''}
-          ${cb.nt?`<div style="font-size:10px;color:#888;margin-top:2px;font-style:italic">${X(cb.nt)}</div>`:''}
-          <div style="display:flex;gap:12px;margin-top:3px;flex-wrap:wrap">
-            ${cbDtStr?`<span style="font-size:10px;color:#E20074;font-weight:700">📅 CB Date: ${cbDtStr}</span>`:''}
-            ${submStr?`<span style="font-size:10px;color:#999">🕐 Submitted: ${submStr}</span>`:''}
-            ${cb.by?`<span style="font-size:10px;color:#999">By: ${X(cb.by)}</span>`:''}
-          </div>
-        </div>
-        <div style="font-size:13px;color:#D32F2F;font-weight:800;white-space:nowrap;margin-left:12px">-$${cb.a.toFixed(2)}</div>
-      </div>
-    </div>`;
-  }).join("")}`:""}
-${c.arc>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF8F8"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">MIM Arcade Credit</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${c.arc.toFixed(2)}</div></div>`:""}
-<div style="display:flex;justify-content:space-between;padding:13px 17px;background:linear-gradient(135deg,${c.nt<0?"#B71C1C,#D32F2F":"#4A1A6B,#6E2B8B"})"><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px;color:#fff">${c.nt<0?"⚠":"✓"} EDGELINK NET OWED</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:20px;color:#fff">$${c.nt.toFixed(2)}</div></div>
+<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF0F7"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Gross Pay</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:18px;color:#E20074">$${dispGross.toFixed(2)}</div></div>
+${isNew&&arcGross>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#F9FFF9"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">− Arcade Gross</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${arcGross.toFixed(2)}</div></div>`:""}
+${cbDeduct>0?`<div style="display:flex;justify-content:space-between;padding:11px 17px;border-bottom:1px solid #F0F0F0;background:#FFF8F8"><div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">Chargebacks (25% of bonus)</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:16px;color:#D32F2F">-$${cbDeduct.toFixed(2)}</div></div>${cbRemaining>0?`<div style="display:flex;justify-content:space-between;padding:8px 17px;border-bottom:1px solid #F0F0F0;background:#FFF0F0"><div style="font-size:12px;color:#C62828">⚠ $${cbRemaining.toFixed(2)} remaining balance rolls to next week</div></div>`:""}`:""}
+${repCBs.length?repCBs.map(cb=>{const fmt=dt=>{try{const d=new Date(dt+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return '';}};return`<div style="padding:8px 17px 8px 32px;border-bottom:1px solid #F0F0F0;background:#FAFAFA"><div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-size:12px;color:#C62828;font-weight:700">${X(cb.tp)}</span>${cb.rf?`<span style="font-size:11px;color:#999"> — Ref: ${X(cb.rf)}</span>`:""}${cb.nt?`<div style="font-size:10px;color:#888;margin-top:2px">${X(cb.nt)}</div>`:""}<div style="display:flex;gap:12px;margin-top:3px">${cb.dt?`<span style="font-size:10px;color:#E20074;font-weight:700">📅 CB Date: ${fmt(cb.dt)}</span>`:""}${cb.by?`<span style="font-size:10px;color:#999">By: ${X(cb.by)}</span>`:""}</div></div><div style="font-size:13px;color:#D32F2F;font-weight:800">-$${cb.a.toFixed(2)}</div></div></div>`;}).join(""):""}
+<div style="display:flex;justify-content:space-between;padding:13px 17px;background:linear-gradient(135deg,${dispNet<0?"#B71C1C,#D32F2F":"#4A1A6B,#6E2B8B"})"><div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px;color:#fff">${dispNet<0?"⚠":"✓"} EDGELINK NET OWED</div><div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:20px;color:#fff">$${Math.max(0,dispNet).toFixed(2)}</div></div>
 </div></div>
 <div style="padding:15px 34px;border-top:1px solid #E8E8E8;background:#FAFAFA"><div style="font-size:9px;color:#bbb;text-align:center;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">Confidential - Edgelink Inc Internal Use Only - Not a Legal Payroll Document - Week of ${wk2}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:48px"><div><div style="border-top:2px solid #1A1A1A;margin-top:40px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">Rep Signature</span><span style="font-size:11px;color:#999">Date</span></div></div><div><div style="border-top:2px solid #1A1A1A;margin-top:40px;padding-top:6px;display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:#555">Manager Approval</span><span style="font-size:11px;color:#999">Date</span></div></div></div></div></div>`;
 }
@@ -12837,7 +12826,7 @@ function ghBuildPublicData(){
           return{
             n:r.n,ri:r.ri,s:r.s,c:r.c,state:r.state,
             ta:r.ta,na:r.na,ra:r.ra,up:r.up,tb:r.tb,wt:r.wt,
-            hs:r.hs,af:r.af,hr:r.hr,ap:r.ap,ml:r.ml,mb:r.mb
+            hs:r.hs,af:r.af,hr:r.hr,ap:r.ap,ml:r.ml,mb:r.mb,arcPay:r.arcPay||0
             // No al (arcade log), no pay amounts
           };
         })
