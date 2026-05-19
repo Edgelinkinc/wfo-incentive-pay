@@ -12797,14 +12797,13 @@ function ghLoadPublicData(){
         localStorage.setItem('wfo_week_index',JSON.stringify(localIdx));
       }
 
-      // Soft refresh — reload data into memory without disrupting the current page
-      if(changed&&!_spAccount){
-        // Reload reps and week data silently
+      // Soft refresh — only if admin is NOT active
+      if(changed&&!_spAccount&&!_pinUnlocked){
         try{
           var latestWk=localIdx[0];
           if(latestWk){
             var latestData=JSON.parse(localStorage.getItem('wfo_week_'+latestWk)||'{}');
-            if(latestData.reps&&latestData.reps.length>0&&!_pinUnlocked){
+            if(latestData.reps&&latestData.reps.length>0){
               reps=latestData.reps;
               CBs=latestData.cbs||[];
               wk=latestWk;
@@ -13356,7 +13355,10 @@ function spLoadConfig(){
 
     if(restoredItems.length){
       tst2('\u2601 Loaded from SharePoint: '+restoredItems.join(', '),'ok');
-      setTimeout(function(){window.location.reload();},1200);
+      // Never reload while admin is active — it disrupts the admin center
+      if(!_pinUnlocked&&!document.body.classList.contains('admin-unlocked')){
+        setTimeout(function(){window.location.reload();},1200);
+      }
     }
   }).catch(function(e){console.log('[WFO] Config load failed:',e);});
 }
