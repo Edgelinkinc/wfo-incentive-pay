@@ -7871,10 +7871,9 @@ function confirmWeekAndClose(){
     const wksEl=document.getElementById('wks');
     if(wksEl)wksEl.value=wk;
     updWB();
-    // New upload = always unlocked week
     wkLocked = false;
-    // Now safe to save — clear the staging block first
     window._weekConfirmPending = false;
+    window._repsLoadedFromWk = wk; // Mark reps as belonging to this week
     saveCurrentWeek();
     buildWeekSelector();
     renR();renCBL();upK();updLk();updSheetStatus();updRepStatus();
@@ -9809,25 +9808,26 @@ function loadWeek(date){
   reps = d.reps || [];
   CBs = d.cbs || [];
   wkLocked = d.locked || false;
-  // Apply roster to all loaded reps
+  // Track which week these reps came from to prevent cross-week saves
+  window._repsLoadedFromWk = wkKey(date);
   loadCustomRoster();
   applyRosterToAll();
-  // Apply pending chargebacks to this week if unlocked
   if(!wkLocked) applyPendingCBs();
   renR();renCBL();upK();updLk();updSheetStatus();
   renWkHist();
 }
 
 function saveCurrentWeek(){
-  // If week confirm is pending, it means a CSV was just uploaded but week not confirmed yet
-  // Don't block indefinitely — if wk is set and confirm is stale, clear the flag
   if(window._weekConfirmPending){
-    // Only block if there's actually a confirm modal open
     if(document.getElementById('wkConfirmModal')){return;}
-    // No modal = stale flag — clear it
     window._weekConfirmPending=false;
   }
   if(!wk) return;
+  // Safety check — don't save reps from a different week into current week key
+  // If reps were loaded from a past week and no new upload happened, skip save
+  if(reps.length>0&&window._repsLoadedFromWk&&window._repsLoadedFromWk!==wk){
+    return;
+  }
   localStorage.setItem("wfo_current_wk",wk);
   // Auto-backup to SharePoint if signed in (debounced)
   if(typeof _spAutoSaveTimer!=='undefined')clearTimeout(_spAutoSaveTimer);
