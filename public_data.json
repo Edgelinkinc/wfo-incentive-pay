@@ -658,7 +658,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
 
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 </head>
-<body style="-webkit-text-size-adjust:100%" class="admin-unlocked admin-active page-pg-admin">
+<body style="-webkit-text-size-adjust:100%" class="admin-unlocked page-pg-admin admin-active">
 <header class="topbar">
   <div style="display:flex;align-items:center;gap:10px">
     <div class="tb-logo">WFO</div>
@@ -772,7 +772,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
   <div style="background:linear-gradient(135deg,#4A1A6B,#6E2B8B);border-radius:12px;padding:20px;margin-bottom:12px;color:#fff">
     <div style="font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.08em">Edgelink Inc · Work Force Ops</div>
     <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:22px;margin:4px 0">Welcome 👋</div>
-    <div style="font-size:12px;opacity:.7" id="homeDateTime">Tuesday, May 19, 2026 · 5:41 PM</div>
+    <div style="font-size:12px;opacity:.7" id="homeDateTime">Tuesday, May 19, 2026 · 5:42 PM</div>
     <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
       <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;min-width:120px">
         <div style="font-size:9px;opacity:.6;text-transform:uppercase;font-weight:700">Current Week</div>
@@ -7270,7 +7270,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
         <button class="sub-tab" onclick="swAdmin('data',this)">📊 Data Management</button>
         <button class="sub-tab" onclick="swAdmin('datastatus',this)">🔗 Data Status</button>
         <button class="sub-tab" onclick="swAdmin('history',this)">📋 History</button>
-        <button class="sub-tab" onclick="swAdmin('actions',this)">⚠️ Pending Actions</button>
+        <button class="sub-tab active" onclick="swAdmin('actions',this)">⚠️ Pending Actions</button>
         <button class="sub-tab" onclick="swAdmin('changelog',this)">📋 Change Log</button>
         <button class="sub-tab" onclick="requirePin(openPerfGradeModal)" style="white-space:nowrap">🎓 Grade Setup</button>
       </div>
@@ -8648,7 +8648,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
       </div>
 
 
-      <div class="sub-pane active" id="admin-assignments">
+      <div class="sub-pane" id="admin-assignments">
         <div class="card"><div class="card-hdr card-hdr-dk">
           <div class="card-title">🏪 Store Assignments</div>
           <div style="display:flex;gap:8px"><button class="btn bghost sm" onclick="expAssignCSV()">⬇ Export</button><button class="btn bd sm" onclick="clrAssign()">🗑 Clear All</button></div>
@@ -9987,7 +9987,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
               <span id="ghPublishStatus" style="font-size: 12px; color: var(--mu);">Uploading to GitHub…</span>
             </div>
             <div style="margin-top:12px;font-size:11px;color:var(--mu)">
-              Last published: <span id="ghLastPublished">5/19/2026, 5:34:58 PM</span>
+              Last published: <span id="ghLastPublished">5/19/2026, 5:42:24 PM</span>
             </div>
           </div>
         </div>
@@ -21508,4 +21508,4 @@ function buildMomData(){
 </script>
 
 
-<scribe-shadow id="crxjs-ext" data-crx="okfkdaglfjjjfefdcppliegebpoegaii" style="position: fixed; width: 0px; height: 0px; top: 0px; left: 0px; z-index: 2147483647; overflow: visible; visibility: visible;"></scribe-shadow><div id="tst" class="tst ok" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgb(0, 166, 81); color: rgb(255, 255, 255); padding: 10px 20px; border-radius: 8px; font-size: 13px; font-family: Nunito, sans-serif; z-index: 99999; display: none; white-space: nowrap; max-width: 90vw; text-align: center; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px;">Store assigned.</div></body></html>
+<scribe-shadow id="crxjs-ext" data-crx="okfkdaglfjjjfefdcppliegebpoegaii" style="position: fixed; width: 0px; height: 0px; top: 0px; left: 0px; z-index: 2147483647; overflow: visible; visibility: visible;"></scribe-shadow><div id="tst" class="tst ok" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgb(0, 166, 81); color: rgb(255, 255, 255); padding: 10px 20px; border-radius: 8px; font-size: 13px; font-family: Nunito, sans-serif; z-index: 99999; display: none; white-space: nowrap; max-width: 90vw; text-align: center; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px;">☁ Saved to SharePoint — 5:42:29 PM</div></body></html>
