@@ -12814,8 +12814,9 @@ function ghPublish(){
   if(btn){btn.textContent='Publishing\u2026';btn.disabled=true;}
   if(st){st.textContent='Uploading to GitHub\u2026';st.style.color='var(--mu)';}
 
-  // Build content
-  var content=document.documentElement.outerHTML;
+  // Build JSON data payload — NOT the full HTML
+  var data=JSON.stringify(ghBuildPublicData(),null,2);
+  var content=data;
   var headers={'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
   var repoBase='https://api.github.com/repos/'+_ghRepo;
 
