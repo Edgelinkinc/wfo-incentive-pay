@@ -7806,17 +7806,6 @@ function buildSlipHTML(r,c,wk2){
   <!-- BODY -->
   <div style="padding:14px 20px">
 
-    <!-- KPIs -->
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">
-      ${[{l:'Acts',v:ppd,i:'⚡',hi:true,s:bT.l},{l:'New',v:r.na||0,i:'📱',hi:false,s:'voice'},{l:'Tab+Watch',v:(r.tb||0)+(r.wt||0),i:'📟',hi:false,s:'devices'},{l:'HSI',v:r.hs||0,i:'🌐',hi:false,s:'internet'},{l:'Acc Net',v:'$'+(r.ap||0).toFixed(0),i:'💎',hi:false,s:'profit'}]
-      .map(k=>`<div style="background:${k.hi?'linear-gradient(135deg,#FFF0F7,#F3E8FF)':'#F7F7FB'};border-radius:10px;padding:8px 6px;text-align:center">
-        <div style="font-size:14px">${k.i}</div>
-        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:${k.hi?'#E20074':'#2D1052'};margin-top:1px">${k.v}</div>
-        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${k.hi?'#E20074':'#999'};margin-top:1px">${k.l}</div>
-        <div style="font-size:8px;color:#ccc">${k.s}</div>
-      </div>`).join('')}
-    </div>
-
     <!-- EARNINGS — compact horizontal cards -->
     <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#4A1A6B;margin-bottom:6px">💰 How You Earned It</div>
     <div style="display:grid;grid-template-columns:1fr 1fr${arcadeAmt>0?' 1fr':''};gap:8px;margin-bottom:10px">
