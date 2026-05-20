@@ -10784,29 +10784,16 @@ function printEmpBonus(){
   const css=`
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Nunito:wght@400;600;700;800&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#fff;font-family:'Nunito',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .slip{max-width:100%;margin:0 auto}
+    html,body{width:100%;background:#fff;font-family:'Nunito',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #slipWrap{width:100%}
+    .slip{width:100%;max-width:100%}
     @media print{
       @page{margin:0;size:letter portrait}
-      body{margin:0;padding:0}
       .no-print{display:none!important}
-      .slip{
-        position:absolute;
-        top:0;left:0;
-        width:100vw;
-        height:100vh;
+      html,body{width:100%;height:100%}
+      #slipWrap{
+        width:100%;
         transform-origin:top left;
-        transform:scale(1);
-        overflow:hidden;
-      }
-      /* Scale everything to fit one page */
-      html,body{width:100%;height:100%;overflow:hidden;}
-      body > .slip{
-        zoom:0.72;
-        -webkit-transform:scale(0.72);
-        transform:scale(0.72);
-        transform-origin:top left;
-        width:calc(100% / 0.72);
       }
     }
   `;
@@ -10825,26 +10812,37 @@ function printEmpBonus(){
     </div>
     <div id="slipWrap">${slipHTML}</div>
     <script>
-      // Auto-scale slip to fit exactly one printed page
       function autoScale(){
         var wrap=document.getElementById('slipWrap');
         if(!wrap)return;
-        var pageH=1056; // 11in at 96dpi
-        var pageW=816;  // 8.5in at 96dpi
-        var slipH=wrap.scrollHeight;
-        var slipW=wrap.scrollWidth;
-        var scaleH=pageH/slipH;
-        var scaleW=pageW/slipW;
-        var scale=Math.min(scaleH,scaleW,1); // never upscale
-        wrap.style.transformOrigin='top left';
-        wrap.style.transform='scale('+scale+')';
-        wrap.style.width=(100/scale)+'%';
-        // Inject into print CSS
+        // Letter page at screen resolution: 8.5in wide
+        // At 96dpi = 816px, but printed at 1in margins = 7.5in = 720px usable
+        var printW=720;
+        var printH=1008; // 10.5in usable at 96dpi
+        var naturalH=wrap.scrollHeight;
+        var scale=Math.min(printH/naturalH, 1);
+        if(scale<1){
+          wrap.style.transformOrigin='top left';
+          wrap.style.transform='scale('+scale+')';
+          wrap.style.width=(100/scale)+'%';
+          document.body.style.height=(naturalH*scale)+'px';
+          document.body.style.overflow='hidden';
+        }
+        // Inject print-specific scale
         var st=document.createElement('style');
-        st.textContent='@media print{#slipWrap{transform:scale('+scale+');transform-origin:top left;width:'+(100/scale)+'%!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+        st.textContent='@media print{'
+          +'#slipWrap{'
+          +'transform:scale('+scale+')!important;'
+          +'transform-origin:top left!important;'
+          +'width:'+(100/scale)+'%!important;'
+          +'-webkit-print-color-adjust:exact;'
+          +'print-color-adjust:exact;'
+          +'}'
+          +'}';
         document.head.appendChild(st);
       }
-      window.addEventListener('load',autoScale);
+      // Wait for fonts+images to load
+      window.addEventListener('load',function(){setTimeout(autoScale,400);});
     <\/script>
   </body></html>`);
   win.document.close();
