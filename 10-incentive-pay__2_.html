@@ -7753,183 +7753,114 @@ function buildSlipHTML(r,c,wk2){
   const cbRemaining=c.cbInfo?c.cbInfo.remaining:0;
   const puTotal=+(c.pu?c.pu.total||0:0);
   const spTotal=+(c.sp?c.sp.tot||0:0);
-
-  // TOTAL = everything earned including arcade
   const totalBonus=isNew?(c.bx+c.ac+arcGross+puTotal+spTotal):c.gr;
-  // Payroll = what Edgelink pays (box + acc minus cb deduction)
   const payrollAmt=isNew?(c.bx+c.ac-cbDeduct):c.nt;
-  // Arcade = instantly paid portion
   const arcadeAmt=isNew?(arcGross+puTotal+spTotal):(c.arc);
-
   const ppd=r.ta||0;
-  const topTier=bT.c==='btop';
-  const tier7=bT.r&&bT.r>=7;
-  const accWin=aT.p&&aT.p>=10;
-
+  const topTier=bT.c==='btop',tier7=bT.r&&bT.r>=7,accWin=aT.p&&aT.p>=10;
   function perfMsg(){
-    if(ppd>=25)return{icon:'🏆',msg:'Elite Performance',sub:'You\'re in the top earner zone this week.'};
-    if(topTier||tier7)return{icon:'🔥',msg:'Top Tier Achieved!',sub:'Max rate unlocked — exceptional week.'};
-    if(ppd>=18)return{icon:'⚡',msg:'Strong Week!',sub:'Keep this pace to hit Top Tier next week.'};
-    if(ppd>=12)return{icon:'🎯',msg:'Solid Effort',sub:'Building momentum — '+(18-ppd)+' more to the next level.'};
-    if(ppd>=8)return{icon:'📈',msg:'Keep Climbing',sub:(12-ppd)+' more activations unlock the next tier.'};
-    return{icon:'💪',msg:'Let\'s Get It',sub:'A strong finish makes all the difference.'};
+    if(ppd>=25)return{icon:'🏆',msg:'Elite Performance — Top Earner Zone'};
+    if(topTier||tier7)return{icon:'🔥',msg:'Top Tier Achieved — Max Rate Unlocked!'};
+    if(ppd>=18)return{icon:'⚡',msg:'Strong Week — Keep this pace!'};
+    if(ppd>=12)return{icon:'🎯',msg:'Solid Effort — '+(18-ppd)+' more to next level'};
+    if(ppd>=8)return{icon:'📈',msg:(12-ppd)+' more activations unlock the next tier'};
+    return{icon:'💪',msg:'Push strong — every activation counts'};
   }
   const pm=perfMsg();
+  function winEmoji(a){return a>=200?'🏆':a>=100?'🔥':a>=50?'⚡':'💪';}
+  return`<div class="slip" style="font-family:'Nunito',sans-serif;max-width:680px;margin:0 auto;background:#fff">
 
-  function winEmoji(amt){
-    if(amt>=250)return{e:'🏆',t:'Incredible week!'};
-    if(amt>=150)return{e:'🔥',t:'On fire!'};
-    if(amt>=100)return{e:'⚡',t:'Great work!'};
-    if(amt>=50)return{e:'🎯',t:'Keep pushing!'};
-    return{e:'💪',t:'Next week is yours!'};
-  }
-  const we=winEmoji(totalBonus);
-
-  return`<div class="slip" style="background:#fff;font-family:'Nunito',sans-serif;max-width:680px;margin:0 auto">
-
-  <!-- ══ HERO ══ -->
-  <div style="background:linear-gradient(135deg,#E20074 0%,#8B1A6B 50%,#3A1060 100%);padding:32px 32px 28px;color:#fff;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:rgba(255,255,255,.05);border-radius:50%"></div>
-    <div style="position:absolute;bottom:-80px;left:-30px;width:260px;height:260px;background:rgba(74,26,107,.3);border-radius:50%"></div>
+  <!-- HERO -->
+  <div style="background:linear-gradient(135deg,#E20074 0%,#8B1A6B 50%,#3A1060 100%);padding:18px 24px 16px;color:#fff;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,.05);border-radius:50%"></div>
     <div style="position:relative;z-index:1">
-
-      <!-- Name + meta -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div>
-          <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:6px">Edgelink Inc · Performance Reward</div>
-          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;line-height:1;letter-spacing:-.01em">${X(r.n)}</div>
-          <div style="font-size:12px;opacity:.75;margin-top:6px;display:flex;gap:14px;flex-wrap:wrap">
-            <span>📍 ${X(r.s||'—')}</span>
-            <span>🎯 ${X(r.c||'—')}</span>
-            ${r.ri?`<span style="opacity:.6">ID: ${r.ri}</span>`:''}
-          </div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:3px">Edgelink Inc · Performance Reward · ${wk2}</div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:22px;line-height:1">${X(r.n)}</div>
+          <div style="font-size:11px;opacity:.78;margin-top:3px">${X(r.s||'—')} &nbsp;·&nbsp; Coach: ${X(r.c||'—')}${r.ri?'  &nbsp;·&nbsp; '+r.ri:''}</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-bottom:4px">Week Ending</div>
-          <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:13px">${wk2}</div>
+        <div style="text-align:center;background:rgba(255,255,255,.13);border-radius:14px;padding:12px 16px;min-width:130px">
+          <div style="font-size:9px;letter-spacing:.1em;opacity:.65;text-transform:uppercase;margin-bottom:2px">🔥 Total Bonus</div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:36px;line-height:1;letter-spacing:-.02em">$${totalBonus.toFixed(2)}</div>
+          <div style="font-size:10px;margin-top:4px;opacity:.85">${pm.icon} ${pm.msg}</div>
         </div>
       </div>
 
-      <!-- ★ TOTAL WEEKLY BONUS — THE STAR ★ -->
-      <div style="background:rgba(255,255,255,.13);border-radius:22px;padding:26px 28px;text-align:center;box-shadow:0 0 60px rgba(255,255,255,.08)">
-        <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65;margin-bottom:8px">🔥 Total Weekly Bonus</div>
-        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:64px;line-height:1;letter-spacing:-.03em;text-shadow:0 4px 24px rgba(0,0,0,.2)">$${totalBonus.toFixed(2)}</div>
-        <div style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:30px;padding:6px 18px">
-          <span style="font-size:18px">${pm.icon}</span>
-          <span style="font-size:13px;font-weight:700">${pm.msg}</span>
+      <!-- HOW PAID — 2 pills -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${arcadeAmt>0?`<div style="background:linear-gradient(135deg,#00A651,#007A3D);border-radius:10px;padding:10px 14px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:2px">✅ Paid via Arcade</div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:22px;line-height:1">$${arcadeAmt.toFixed(2)}</div>
+          <div style="font-size:10px;opacity:.75;margin-top:2px">Power-ups &amp; spiffs</div>
+        </div>`:`<div style="background:rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;opacity:.5">No Arcade this week</span></div>`}
+        <div style="background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.08));border-radius:10px;padding:10px 14px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:2px">🏦 Edgelink Payroll</div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:22px;line-height:1">$${Math.max(0,payrollAmt).toFixed(2)}</div>
+          <div style="font-size:10px;opacity:.75;margin-top:2px">Box incentive + accessories</div>
         </div>
-        <div style="font-size:11px;opacity:.65;margin-top:8px">${pm.sub}</div>
       </div>
     </div>
   </div>
 
-  <!-- ══ HOW YOUR BONUS WAS PAID ══ -->
-  <div style="padding:24px 28px 0">
-    <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#4A1A6B;margin-bottom:6px">How Your Bonus Was Paid</div>
-    <div style="font-size:12px;color:#999;margin-bottom:14px">Some rewards are paid instantly through Arcade and are included in your total weekly earnings.</div>
+  <!-- BODY -->
+  <div style="padding:14px 20px">
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
-      <!-- Arcade Instant Pay -->
-      ${arcadeAmt>0?`<div style="background:linear-gradient(135deg,#00A651,#007A3D);border-radius:16px;padding:18px 20px;color:#fff;box-shadow:0 4px 16px rgba(0,166,81,.25)">
-        <div style="display:inline-block;background:rgba(255,255,255,.2);color:#fff;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px">✅ Paid via Arcade</div>
-        <div style="font-size:11px;opacity:.8;margin-bottom:4px">⚡ Arcade Instant Pay</div>
-        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:32px;line-height:1">$${arcadeAmt.toFixed(2)}</div>
-        <div style="font-size:11px;opacity:.7;margin-top:6px">Power-ups, spiffs &amp; Arcade gross</div>
-      </div>`:`<div style="background:#F9F9FB;border-radius:16px;padding:18px 20px;display:flex;align-items:center;justify-content:center">
-        <div style="text-align:center;color:#ccc"><div style="font-size:24px">⚡</div><div style="font-size:12px;margin-top:4px">No Arcade this week</div></div>
-      </div>`}
-
-      <!-- Payroll Payment -->
-      <div style="background:linear-gradient(135deg,#4A1A6B,#2D1052);border-radius:16px;padding:18px 20px;color:#fff;box-shadow:0 4px 16px rgba(74,26,107,.25)">
-        <div style="display:inline-block;background:rgba(255,255,255,.15);color:#fff;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px">🏦 Edgelink Payroll</div>
-        <div style="font-size:11px;opacity:.8;margin-bottom:4px">💵 Direct Payment</div>
-        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:32px;line-height:1">$${Math.max(0,payrollAmt).toFixed(2)}</div>
-        <div style="font-size:11px;opacity:.7;margin-top:6px">Box incentive + accessories</div>
-      </div>
-    </div>
-
-    <!-- ══ YOUR NUMBERS ══ -->
-    <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#4A1A6B;margin-bottom:12px">📊 Your Numbers</div>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px">
-      ${[
-        {l:'Activations',v:ppd,i:'⚡',hi:true,s:bT.l+' tier'},
-        {l:'New Lines',v:r.na||0,i:'📱',hi:false,s:'new voice'},
-        {l:'Tab + Watch',v:(r.tb||0)+(r.wt||0),i:'📟',hi:false,s:'devices'},
-        {l:'HSI',v:r.hs||0,i:'🌐',hi:false,s:'home internet'},
-        {l:'Acc Net',v:'$'+(r.ap||0).toFixed(0),i:'💎',hi:false,s:'net profit'}
-      ].map(k=>`<div style="background:${k.hi?'linear-gradient(135deg,#FFF0F7,#F3E8FF)':'#F9F9FB'};border-radius:14px;padding:12px 8px;text-align:center">
-        <div style="font-size:18px">${k.i}</div>
-        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:20px;color:${k.hi?'#E20074':'#2D1052'};margin-top:2px">${k.v}</div>
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${k.hi?'#E20074':'#888'};margin-top:2px">${k.l}</div>
-        <div style="font-size:9px;color:#bbb;margin-top:1px">${k.s}</div>
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">
+      ${[{l:'Acts',v:ppd,i:'⚡',hi:true,s:bT.l},{l:'New',v:r.na||0,i:'📱',hi:false,s:'voice'},{l:'Tab+Watch',v:(r.tb||0)+(r.wt||0),i:'📟',hi:false,s:'devices'},{l:'HSI',v:r.hs||0,i:'🌐',hi:false,s:'internet'},{l:'Acc Net',v:'$'+(r.ap||0).toFixed(0),i:'💎',hi:false,s:'profit'}]
+      .map(k=>`<div style="background:${k.hi?'linear-gradient(135deg,#FFF0F7,#F3E8FF)':'#F7F7FB'};border-radius:10px;padding:8px 6px;text-align:center">
+        <div style="font-size:14px">${k.i}</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:${k.hi?'#E20074':'#2D1052'};margin-top:1px">${k.v}</div>
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:${k.hi?'#E20074':'#999'};margin-top:1px">${k.l}</div>
+        <div style="font-size:8px;color:#ccc">${k.s}</div>
       </div>`).join('')}
     </div>
 
-    <!-- ══ HOW YOU EARNED IT ══ -->
-    <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#4A1A6B;margin-bottom:12px">💰 How You Earned It</div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
-
-      <div style="background:linear-gradient(135deg,#FFF0F7,#F9EEFF);border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#E20074;margin-bottom:3px">⚡ Activation Incentive</div>
-          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;color:#2D1052">$${c.bx.toFixed(2)}</div>
-          <div style="font-size:12px;color:#888;margin-top:4px">
-            ${(r.tb||0)>0?`${r.ta||0} total · ${r.tb||0} tablets adj → <strong style="color:#4A1A6B">${c.bxRes.adjPpd} qualifying</strong>`:`${r.ta||0} activations`}
-            &nbsp;<span style="background:#E20074;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${bT.l}</span>
-            ${topTier||tier7?'&nbsp;<span style="background:#FFD700;color:#2D1052;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">🏆 TOP TIER</span>':''}
-          </div>
-        </div>
-        <div style="width:46px;height:46px;background:#E20074;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚡</div>
+    <!-- EARNINGS — compact horizontal cards -->
+    <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#4A1A6B;margin-bottom:6px">💰 How You Earned It</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr${arcadeAmt>0?' 1fr':''};gap:8px;margin-bottom:10px">
+      <div style="background:linear-gradient(135deg,#FFF0F7,#F9EEFF);border-radius:12px;padding:12px 14px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#E20074;margin-bottom:2px">⚡ Activation</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#2D1052">$${c.bx.toFixed(2)}</div>
+        <div style="font-size:10px;color:#888;margin-top:3px">${(r.tb||0)>0?c.bxRes.adjPpd+' adj acts':ppd+' acts'} &nbsp;<span style="background:#E20074;color:#fff;font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px">${bT.l}</span>${topTier||tier7?' <span style="background:#FFD700;color:#2D1052;font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px">🏆TOP</span>':''}</div>
       </div>
-
-      <div style="background:linear-gradient(135deg,#F3E8FF,#EDE0FF);border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6E2B8B;margin-bottom:3px">💎 Accessory Performance</div>
-          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;color:#2D1052">$${c.ac.toFixed(2)}</div>
-          <div style="font-size:12px;color:#888;margin-top:4px">
-            $${(r.ap||0).toFixed(2)} net profit
-            &nbsp;<span style="background:#6E2B8B;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">${aT.p}% rate</span>
-            ${accWin?'&nbsp;<span style="background:#00A651;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px">Strong Performance</span>':''}
-          </div>
-        </div>
-        <div style="width:46px;height:46px;background:#6E2B8B;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💎</div>
+      <div style="background:linear-gradient(135deg,#F3E8FF,#EDE0FF);border-radius:12px;padding:12px 14px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6E2B8B;margin-bottom:2px">💎 Accessories</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#2D1052">$${c.ac.toFixed(2)}</div>
+        <div style="font-size:10px;color:#888;margin-top:3px">$${(r.ap||0).toFixed(2)} net &nbsp;<span style="background:#6E2B8B;color:#fff;font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px">${aT.p}%</span>${accWin?' <span style="background:#00A651;color:#fff;font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px">Strong</span>':''}</div>
       </div>
-
-      ${arcadeAmt>0?`<div style="background:linear-gradient(135deg,#00A651,#007A3D);border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="display:inline-block;background:rgba(255,255,255,.25);color:#fff;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 10px;border-radius:20px;margin-bottom:6px">✅ Already Paid via Arcade</div>
-          <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;color:#fff">$${arcadeAmt.toFixed(2)}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px">⚡ Power-ups &amp; Spiffs — included in your total above</div>
-        </div>
-        <div style="width:46px;height:46px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎮</div>
+      ${arcadeAmt>0?`<div style="background:linear-gradient(135deg,#00A651,#007A3D);border-radius:12px;padding:12px 14px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:2px">🎮 Arcade</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:24px;color:#fff">$${arcadeAmt.toFixed(2)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:3px">✅ Already paid</div>
       </div>`:''}
     </div>
 
-    ${cbDeduct>0?`
-    <div style="background:#FFF8F0;border:1.5px solid #FFB74D;border-radius:14px;padding:16px 20px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#E65100;margin-bottom:8px">📋 Balance Recovery</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div style="font-size:13px;color:#555">25% of earnings applied toward outstanding balance</div>
-        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:18px;color:#E65100">$${cbDeduct.toFixed(2)} applied</div>
+    ${cbDeduct>0?`<div style="background:#FFF8F0;border:1px solid #FFB74D;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#E65100;margin-bottom:2px">📋 Balance Recovery</div>
+        <div style="font-size:11px;color:#555">25% applied toward outstanding balance${cbRemaining>0?' · $'+cbRemaining.toFixed(2)+' carries next week':''}</div>
+        ${repCBs.map(cb=>`<div style="font-size:10px;color:#888;margin-top:2px">${X(cb.tp)}${cb.rf?' · '+X(cb.rf):''}</div>`).join('')}
       </div>
-      ${cbRemaining>0?`<div style="margin-top:8px;font-size:12px;color:#888">$${cbRemaining.toFixed(2)} remaining balance carries to next week</div>`:''}
-      ${repCBs.map(cb=>`<div style="margin-top:8px;padding-top:8px;border-top:1px solid #FFE0B2;display:flex;justify-content:space-between;font-size:12px;color:#666"><span>${X(cb.tp)}${cb.rf?' · Ref: '+X(cb.rf):''}</span><span>$${cb.a.toFixed(2)}</span></div>`).join('')}
+      <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:18px;color:#E65100">$${cbDeduct.toFixed(2)}</div>
     </div>`:''}
 
-    <!-- ══ WIN SCREEN ══ -->
-    <div style="background:linear-gradient(135deg,#2D1052,#4A1A6B);border-radius:20px;padding:24px 28px;color:#fff;margin-bottom:28px;text-align:center">
-      <div style="font-size:36px;margin-bottom:8px">${we.e}</div>
-      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:6px">You Earned This Week</div>
-      <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:52px;line-height:1;letter-spacing:-.02em">$${totalBonus.toFixed(2)}</div>
-      <div style="font-size:14px;opacity:.75;margin-top:10px">${we.t}</div>
+    <!-- WIN BAR -->
+    <div style="background:linear-gradient(135deg,#2D1052,#4A1A6B);border-radius:12px;padding:14px 20px;color:#fff;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:3px">You Earned This Week</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:36px;line-height:1;letter-spacing:-.02em">$${totalBonus.toFixed(2)}</div>
+      </div>
+      <div style="font-size:32px">${winEmoji(totalBonus)}</div>
     </div>
 
     <!-- SIG -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:16px">
-      <div><div style="border-top:1.5px solid #E8E8E8;padding-top:6px;margin-top:44px;display:flex;justify-content:space-between"><span style="font-size:11px;color:#888">Employee Signature</span><span style="font-size:11px;color:#ccc">Date</span></div></div>
-      <div><div style="border-top:1.5px solid #E8E8E8;padding-top:6px;margin-top:44px;display:flex;justify-content:space-between"><span style="font-size:11px;color:#888">Manager Approval</span><span style="font-size:11px;color:#ccc">Date</span></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:8px">
+      <div><div style="border-top:1.5px solid #E8E8E8;padding-top:5px;margin-top:32px;display:flex;justify-content:space-between"><span style="font-size:10px;color:#888">Employee Signature</span><span style="font-size:10px;color:#ccc">Date</span></div></div>
+      <div><div style="border-top:1.5px solid #E8E8E8;padding-top:5px;margin-top:32px;display:flex;justify-content:space-between"><span style="font-size:10px;color:#888">Manager Approval</span><span style="font-size:10px;color:#ccc">Date</span></div></div>
     </div>
-    <div style="text-align:center;font-size:9px;color:#ccc;letter-spacing:.05em;padding-bottom:20px">EDGELINK INC · PERFORMANCE INCENTIVE · WEEK OF ${wk2} · INTERNAL USE ONLY</div>
+    <div style="text-align:center;font-size:8px;color:#ccc;letter-spacing:.04em;padding-bottom:10px">EDGELINK INC · PERFORMANCE INCENTIVE · ${wk2} · INTERNAL USE ONLY</div>
   </div>
 </div>`;
 }
