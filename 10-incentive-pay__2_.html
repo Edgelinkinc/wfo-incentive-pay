@@ -13864,6 +13864,8 @@ function getMgrForMonth(storeName, mn){
     const exact=sd.mgrHistory.find(function(h){return h.month===mn;});
     if(exact&&exact.mgr)return exact.mgr;
   }
+  // Respect Manager Start Month — if requested month is before the manager started here, no manager
+  if(mn&&sd.mgrSince&&mn<sd.mgrSince)return '';
   // Fall back to current assignment
   return sd.mgr||'';
 }
