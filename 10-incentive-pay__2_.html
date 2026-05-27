@@ -4468,12 +4468,17 @@ function calcMgrBonus(storeName, sd, monthOverride){
   const protPct=+sd.attach||0;
   const protPen=protPct>0&&protPct<(T2.protThresh||60);
 
+  // Pull admin-editable thresholds from backsheet category config
+  const catCfg=id=>(bs.categories||[]).find(c=>c.id===id)||{};
+  const _cA=catCfg('acts'),_cB=catCfg('bts'),_cH=catCfg('hsi'),_cC=catCfg('acc');
   const cats=[
-    {name:'New Voice Activations',actual:+sd.acts||0,target:+bs.actsTarget||0,base:+bs.actsBase||0,upside:+bs.actsUpside||0},
-    {name:'BTS Activations',actual:+sd.bts||0,target:+bs.btsTarget||0,base:+bs.btsBase||0,upside:+bs.btsUpside||0},
-    {name:'HSI',actual:+sd.hsi||0,target:+bs.hsiTarget||0,base:+bs.hsiBase||0,upside:+bs.hsiUpside||0},
-    {name:'Accessories',actual:+sd.acc||0,target:+bs.accTarget||0,base:+bs.accBase||0,upside:+bs.accUpside||0},
+    {name:'New Voice Activations',actual:+sd.acts||0,target:+bs.actsTarget||0,base:+bs.actsBase||0,upside:+bs.actsUpside||0,baseThresh:_cA.baseThresh||100,upThresh:_cA.upThresh||125},
+    {name:'BTS Activations',actual:+sd.bts||0,target:+bs.btsTarget||0,base:+bs.btsBase||0,upside:+bs.btsUpside||0,baseThresh:_cB.baseThresh||100,upThresh:_cB.upThresh||125},
+    {name:'HSI',actual:+sd.hsi||0,target:+bs.hsiTarget||0,base:+bs.hsiBase||0,upside:+bs.hsiUpside||0,baseThresh:_cH.baseThresh||100,upThresh:_cH.upThresh||125},
+    {name:'Accessories',actual:+sd.acc||0,target:+bs.accTarget||0,base:+bs.accBase||0,upside:+bs.accUpside||0,baseThresh:_cC.baseThresh||100,upThresh:_cC.upThresh||125},
   ];
+
+  const attachPenaltyPct=(bs.qualifiers&&bs.qualifiers.attachPenalty!=null)?+bs.qualifiers.attachPenalty:25;
 
   let totalEarned=0;
   const earned=[];
@@ -4485,16 +4490,16 @@ function calcMgrBonus(storeName, sd, monthOverride){
     const pct=cat.target>0?(cat.actual/cat.target)*100:0;
     let pay=0;
     if(!elbDQ&&cat.actual>0&&cat.target>0){
-      if(pct>=125)pay=cat.upside||cat.base;
-      else if(pct>=100)pay=cat.base;
+      if(pct>=cat.upThresh)pay=cat.upside||cat.base;
+      else if(pct>=cat.baseThresh)pay=cat.base;
       else pay=0;
-      if(protPen)pay=pay*(1-0.25);
+      if(protPen)pay=pay*(1-attachPenaltyPct/100);
     }
     totalEarned+=pay;
     earned.push(pay);
   });
 
-  if(protPen)notes.push('⚠ Protection attach '+protPct.toFixed(1)+'% < '+(T2.protThresh||60)+'% — 25% penalty applied');
+  if(protPen)notes.push('⚠ Protection attach '+protPct.toFixed(1)+'% < '+(T2.protThresh||60)+'% — '+attachPenaltyPct+'% penalty applied');
 
   // New manager guarantee
   const isNew=sd.newMgr||false;
