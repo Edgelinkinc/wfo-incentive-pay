@@ -1155,6 +1155,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
           <button class="btn bp sm" onclick="printAllStubs()">🖨️ Print All</button>
               <button class="btn bp" onclick="downloadAllRepSlipsZIP()">⬇ Download All as ZIP</button>
           <button class="btn bok sm" onclick="doExp()">⬇ Payroll CSV</button>
+          <button class="btn bok sm" onclick="doTierExp()">📊 Tier Achievement CSV</button>
         </div>
       </div>
       <div class="card-body">
@@ -6888,6 +6889,108 @@ function loadSmp(){
   ];
   CBs=[{id:101,rp:"Tina W.",st:"MA-COGGESHALL",tp:"Deposit Shortage",a:25,by:"HR",rf:"DS-001",nt:"Register short",at:"4/1/2026"},{id:102,rp:"Jess P.",st:"TN-WEST MARKET",tp:"MIM Cancellation",a:20,by:"HR",rf:"MIM-CB-1",nt:"Cancelled",at:"4/2/2026"}];
   saveSession();renR();renCBL();tst2("Sample data loaded.","ok");
+}
+
+function doTierExp(){
+  if(!reps.length){tst2("No reps.","wn");return;}
+  const defWk=wk||new Date().toISOString().split("T")[0];
+  const wkInput=prompt("Week ending date (YYYY-MM-DD):\n\nDefaults to currently displayed week. Edit to pick another.",defWk);
+  if(wkInput===null)return;
+  const wkDate=wkInput.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(wkDate)){tst2("Invalid date format. Use YYYY-MM-DD.","er");return;}
+
+  // Use historical tiers for past weeks (same pattern as cRp)
+  var _tBackup=null;
+  var today=new Date().toISOString().split('T')[0];
+  var isPast=wkDate<today;
+  if(isPast&&typeof getTiersForWeek==='function'&&getTierHistory().length){
+    var _histT=getTiersForWeek(wkDate);
+    if(_histT&&_histT!==T){_tBackup=T;T=_histT;}
+  }
+
+  try{
+    const boxTiers=T.box||[];
+    const accTiers=T.acc||[];
+
+    function boxTierInfo(adjPpd){
+      if(adjPpd<=0){
+        const need=boxTiers[0]?boxTiers[0].mn-adjPpd:0;
+        return{label:"No Tier",num:0,rate:0,gapLabel:boxTiers[0]?(need+" acts to Tier 1"):""};
+      }
+      for(var i=0;i<boxTiers.length;i++){
+        var t=boxTiers[i];
+        if(adjPpd>=t.mn&&adjPpd<=t.mx){
+          var isTop=!t.mx||t.mx>=9999||i===boxTiers.length-1;
+          var nextT=boxTiers[i+1];
+          var lbl=isTop?("Tier "+(i+1)+": $"+t.r+"/act ("+t.mn+"+)"):("Tier "+(i+1)+": $"+t.r+"/act ("+t.mn+"-"+t.mx+")");
+          var gapLabel=nextT?((nextT.mn-adjPpd)+" acts to Tier "+(i+2)):"Top Tier";
+          return{label:lbl,num:i+1,rate:t.r,gapLabel:gapLabel};
+        }
+      }
+      return{label:"No Tier",num:0,rate:0,gapLabel:""};
+    }
+
+    function accTierInfo(accProfit){
+      if(accProfit<=0){
+        const need=accTiers[0]?accTiers[0].mp-accProfit:0;
+        return{label:"No Tier",num:0,pct:0,gapLabel:accTiers[0]?("$"+need.toFixed(2)+" to Tier 1"):""};
+      }
+      for(var i=0;i<accTiers.length;i++){
+        var t=accTiers[i];
+        if(accProfit>=t.mp&&accProfit<=t.xp){
+          var isTop=!t.xp||t.xp>=999999||i===accTiers.length-1;
+          var nextT=accTiers[i+1];
+          var lbl=isTop?("Tier "+(i+1)+": "+t.p+"% ($"+t.mp+"+)"):("Tier "+(i+1)+": "+t.p+"% ($"+t.mp+"-$"+t.xp+")");
+          var gapLabel=nextT?("$"+(nextT.mp-accProfit).toFixed(2)+" to Tier "+(i+2)):"Top Tier";
+          return{label:lbl,num:i+1,pct:t.p,gapLabel:gapLabel};
+        }
+      }
+      return{label:"No Tier",num:0,pct:0,gapLabel:""};
+    }
+
+    const hd=["NTID","Rep Name","Store","Coach","State","Week Ending","Total Acts","Tablets","Adj PPD","Act Tier","Act Tier #","$/Act","Acts Payout $","Next Act Tier Gap","Acc Net Profit $","Acc Tier","Acc Tier #","Acc %","Acc Payout $","Next Acc Tier Gap","Total Tiered Payout $"];
+
+    const actDist={0:0},accDist={0:0};
+    boxTiers.forEach(function(t,i){actDist[i+1]=0;});
+    accTiers.forEach(function(t,i){accDist[i+1]=0;});
+
+    const rows=reps.map(function(r){
+      const c=cRp(r,wkDate);
+      const adjPpd=Math.max(0,(r.ta||0)-(r.tb||0));
+      const accProfit=r.ap||0;
+      const bx=boxTierInfo(adjPpd);
+      const ac=accTierInfo(accProfit);
+      actDist[bx.num]=(actDist[bx.num]||0)+1;
+      accDist[ac.num]=(accDist[ac.num]||0)+1;
+      return[r.ri||"",r.n||"",r.s||"",r.c||"",r.state||"",wkDate,r.ta||0,r.tb||0,adjPpd,bx.label,bx.num||"—",bx.rate?("$"+bx.rate):"—",c.bx.toFixed(2),bx.gapLabel,accProfit.toFixed(2),ac.label,ac.num||"—",ac.pct?(ac.pct+"%"):"—",c.ac.toFixed(2),ac.gapLabel,(c.bx+c.ac).toFixed(2)];
+    });
+
+    rows.push([]);
+    rows.push(["TIER DISTRIBUTION SUMMARY"]);
+    rows.push([]);
+    rows.push(["ACTIVATION TIERS","# of Reps"]);
+    rows.push(["No Tier",actDist[0]||0]);
+    boxTiers.forEach(function(t,i){
+      var isTop=!t.mx||t.mx>=9999||i===boxTiers.length-1;
+      var range=isTop?(t.mn+"+"):(t.mn+"-"+t.mx);
+      rows.push(["Tier "+(i+1)+" ($"+t.r+"/act, "+range+")",actDist[i+1]||0]);
+    });
+    rows.push([]);
+    rows.push(["ACCESSORY TIERS","# of Reps"]);
+    rows.push(["No Tier",accDist[0]||0]);
+    accTiers.forEach(function(t,i){
+      var isTop=!t.xp||t.xp>=999999||i===accTiers.length-1;
+      var range=isTop?("$"+t.mp+"+"):("$"+t.mp+"-$"+t.xp);
+      rows.push(["Tier "+(i+1)+" ("+t.p+"%, "+range+")",accDist[i+1]||0]);
+    });
+    rows.push([]);
+    rows.push(["TOTAL REPS",reps.length]);
+
+    dlC([hd].concat(rows),"WFO_RepTierAchievement_"+wkDate+".csv");
+    tst2("✅ Tier Achievement CSV exported for week "+wkDate,"ok");
+  }finally{
+    if(_tBackup){T=_tBackup;}
+  }
 }
 
 function doExp(){
