@@ -1155,7 +1155,7 @@ body.admin-unlocked #sbStaffSection{display:block!important}
           <button class="btn bp sm" onclick="printAllStubs()">🖨️ Print All</button>
               <button class="btn bp" onclick="downloadAllRepSlipsZIP()">⬇ Download All as ZIP</button>
           <button class="btn bok sm" onclick="doExp()">⬇ Payroll CSV</button>
-          <button class="btn bok sm" onclick="doTierExp()">📊 Tier Achievement CSV</button>
+          <button class="btn bok sm" onclick="doTierExp()">📊 Tier Achievement XLSX</button>
         </div>
       </div>
       <div class="card-body">
@@ -6891,7 +6891,11 @@ function loadSmp(){
   saveSession();renR();renCBL();tst2("Sample data loaded.","ok");
 }
 
-function doTierExp(){
+async function ensureXLSXLib(){
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
+}
+
+async function doTierExp(){
   if(!reps.length){tst2("No reps.","wn");return;}
   const defWk=wk||new Date().toISOString().split("T")[0];
   const wkInput=prompt("Week ending date (YYYY-MM-DD):\n\nDefaults to currently displayed week. Edit to pick another.",defWk);
@@ -6899,7 +6903,11 @@ function doTierExp(){
   const wkDate=wkInput.trim();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(wkDate)){tst2("Invalid date format. Use YYYY-MM-DD.","er");return;}
 
-  // Use historical tiers for past weeks (same pattern as cRp)
+  tst2("Building Tier Achievement XLSX…","ok");
+  try{await ensureXLSXLib();}catch(e){tst2("Could not load Excel library: "+e.message,"er");return;}
+  if(typeof ExcelJS==='undefined'){tst2("ExcelJS failed to load","er");return;}
+
+  // Use historical tiers for past weeks
   var _tBackup=null;
   var today=new Date().toISOString().split('T')[0];
   var isPast=wkDate<today;
@@ -6911,11 +6919,19 @@ function doTierExp(){
   try{
     const boxTiers=T.box||[];
     const accTiers=T.acc||[];
+    const topBoxIdx=boxTiers.length;   // 1-based top tier
+    const topAccIdx=accTiers.length;
+
+    function lastNameOf(r){
+      if(r.lastName&&r.lastName.trim())return r.lastName.trim();
+      const parts=(r.n||"").trim().split(/\s+/);
+      return parts.length>1?parts[parts.length-1]:"";
+    }
 
     function boxTierInfo(adjPpd){
       if(adjPpd<=0){
         const need=boxTiers[0]?boxTiers[0].mn-adjPpd:0;
-        return{label:"No Tier",num:0,rate:0,gapLabel:boxTiers[0]?(need+" acts to Tier 1"):""};
+        return{label:"No Tier",num:0,rate:0,gapLabel:boxTiers[0]?(need+" acts to Tier 1"):"",gapNum:need};
       }
       for(var i=0;i<boxTiers.length;i++){
         var t=boxTiers[i];
@@ -6923,17 +6939,18 @@ function doTierExp(){
           var isTop=!t.mx||t.mx>=9999||i===boxTiers.length-1;
           var nextT=boxTiers[i+1];
           var lbl=isTop?("Tier "+(i+1)+": $"+t.r+"/act ("+t.mn+"+)"):("Tier "+(i+1)+": $"+t.r+"/act ("+t.mn+"-"+t.mx+")");
-          var gapLabel=nextT?((nextT.mn-adjPpd)+" acts to Tier "+(i+2)):"Top Tier";
-          return{label:lbl,num:i+1,rate:t.r,gapLabel:gapLabel};
+          var gap=nextT?(nextT.mn-adjPpd):0;
+          var gapLabel=nextT?(gap+" acts to Tier "+(i+2)):"Top Tier";
+          return{label:lbl,num:i+1,rate:t.r,gapLabel:gapLabel,gapNum:isTop?-1:gap};
         }
       }
-      return{label:"No Tier",num:0,rate:0,gapLabel:""};
+      return{label:"No Tier",num:0,rate:0,gapLabel:"",gapNum:0};
     }
 
     function accTierInfo(accProfit){
       if(accProfit<=0){
         const need=accTiers[0]?accTiers[0].mp-accProfit:0;
-        return{label:"No Tier",num:0,pct:0,gapLabel:accTiers[0]?("$"+need.toFixed(2)+" to Tier 1"):""};
+        return{label:"No Tier",num:0,pct:0,gapLabel:accTiers[0]?("$"+need.toFixed(2)+" to Tier 1"):"",gapNum:need};
       }
       for(var i=0;i<accTiers.length;i++){
         var t=accTiers[i];
@@ -6941,53 +6958,212 @@ function doTierExp(){
           var isTop=!t.xp||t.xp>=999999||i===accTiers.length-1;
           var nextT=accTiers[i+1];
           var lbl=isTop?("Tier "+(i+1)+": "+t.p+"% ($"+t.mp+"+)"):("Tier "+(i+1)+": "+t.p+"% ($"+t.mp+"-$"+t.xp+")");
-          var gapLabel=nextT?("$"+(nextT.mp-accProfit).toFixed(2)+" to Tier "+(i+2)):"Top Tier";
-          return{label:lbl,num:i+1,pct:t.p,gapLabel:gapLabel};
+          var gap=nextT?(nextT.mp-accProfit):0;
+          var gapLabel=nextT?("$"+gap.toFixed(2)+" to Tier "+(i+2)):"Top Tier";
+          return{label:lbl,num:i+1,pct:t.p,gapLabel:gapLabel,gapNum:isTop?-1:gap};
         }
       }
-      return{label:"No Tier",num:0,pct:0,gapLabel:""};
+      return{label:"No Tier",num:0,pct:0,gapLabel:"",gapNum:0};
     }
 
-    const hd=["NTID","Rep Name","Store","Coach","State","Week Ending","Total Acts","Tablets","Adj PPD","Act Tier","Act Tier #","$/Act","Acts Payout $","Next Act Tier Gap","Acc Net Profit $","Acc Tier","Acc Tier #","Acc %","Acc Payout $","Next Acc Tier Gap","Total Tiered Payout $"];
+    // Excel "Good/Neutral/Bad" palette
+    const GREEN={fill:'FFC6EFCE',font:'FF006100'};
+    const YELLOW={fill:'FFFFEB9C',font:'FF9C5700'};
+    const RED={fill:'FFFFC7CE',font:'FF9C0006'};
+
+    function tierColor(num,topIdx){
+      if(num===0)return RED;
+      if(num===topIdx)return GREEN;
+      return YELLOW;
+    }
+    // gap thresholds: green if very close, yellow if mid-distance
+    function gapColorActs(gapNum){
+      if(gapNum===-1)return GREEN; // Top Tier
+      if(gapNum<=0)return RED;     // No Tier — needs 2+ acts (handled separately)
+      if(gapNum<=2)return GREEN;
+      if(gapNum<=5)return YELLOW;
+      return null;
+    }
+    function gapColorAcc(gapNum){
+      if(gapNum===-1)return GREEN; // Top Tier
+      if(gapNum<=0)return RED;
+      if(gapNum<=50)return GREEN;
+      if(gapNum<=150)return YELLOW;
+      return null;
+    }
+    function totalColor(total){
+      if(total<=0)return RED;
+      if(total>=200)return GREEN;
+      return YELLOW;
+    }
+
+    const wb=new ExcelJS.Workbook();
+    wb.creator='Edgelink WFO';
+    wb.created=new Date();
+    const ws=wb.addWorksheet('Tier Achievement',{
+      views:[{state:'frozen',ySplit:1}]
+    });
+
+    const headers=[
+      "NTID","First Name","Last Name","Rep Name","Store","Coach","State","Week Ending",
+      "Total Acts","Tablets","Adj PPD","Act Tier","Act Tier #","$/Act","Acts Payout $","Next Act Tier Gap",
+      "Acc Net Profit $","Acc Tier","Acc Tier #","Acc %","Acc Payout $","Next Acc Tier Gap",
+      "Total Tiered Payout $"
+    ];
+    ws.addRow(headers);
+
+    // Header style: deep purple background, white text
+    const hdrRow=ws.getRow(1);
+    hdrRow.font={bold:true,color:{argb:'FFFFFFFF'},name:'Calibri',size:11};
+    hdrRow.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+    hdrRow.height=28;
+    for(var c=1;c<=headers.length;c++){
+      const cell=hdrRow.getCell(c);
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF4A1B5C'}};
+      cell.border={
+        top:{style:'thin',color:{argb:'FFCCCCCC'}},
+        left:{style:'thin',color:{argb:'FFCCCCCC'}},
+        bottom:{style:'thin',color:{argb:'FFCCCCCC'}},
+        right:{style:'thin',color:{argb:'FFCCCCCC'}}
+      };
+    }
+
+    function applyFill(cell,colorObj){
+      if(!colorObj)return;
+      cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:colorObj.fill}};
+      cell.font={color:{argb:colorObj.font},bold:true,name:'Calibri',size:10};
+    }
 
     const actDist={0:0},accDist={0:0};
     boxTiers.forEach(function(t,i){actDist[i+1]=0;});
     accTiers.forEach(function(t,i){accDist[i+1]=0;});
 
-    const rows=reps.map(function(r){
+    reps.forEach(function(r){
       const c=cRp(r,wkDate);
       const adjPpd=Math.max(0,(r.ta||0)-(r.tb||0));
       const accProfit=r.ap||0;
       const bx=boxTierInfo(adjPpd);
       const ac=accTierInfo(accProfit);
+      const total=c.bx+c.ac;
       actDist[bx.num]=(actDist[bx.num]||0)+1;
       accDist[ac.num]=(accDist[ac.num]||0)+1;
-      return[r.ri||"",r.n||"",r.s||"",r.c||"",r.state||"",wkDate,r.ta||0,r.tb||0,adjPpd,bx.label,bx.num||"—",bx.rate?("$"+bx.rate):"—",c.bx.toFixed(2),bx.gapLabel,accProfit.toFixed(2),ac.label,ac.num||"—",ac.pct?(ac.pct+"%"):"—",c.ac.toFixed(2),ac.gapLabel,(c.bx+c.ac).toFixed(2)];
+
+      const parts=(r.n||"").trim().split(/\s+/);
+      const firstName=parts[0]||"";
+      const lastName=lastNameOf(r);
+
+      const rowData=[
+        r.ri||"",
+        firstName,
+        lastName,
+        r.n||"",
+        r.s||"",
+        r.c||"",
+        r.state||"",
+        wkDate,
+        r.ta||0,
+        r.tb||0,
+        adjPpd,
+        bx.label,
+        bx.num||0,
+        bx.rate?("$"+bx.rate):"—",
+        Number(c.bx.toFixed(2)),
+        bx.gapLabel,
+        Number(accProfit.toFixed(2)),
+        ac.label,
+        ac.num||0,
+        ac.pct?(ac.pct+"%"):"—",
+        Number(c.ac.toFixed(2)),
+        ac.gapLabel,
+        Number(total.toFixed(2))
+      ];
+      const row=ws.addRow(rowData);
+      row.alignment={vertical:'middle'};
+
+      // Number formatting for currency cells
+      [15,17,21,23].forEach(function(col){row.getCell(col).numFmt='"$"#,##0.00';});
+
+      // Conditional fills
+      const actColor=tierColor(bx.num,topBoxIdx);
+      const accColor=tierColor(ac.num,topAccIdx);
+      applyFill(row.getCell(12),actColor); // Act Tier
+      applyFill(row.getCell(15),actColor); // Acts Payout
+      applyFill(row.getCell(18),accColor); // Acc Tier
+      applyFill(row.getCell(21),accColor); // Acc Payout
+      applyFill(row.getCell(16),gapColorActs(bx.gapNum)); // Next Act Gap
+      applyFill(row.getCell(22),gapColorAcc(ac.gapNum));  // Next Acc Gap
+      applyFill(row.getCell(23),totalColor(total));       // Total
     });
 
-    rows.push([]);
-    rows.push(["TIER DISTRIBUTION SUMMARY"]);
-    rows.push([]);
-    rows.push(["ACTIVATION TIERS","# of Reps"]);
-    rows.push(["No Tier",actDist[0]||0]);
+    const lastDataRow=ws.rowCount;
+
+    // Auto-filter on the header row across all columns
+    ws.autoFilter={
+      from:{row:1,column:1},
+      to:{row:lastDataRow,column:headers.length}
+    };
+
+    // Column widths
+    const widths=[10,12,14,22,16,14,8,12,10,9,9,28,9,8,12,22,14,28,9,8,12,22,14];
+    widths.forEach(function(w,i){ws.getColumn(i+1).width=w;});
+
+    // Summary block — placed a few rows below the data (won't interfere with autofilter)
+    ws.addRow([]);
+    ws.addRow([]);
+    const sumHdrRow=ws.addRow(["TIER DISTRIBUTION SUMMARY"]);
+    sumHdrRow.getCell(1).font={bold:true,size:12,color:{argb:'FF4A1B5C'}};
+    ws.addRow([]);
+
+    const actHdr=ws.addRow(["ACTIVATION TIERS","# of Reps"]);
+    actHdr.getCell(1).font={bold:true};actHdr.getCell(2).font={bold:true};
+    actHdr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEEEDFE'}};
+    actHdr.getCell(2).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEEEDFE'}};
+
+    const noActRow=ws.addRow(["No Tier",actDist[0]||0]);
+    applyFill(noActRow.getCell(1),RED);applyFill(noActRow.getCell(2),RED);
+
     boxTiers.forEach(function(t,i){
       var isTop=!t.mx||t.mx>=9999||i===boxTiers.length-1;
       var range=isTop?(t.mn+"+"):(t.mn+"-"+t.mx);
-      rows.push(["Tier "+(i+1)+" ($"+t.r+"/act, "+range+")",actDist[i+1]||0]);
+      var r=ws.addRow(["Tier "+(i+1)+" ($"+t.r+"/act, "+range+")",actDist[i+1]||0]);
+      var clr=isTop?GREEN:YELLOW;
+      applyFill(r.getCell(1),clr);applyFill(r.getCell(2),clr);
     });
-    rows.push([]);
-    rows.push(["ACCESSORY TIERS","# of Reps"]);
-    rows.push(["No Tier",accDist[0]||0]);
+
+    ws.addRow([]);
+
+    const accHdr=ws.addRow(["ACCESSORY TIERS","# of Reps"]);
+    accHdr.getCell(1).font={bold:true};accHdr.getCell(2).font={bold:true};
+    accHdr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEEEDFE'}};
+    accHdr.getCell(2).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEEEDFE'}};
+
+    const noAccRow=ws.addRow(["No Tier",accDist[0]||0]);
+    applyFill(noAccRow.getCell(1),RED);applyFill(noAccRow.getCell(2),RED);
+
     accTiers.forEach(function(t,i){
       var isTop=!t.xp||t.xp>=999999||i===accTiers.length-1;
       var range=isTop?("$"+t.mp+"+"):("$"+t.mp+"-$"+t.xp);
-      rows.push(["Tier "+(i+1)+" ("+t.p+"%, "+range+")",accDist[i+1]||0]);
+      var r=ws.addRow(["Tier "+(i+1)+" ("+t.p+"%, "+range+")",accDist[i+1]||0]);
+      var clr=isTop?GREEN:YELLOW;
+      applyFill(r.getCell(1),clr);applyFill(r.getCell(2),clr);
     });
-    rows.push([]);
-    rows.push(["TOTAL REPS",reps.length]);
 
-    dlC([hd].concat(rows),"WFO_RepTierAchievement_"+wkDate+".csv");
-    tst2("✅ Tier Achievement CSV exported for week "+wkDate,"ok");
+    ws.addRow([]);
+    const totRow=ws.addRow(["TOTAL REPS",reps.length]);
+    totRow.getCell(1).font={bold:true};totRow.getCell(2).font={bold:true};
+
+    // Generate and download
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download="WFO_RepTierAchievement_"+wkDate+".xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+    tst2("✅ Tier Achievement XLSX exported for week "+wkDate,"ok");
+  }catch(e){
+    console.error(e);
+    tst2("Error building XLSX: "+e.message,"er");
   }finally{
     if(_tBackup){T=_tBackup;}
   }
