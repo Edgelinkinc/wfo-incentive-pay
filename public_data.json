@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "publishedAt": "2026-05-27T22:07:39.595Z",
-  "currentWeek": "2026-05-18",
+  "publishedAt": "2026-05-29T14:19:59.284Z",
+  "currentWeek": "2026-05-11",
   "weekIndex": [
     "2026-05-25",
     "2026-05-18",
@@ -3382,13 +3382,13 @@
       ]
     },
     "2026-05-11": {
-      "locked": false,
-      "repCount": 84,
+      "locked": true,
+      "repCount": 85,
       "reps": [
         {
           "n": "Abel",
           "ri": "NIV04273",
-          "s": "MA-SOUTH SHORE MALL",
+          "s": "",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 22,
@@ -3403,7 +3403,27 @@
           "ap": 768.89,
           "ml": 0,
           "mb": 0,
-          "arcPay": 20
+          "arcPay": 0
+        },
+        {
+          "n": "Abigail",
+          "ri": "OLP39593",
+          "s": "RI-PROVIDENCE PLACE MALL",
+          "c": "Rose Perez",
+          "state": "RI",
+          "ta": 26,
+          "na": 18,
+          "ra": 0,
+          "up": 8,
+          "tb": 0,
+          "wt": 0,
+          "hs": 3,
+          "af": 0,
+          "hr": 24.93,
+          "ap": 417.36,
+          "ml": 0,
+          "mb": 0,
+          "arcPay": 0
         },
         {
           "n": "Alex",
@@ -3423,12 +3443,12 @@
           "ap": 376.85,
           "ml": 0,
           "mb": 0,
-          "arcPay": 19
+          "arcPay": 0
         },
         {
           "n": "Alicia",
           "ri": "KAM65097",
-          "s": "MA-LOCUST STREET",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 12,
@@ -3443,12 +3463,12 @@
           "ap": 121.79,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "Alishabeth",
           "ri": "WQA62252",
-          "s": "CT-BUCKLAND HILLS MALL",
+          "s": "",
           "c": "TBD",
           "state": "CT",
           "ta": 2,
@@ -3463,12 +3483,12 @@
           "ap": 0,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Allia",
           "ri": "DXP98939",
-          "s": "RI-BALD HILL",
+          "s": "",
           "c": "TBD",
           "state": "RI",
           "ta": 21,
@@ -3483,12 +3503,12 @@
           "ap": 546.51,
           "ml": 0,
           "mb": 0,
-          "arcPay": 102
+          "arcPay": 0
         },
         {
           "n": "ALMA",
           "ri": "DCZ70200",
-          "s": "MA-EXCHANGE ST",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 4,
@@ -3499,17 +3519,17 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 32.37,
+          "hr": 25.32,
           "ap": 87.18,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Amauri",
           "ri": "DDX65206",
-          "s": "RI-RESERVOIR AVE",
-          "c": "Ambulai Sheku",
+          "s": "",
+          "c": "TBD",
           "ta": 3,
           "na": 2,
           "ra": 0,
@@ -3518,11 +3538,11 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 21.77,
+          "hr": 24.53,
           "ap": 83.62,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Amina",
@@ -3538,11 +3558,11 @@
           "wt": 1,
           "hs": 1,
           "af": 0,
-          "hr": 43.78,
+          "hr": 38.8,
           "ap": 354.52,
           "ml": 0,
           "mb": 0,
-          "arcPay": 25
+          "arcPay": 0
         },
         {
           "n": "Ana",
@@ -3561,12 +3581,12 @@
           "ap": 289.52,
           "ml": 0,
           "mb": 0,
-          "arcPay": 22
+          "arcPay": 0
         },
         {
           "n": "Ana",
           "ri": "OZY90583",
-          "s": "RI-BROAD ST",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 10,
@@ -3581,7 +3601,7 @@
           "ap": 821.06,
           "ml": 0,
           "mb": 0,
-          "arcPay": 30
+          "arcPay": 0
         },
         {
           "n": "angel",
@@ -3601,12 +3621,12 @@
           "ap": 394.17,
           "ml": 0,
           "mb": 0,
-          "arcPay": 11
+          "arcPay": 0
         },
         {
           "n": "Angela",
           "ri": "MMM94297",
-          "s": "TN-KEITH ST",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 3,
@@ -3640,12 +3660,12 @@
           "ap": 22.69,
           "ml": 0,
           "mb": 0,
-          "arcPay": 26
+          "arcPay": 0
         },
         {
           "n": "Armando",
           "ri": "ZIW70174",
-          "s": "MA-LOCUST STREET",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 18,
@@ -3660,7 +3680,7 @@
           "ap": 570.62,
           "ml": 0,
           "mb": 0,
-          "arcPay": 51
+          "arcPay": 0
         },
         {
           "n": "Ashton",
@@ -3679,13 +3699,13 @@
           "ap": 162.97,
           "ml": 0,
           "mb": 0,
-          "arcPay": 8
+          "arcPay": 0
         },
         {
           "n": "Brandon",
           "ri": "QQO06195",
-          "s": "RI-NEWPORT AVE",
-          "c": "Rose Perez",
+          "s": "",
+          "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 7,
           "na": 2,
@@ -3695,16 +3715,16 @@
           "wt": 0,
           "hs": 1,
           "af": 0,
-          "hr": 29.58,
+          "hr": 25.2,
           "ap": 20.16,
           "ml": 0,
           "mb": 0,
-          "arcPay": 17
+          "arcPay": 0
         },
         {
           "n": "Brenda",
           "ri": "CYW45301",
-          "s": "AR-COLONEL GLENN",
+          "s": "",
           "c": "TBD",
           "state": "AR",
           "ta": 21,
@@ -3719,12 +3739,12 @@
           "ap": 203.76,
           "ml": 0,
           "mb": 0,
-          "arcPay": 82
+          "arcPay": 0
         },
         {
           "n": "Brendaliz",
           "ri": "IHS87312",
-          "s": "CT-NEW LONDON",
+          "s": "",
           "c": "TBD",
           "state": "CT",
           "ta": 2,
@@ -3739,12 +3759,12 @@
           "ap": 83.92,
           "ml": 0,
           "mb": 0,
-          "arcPay": 10
+          "arcPay": 0
         },
         {
           "n": "Carlos",
           "ri": "KOW08275",
-          "s": "MA-HOLYOKE",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 20,
@@ -3759,7 +3779,7 @@
           "ap": 459.18,
           "ml": 0,
           "mb": 0,
-          "arcPay": 53
+          "arcPay": 0
         },
         {
           "n": "Ceidy",
@@ -3778,7 +3798,7 @@
           "ap": 0,
           "ml": 0,
           "mb": 0,
-          "arcPay": 10
+          "arcPay": 0
         },
         {
           "n": "Charisma",
@@ -3798,12 +3818,12 @@
           "ap": 176.46,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "Christopher",
           "ri": "KLZ94722",
-          "s": "RI-COVENTRY",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 23,
@@ -3818,12 +3838,12 @@
           "ap": 198.3,
           "ml": 0,
           "mb": 0,
-          "arcPay": 8
+          "arcPay": 0
         },
         {
           "n": "Cleoty",
           "ri": "YGR92575",
-          "s": "RI-NEWPORT AVE",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 13,
@@ -3834,16 +3854,16 @@
           "wt": 0,
           "hs": 2,
           "af": 0,
-          "hr": 42.43,
+          "hr": 33.95,
           "ap": 561.34,
           "ml": 0,
           "mb": 0,
-          "arcPay": 54
+          "arcPay": 0
         },
         {
           "n": "Daniel",
           "ri": "MTX98142",
-          "s": "RI-RESERVOIR AVE",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 22,
@@ -3854,11 +3874,11 @@
           "wt": 0,
           "hs": 3,
           "af": 0,
-          "hr": 38.87,
+          "hr": 39.2,
           "ap": 771.99,
           "ml": 0,
           "mb": 0,
-          "arcPay": 28
+          "arcPay": 0
         },
         {
           "n": "Delbert",
@@ -3877,12 +3897,12 @@
           "ap": 94.14,
           "ml": 0,
           "mb": 0,
-          "arcPay": 7
+          "arcPay": 0
         },
         {
           "n": "Derek",
           "ri": "CLB37831",
-          "s": "MA-ROCKDALE",
+          "s": "",
           "c": "Manny",
           "state": "MA",
           "ta": 15,
@@ -3897,12 +3917,12 @@
           "ap": 65.43,
           "ml": 0,
           "mb": 0,
-          "arcPay": 8
+          "arcPay": 0
         },
         {
           "n": "Divante",
           "ri": "PNO47488",
-          "s": "MA-STATE STREET",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 9,
@@ -3922,7 +3942,7 @@
         {
           "n": "Djeison",
           "ri": "NIK70124",
-          "s": "MA-ROCKDALE",
+          "s": "",
           "c": "Manny",
           "state": "MA",
           "ta": 5,
@@ -3937,7 +3957,7 @@
           "ap": 137.77,
           "ml": 0,
           "mb": 0,
-          "arcPay": 11
+          "arcPay": 0
         },
         {
           "n": "Eliezer",
@@ -3956,12 +3976,12 @@
           "ap": 396.67,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "Franchesca",
           "ri": "LHX36141",
-          "s": "TN-NORTH BROADWAY",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 10,
@@ -3972,16 +3992,16 @@
           "wt": 0,
           "hs": 1,
           "af": 0,
-          "hr": 33.02,
+          "hr": 28.23,
           "ap": 150.06,
           "ml": 0,
           "mb": 0,
-          "arcPay": 31
+          "arcPay": 0
         },
         {
           "n": "Frank",
           "ri": "TZO36978",
-          "s": "RI-BROADWAY",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 10,
@@ -3996,12 +4016,12 @@
           "ap": 326.22,
           "ml": 0,
           "mb": 0,
-          "arcPay": 12
+          "arcPay": 0
         },
         {
           "n": "GAMALY",
           "ri": "RYL10527",
-          "s": "CT-BUCKLAND HILLS MALL",
+          "s": "",
           "c": "TBD",
           "state": "CT",
           "ta": 2,
@@ -4012,7 +4032,7 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 24.48,
+          "hr": 26.98,
           "ap": 93.06,
           "ml": 0,
           "mb": 0,
@@ -4032,11 +4052,11 @@
           "wt": 0,
           "hs": 1,
           "af": 0,
-          "hr": 36.25,
+          "hr": 36.23,
           "ap": 1115.56,
           "ml": 0,
           "mb": 0,
-          "arcPay": 13
+          "arcPay": 0
         },
         {
           "n": "Gina",
@@ -4055,12 +4075,12 @@
           "ap": 192.92,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "Handriel",
           "ri": "PHM41466",
-          "s": "RI-RESERVOIR AVE",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 17,
@@ -4075,12 +4095,12 @@
           "ap": 190.25,
           "ml": 0,
           "mb": 0,
-          "arcPay": 13
+          "arcPay": 0
         },
         {
           "n": "Hasba",
           "ri": "TRR15148",
-          "s": "RI-DOUGLAS",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 4,
@@ -4095,12 +4115,12 @@
           "ap": 110.66,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "Hector",
           "ri": "EIY40272",
-          "s": "RI-751 BROAD",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 16,
@@ -4115,12 +4135,12 @@
           "ap": 443.64,
           "ml": 0,
           "mb": 0,
-          "arcPay": 22
+          "arcPay": 0
         },
         {
           "n": "Hector",
           "ri": "KWV73873",
-          "s": "MA-HOLYOKE",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 7,
@@ -4131,17 +4151,17 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 37.9,
+          "hr": 39.27,
           "ap": 262.32,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "IMMANUEL",
           "ri": "RZD14638",
-          "s": "MA-ROCKDALE",
-          "c": "Manny",
+          "s": "",
+          "c": "TBD",
           "ta": 5,
           "na": 2,
           "ra": 1,
@@ -4159,7 +4179,7 @@
         {
           "n": "isaiah",
           "ri": "CZU10265",
-          "s": "MA-EXCHANGE ST",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 20,
@@ -4174,12 +4194,12 @@
           "ap": 405.97,
           "ml": 0,
           "mb": 0,
-          "arcPay": 12
+          "arcPay": 0
         },
         {
           "n": "Isiaish",
           "ri": "YBT81977",
-          "s": "RI-EAST PROVIDENCE",
+          "s": "",
           "c": "TBD",
           "state": "RI",
           "ta": 17,
@@ -4194,12 +4214,12 @@
           "ap": 383.44,
           "ml": 0,
           "mb": 0,
-          "arcPay": 42
+          "arcPay": 0
         },
         {
           "n": "Izabella",
           "ri": "MAF14353",
-          "s": "RI-BALD HILL",
+          "s": "",
           "c": "TBD",
           "state": "RI",
           "ta": 15,
@@ -4214,12 +4234,12 @@
           "ap": 404.64,
           "ml": 0,
           "mb": 0,
-          "arcPay": 16
+          "arcPay": 0
         },
         {
           "n": "Jalah",
           "ri": "CAI39911",
-          "s": "CT-NEW LONDON",
+          "s": "",
           "c": "TBD",
           "ta": 5,
           "na": 5,
@@ -4233,12 +4253,12 @@
           "ap": 218.32,
           "ml": 0,
           "mb": 0,
-          "arcPay": 5
+          "arcPay": 0
         },
         {
           "n": "James",
           "ri": "BPW93549",
-          "s": "CT-NEW LONDON",
+          "s": "",
           "c": "TBD",
           "state": "CT",
           "ta": 17,
@@ -4253,7 +4273,7 @@
           "ap": 668.04,
           "ml": 0,
           "mb": 0,
-          "arcPay": 54
+          "arcPay": 0
         },
         {
           "n": "James",
@@ -4277,7 +4297,7 @@
         {
           "n": "Jasmine",
           "ri": "ZHW99574",
-          "s": "AR-RADIO GEYER",
+          "s": "",
           "c": "TBD",
           "state": "AR",
           "ta": 12,
@@ -4292,7 +4312,7 @@
           "ap": 217.34,
           "ml": 0,
           "mb": 0,
-          "arcPay": 50
+          "arcPay": 0
         },
         {
           "n": "JayNa",
@@ -4311,12 +4331,12 @@
           "ap": 220.55,
           "ml": 0,
           "mb": 0,
-          "arcPay": 26
+          "arcPay": 0
         },
         {
           "n": "Jazmine",
           "ri": "QQL00950",
-          "s": "MA-EXCHANGE ST",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 19,
@@ -4327,16 +4347,16 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 54.07,
+          "hr": 50.12,
           "ap": 590.5,
           "ml": 0,
           "mb": 0,
-          "arcPay": 10
+          "arcPay": 0
         },
         {
           "n": "Jensy",
           "ri": "JIY63724",
-          "s": "RI-PROVIDENCE PLACE MALL",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 31,
@@ -4351,12 +4371,12 @@
           "ap": 603.32,
           "ml": 0,
           "mb": 0,
-          "arcPay": 171
+          "arcPay": 0
         },
         {
           "n": "Jermaine",
           "ri": "KFE95893",
-          "s": "TN-SHALLOWFORD RD",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 14,
@@ -4371,12 +4391,12 @@
           "ap": 416.95,
           "ml": 0,
           "mb": 0,
-          "arcPay": 43
+          "arcPay": 0
         },
         {
           "n": "Jessica",
           "ri": "IDF00979",
-          "s": "MA-STATE STREET",
+          "s": "",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 13,
@@ -4387,11 +4407,11 @@
           "wt": 0,
           "hs": 1,
           "af": 0,
-          "hr": 33.4,
+          "hr": 35.08,
           "ap": 289.98,
           "ml": 0,
           "mb": 0,
-          "arcPay": 13
+          "arcPay": 0
         },
         {
           "n": "Jonah",
@@ -4406,11 +4426,11 @@
           "wt": 0,
           "hs": 1,
           "af": 1,
-          "hr": 31.37,
+          "hr": 34.62,
           "ap": 183.98,
           "ml": 0,
           "mb": 0,
-          "arcPay": 11
+          "arcPay": 0
         },
         {
           "n": "JOSE",
@@ -4429,13 +4449,13 @@
           "ap": 404.13,
           "ml": 0,
           "mb": 0,
-          "arcPay": 83
+          "arcPay": 0
         },
         {
           "n": "Joseph",
           "ri": "CMP10750",
-          "s": "RI-HARTFORD AVE",
-          "c": "Rose Perez",
+          "s": "",
+          "c": "TBD",
           "ta": 15,
           "na": 13,
           "ra": 1,
@@ -4448,12 +4468,12 @@
           "ap": 76.45,
           "ml": 0,
           "mb": 0,
-          "arcPay": 20
+          "arcPay": 0
         },
         {
           "n": "Josh",
           "ri": "KWP74551",
-          "s": "CT-NEW LONDON",
+          "s": "",
           "c": "TBD",
           "state": "CT",
           "ta": 6,
@@ -4468,12 +4488,12 @@
           "ap": 163.68,
           "ml": 0,
           "mb": 0,
-          "arcPay": 86
+          "arcPay": 0
         },
         {
           "n": "Juliana",
           "ri": "VIT47142",
-          "s": "RI-PROVIDENCE PLACE MALL",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 23,
@@ -4488,12 +4508,12 @@
           "ap": 387.79,
           "ml": 0,
           "mb": 0,
-          "arcPay": 30
+          "arcPay": 0
         },
         {
           "n": "Justin",
           "ri": "USW26794",
-          "s": "MA-FALLRIVER",
+          "s": "",
           "c": "Manny",
           "state": "MA",
           "ta": 19,
@@ -4504,11 +4524,11 @@
           "wt": 0,
           "hs": 1,
           "af": 0,
-          "hr": 38.47,
+          "hr": 32.48,
           "ap": 465.48,
           "ml": 0,
           "mb": 0,
-          "arcPay": 29
+          "arcPay": 0
         },
         {
           "n": "Karmina",
@@ -4528,12 +4548,12 @@
           "ap": 348.52,
           "ml": 0,
           "mb": 0,
-          "arcPay": 163
+          "arcPay": 0
         },
         {
           "n": "Khrystyne",
           "ri": "VPB31735",
-          "s": "MA-FALLRIVER",
+          "s": "",
           "c": "Manny",
           "state": "MA",
           "ta": 11,
@@ -4548,12 +4568,12 @@
           "ap": 180.92,
           "ml": 0,
           "mb": 0,
-          "arcPay": 14
+          "arcPay": 0
         },
         {
           "n": "Lori",
           "ri": "HHI23969",
-          "s": "MA-ROCKDALE",
+          "s": "",
           "c": "Manny",
           "state": "MA",
           "ta": 20,
@@ -4568,12 +4588,12 @@
           "ap": 421.12,
           "ml": 0,
           "mb": 0,
-          "arcPay": 17
+          "arcPay": 0
         },
         {
           "n": "Lucmila",
           "ri": "RLR38159",
-          "s": "MA-SOUTH SHORE MALL",
+          "s": "",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 7,
@@ -4588,12 +4608,12 @@
           "ap": 211.46,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Maliek",
           "ri": "DDX68207",
-          "s": "MA-CAPE COD MALL",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "MA",
           "ta": 6,
@@ -4608,12 +4628,12 @@
           "ap": 340.5,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Mariel",
           "ri": "CSO68288",
-          "s": "TN-MAGNOLIA",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 40,
@@ -4628,7 +4648,7 @@
           "ap": 1041.69,
           "ml": 0,
           "mb": 0,
-          "arcPay": 29
+          "arcPay": 0
         },
         {
           "n": "marquesha",
@@ -4644,7 +4664,7 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 47.37,
+          "hr": 43.38,
           "ap": 329.67,
           "ml": 0,
           "mb": 0,
@@ -4653,7 +4673,7 @@
         {
           "n": "Melicia",
           "ri": "NFO89908",
-          "s": "TN-WEST MARKET",
+          "s": "",
           "c": "Cheryl",
           "state": "TN",
           "ta": 3,
@@ -4668,12 +4688,12 @@
           "ap": 17.74,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Mirtha",
           "ri": "QLO66750",
-          "s": "TN-KEITH ST",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 9,
@@ -4688,12 +4708,12 @@
           "ap": 320.13,
           "ml": 0,
           "mb": 0,
-          "arcPay": 10.99
+          "arcPay": 0
         },
         {
           "n": "Napoleoa",
           "ri": "CLG74245",
-          "s": "MA-COGGESHALL",
+          "s": "",
           "c": "Manny",
           "state": "MA",
           "ta": 26,
@@ -4708,12 +4728,12 @@
           "ap": 927.09,
           "ml": 0,
           "mb": 0,
-          "arcPay": 66
+          "arcPay": 0
         },
         {
           "n": "Nathan",
           "ri": "RHF94107",
-          "s": "TN-KEITH ST",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 14,
@@ -4733,7 +4753,7 @@
         {
           "n": "nereida",
           "ri": "BEY39099",
-          "s": "CT-BUCKLAND HILLS MALL",
+          "s": "",
           "c": "TBD",
           "state": "CT",
           "ta": 10,
@@ -4748,7 +4768,7 @@
           "ap": 344.72,
           "ml": 0,
           "mb": 0,
-          "arcPay": 6
+          "arcPay": 0
         },
         {
           "n": "Nicole",
@@ -4763,16 +4783,16 @@
           "wt": 0,
           "hs": 1,
           "af": 0,
-          "hr": 25.92,
+          "hr": 17.12,
           "ap": 46.92,
           "ml": 0,
           "mb": 0,
-          "arcPay": 5
+          "arcPay": 0
         },
         {
           "n": "Oscar",
           "ri": "IAS17194",
-          "s": "RI-HARTFORD AVE",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 6,
@@ -4783,11 +4803,11 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 28.12,
+          "hr": 19.63,
           "ap": 361.92,
           "ml": 0,
           "mb": 0,
-          "arcPay": 4
+          "arcPay": 0
         },
         {
           "n": "Richard",
@@ -4807,7 +4827,7 @@
           "ap": 506.2,
           "ml": 0,
           "mb": 0,
-          "arcPay": 17
+          "arcPay": 0
         },
         {
           "n": "rosemary",
@@ -4831,7 +4851,7 @@
         {
           "n": "Sabrina",
           "ri": "KHP97059",
-          "s": "RI-BROAD ST",
+          "s": "",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 21,
@@ -4846,7 +4866,7 @@
           "ap": 952.82,
           "ml": 0,
           "mb": 0,
-          "arcPay": 19
+          "arcPay": 0
         },
         {
           "n": "saimary",
@@ -4866,12 +4886,12 @@
           "ap": 467.98,
           "ml": 0,
           "mb": 0,
-          "arcPay": 294
+          "arcPay": 0
         },
         {
           "n": "Samantha",
           "ri": "WXJ72901",
-          "s": "TN-WEST MARKET",
+          "s": "",
           "c": "Cheryl",
           "state": "TN",
           "ta": 8,
@@ -4882,17 +4902,17 @@
           "wt": 0,
           "hs": 0,
           "af": 0,
-          "hr": 26.93,
+          "hr": 22.7,
           "ap": 157.3,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Sergio",
           "ri": "YWZ19652",
-          "s": "TN-NORTH BROADWAY",
-          "c": "Mr. Watts",
+          "s": "",
+          "c": "TBD",
           "ta": 9,
           "na": 5,
           "ra": 1,
@@ -4905,12 +4925,12 @@
           "ap": 270.04,
           "ml": 0,
           "mb": 0,
-          "arcPay": 2
+          "arcPay": 0
         },
         {
           "n": "Shelena",
           "ri": "BWP66480",
-          "s": "TN-NORTH BROADWAY",
+          "s": "",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 37,
@@ -4925,12 +4945,12 @@
           "ap": 753.7,
           "ml": 0,
           "mb": 0,
-          "arcPay": 38
+          "arcPay": 0
         },
         {
           "n": "stephanie",
           "ri": "HFO96739",
-          "s": "MA-WESTERN AVE",
+          "s": "",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 26,
@@ -4945,7 +4965,7 @@
           "ap": 610.96,
           "ml": 0,
           "mb": 0,
-          "arcPay": 52
+          "arcPay": 0
         },
         {
           "n": "Tyrone",
@@ -4969,7 +4989,7 @@
         {
           "n": "Vernard",
           "ri": "ZFZ71226",
-          "s": "RI-RESERVOIR AVE",
+          "s": "",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 30,
@@ -4984,7 +5004,7 @@
           "ap": 1122.95,
           "ml": 0,
           "mb": 0,
-          "arcPay": 43
+          "arcPay": 0
         },
         {
           "n": "Yanna",
@@ -5004,12 +5024,12 @@
           "ap": 628.7,
           "ml": 0,
           "mb": 0,
-          "arcPay": 36
+          "arcPay": 0
         },
         {
           "n": "Yarele",
           "ri": "IFZ56368",
-          "s": "MA-SOUTH SHORE MALL",
+          "s": "",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 18,
@@ -5024,7 +5044,7 @@
           "ap": 683.31,
           "ml": 0,
           "mb": 0,
-          "arcPay": 8
+          "arcPay": 0
         },
         {
           "n": "Zulmarie",
@@ -5043,7 +5063,7 @@
           "ap": 549.5,
           "ml": 0,
           "mb": 0,
-          "arcPay": 16
+          "arcPay": 0
         }
       ]
     },
