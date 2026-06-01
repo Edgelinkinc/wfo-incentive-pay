@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "publishedAt": "2026-06-01T15:28:27.781Z",
+  "publishedAt": "2026-06-01T15:37:33.695Z",
   "currentWeek": "2026-05-25",
   "weekIndex": [
     "2026-05-25",
@@ -25,7 +25,7 @@
         {
           "n": "Mariel",
           "ri": "CSO68288",
-          "s": "",
+          "s": "TN-MAGNOLIA",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 34,
@@ -45,7 +45,7 @@
         {
           "n": "Juliana",
           "ri": "VIT47142",
-          "s": "",
+          "s": "RI-PROVIDENCE PLACE MALL",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 23,
@@ -65,7 +65,7 @@
         {
           "n": "Shelena",
           "ri": "BWP66480",
-          "s": "",
+          "s": "TN-NORTH BROADWAY",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 28,
@@ -145,7 +145,7 @@
         {
           "n": "Vernard",
           "ri": "ZFZ71226",
-          "s": "",
+          "s": "MA-CAPE COD MALL",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 36,
@@ -165,7 +165,7 @@
         {
           "n": "Allia",
           "ri": "DXP98939",
-          "s": "",
+          "s": "RI-BALD HILL",
           "c": "TBD",
           "state": "RI",
           "ta": 40,
@@ -225,7 +225,7 @@
         {
           "n": "nereida",
           "ri": "BEY39099",
-          "s": "",
+          "s": "CT-BUCKLAND HILLS MALL",
           "c": "TBD",
           "state": "CT",
           "ta": 35,
@@ -245,7 +245,7 @@
         {
           "n": "stephanie",
           "ri": "HFO96739",
-          "s": "",
+          "s": "MA-WESTERN AVE",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 21,
@@ -265,7 +265,7 @@
         {
           "n": "Jensy",
           "ri": "JIY63724",
-          "s": "",
+          "s": "RI-PROVIDENCE PLACE MALL",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 41,
@@ -305,7 +305,7 @@
         {
           "n": "Abel",
           "ri": "NIV04273",
-          "s": "",
+          "s": "MA-SOUTH SHORE MALL",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 28,
@@ -345,8 +345,8 @@
         {
           "n": "Joseph",
           "ri": "CMP10750",
-          "s": "",
-          "c": "TBD",
+          "s": "RI-HARTFORD AVE",
+          "c": "Rose Perez",
           "ta": 18,
           "na": 16,
           "ra": 0,
@@ -364,7 +364,7 @@
         {
           "n": "Sabrina",
           "ri": "KHP97059",
-          "s": "",
+          "s": "RI-BROAD ST",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 28,
@@ -384,7 +384,7 @@
         {
           "n": "Brenda",
           "ri": "CYW45301",
-          "s": "",
+          "s": "AR-COLONEL GLENN",
           "c": "TBD",
           "state": "AR",
           "ta": 14,
@@ -404,7 +404,7 @@
         {
           "n": "Ana",
           "ri": "OZY90583",
-          "s": "",
+          "s": "RI-751 BROAD",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 7,
@@ -443,7 +443,7 @@
         {
           "n": "Hector",
           "ri": "KWV73873",
-          "s": "",
+          "s": "MA-HOLYOKE",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 26,
@@ -482,7 +482,7 @@
         {
           "n": "Napoleoa",
           "ri": "CLG74245",
-          "s": "",
+          "s": "MA-COGGESHALL",
           "c": "Manny",
           "state": "MA",
           "ta": 28,
@@ -522,7 +522,7 @@
         {
           "n": "Carlos",
           "ri": "KOW08275",
-          "s": "",
+          "s": "MA-HOLYOKE",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 28,
@@ -542,7 +542,7 @@
         {
           "n": "Frank",
           "ri": "TZO36978",
-          "s": "",
+          "s": "RI-BROADWAY",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 29,
@@ -562,7 +562,7 @@
         {
           "n": "Khrystyne",
           "ri": "VPB31735",
-          "s": "",
+          "s": "MA-FALLRIVER",
           "c": "Manny",
           "state": "MA",
           "ta": 17,
@@ -601,7 +601,7 @@
         {
           "n": "Armando",
           "ri": "ZIW70174",
-          "s": "",
+          "s": "MA-LOCUST STREET",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 7,
@@ -621,7 +621,7 @@
         {
           "n": "Christopher",
           "ri": "KLZ94722",
-          "s": "",
+          "s": "RI-COVENTRY",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 10,
@@ -641,7 +641,7 @@
         {
           "n": "Daniel",
           "ri": "MTX98142",
-          "s": "",
+          "s": "RI-RESERVOIR AVE",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 18,
@@ -680,7 +680,7 @@
         {
           "n": "isaiah",
           "ri": "CZU10265",
-          "s": "",
+          "s": "MA-LOCUST STREET",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 20,
@@ -700,7 +700,7 @@
         {
           "n": "Jessica",
           "ri": "IDF00979",
-          "s": "",
+          "s": "MA-STATE STREET",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 8,
@@ -720,7 +720,7 @@
         {
           "n": "Derek",
           "ri": "CLB37831",
-          "s": "",
+          "s": "MA-ROCKDALE",
           "c": "Manny",
           "state": "MA",
           "ta": 14,
@@ -740,8 +740,8 @@
         {
           "n": "Handriel",
           "ri": "PHM41466",
-          "s": "",
-          "c": "Ambulai Sheku",
+          "s": "RI-BALD HILL",
+          "c": "TBD",
           "state": "RI",
           "ta": 10,
           "na": 3,
@@ -760,7 +760,7 @@
         {
           "n": "Alicia",
           "ri": "KAM65097",
-          "s": "",
+          "s": "MA-LOCUST STREET",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 10,
@@ -780,7 +780,7 @@
         {
           "n": "Melicia",
           "ri": "NFO89908",
-          "s": "",
+          "s": "TN-WEST MARKET",
           "c": "Cheryl",
           "state": "TN",
           "ta": 4,
@@ -819,7 +819,7 @@
         {
           "n": "Brendaliz",
           "ri": "IHS87312",
-          "s": "",
+          "s": "CT-NORWICH",
           "c": "TBD",
           "state": "CT",
           "ta": 17,
@@ -839,7 +839,7 @@
         {
           "n": "Izabella",
           "ri": "MAF14353",
-          "s": "",
+          "s": "RI-BALD HILL",
           "c": "TBD",
           "state": "RI",
           "ta": 22,
@@ -878,7 +878,7 @@
         {
           "n": "Samantha",
           "ri": "WXJ72901",
-          "s": "",
+          "s": "TN-WEST MARKET",
           "c": "Cheryl",
           "state": "TN",
           "ta": 3,
@@ -898,7 +898,7 @@
         {
           "n": "Angela",
           "ri": "MMM94297",
-          "s": "",
+          "s": "TN-KEITH ST",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 6,
@@ -918,7 +918,7 @@
         {
           "n": "Justin",
           "ri": "USW26794",
-          "s": "",
+          "s": "MA-FALLRIVER",
           "c": "Manny",
           "state": "MA",
           "ta": 20,
@@ -938,8 +938,8 @@
         {
           "n": "Amauri",
           "ri": "DDX65206",
-          "s": "",
-          "c": "TBD",
+          "s": "RI-RESERVOIR AVE",
+          "c": "Ambulai Sheku",
           "ta": 4,
           "na": 2,
           "ra": 0,
@@ -957,7 +957,7 @@
         {
           "n": "Lori",
           "ri": "HHI23969",
-          "s": "",
+          "s": "MA-ROCKDALE",
           "c": "Manny",
           "state": "MA",
           "ta": 17,
@@ -1017,7 +1017,7 @@
         {
           "n": "Djeison",
           "ri": "NIK70124",
-          "s": "",
+          "s": "MA-ROCKDALE",
           "c": "Manny",
           "state": "MA",
           "ta": 8,
@@ -1094,7 +1094,7 @@
         {
           "n": "Lucmila",
           "ri": "RLR38159",
-          "s": "",
+          "s": "MA-SOUTH SHORE MALL",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 43,
@@ -1114,8 +1114,8 @@
         {
           "n": "Sergio",
           "ri": "YWZ19652",
-          "s": "",
-          "c": "TBD",
+          "s": "TN-WESTERN AVE",
+          "c": "Mr. Watts",
           "ta": 10,
           "na": 8,
           "ra": 1,
@@ -1153,7 +1153,7 @@
         {
           "n": "ALMA",
           "ri": "DCZ70200",
-          "s": "",
+          "s": "MA-EXCHANGE ST",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 3,
@@ -1173,7 +1173,7 @@
         {
           "n": "Divante",
           "ri": "PNO47488",
-          "s": "",
+          "s": "MA-STATE STREET",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 12,
@@ -1193,7 +1193,7 @@
         {
           "n": "Hasba",
           "ri": "TRR15148",
-          "s": "",
+          "s": "RI-DOUGLAS",
           "c": "Ambulai Sheku",
           "state": "RI",
           "ta": 3,
@@ -1213,7 +1213,7 @@
         {
           "n": "Hector",
           "ri": "EIY40272",
-          "s": "",
+          "s": "RI-751 BROAD",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 13,
@@ -1253,7 +1253,7 @@
         {
           "n": "Mirtha",
           "ri": "QLO66750",
-          "s": "",
+          "s": "TN-KEITH ST",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 6,
@@ -1273,7 +1273,7 @@
         {
           "n": "Franchesca",
           "ri": "LHX36141",
-          "s": "",
+          "s": "TN-NORTH BROADWAY",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 3,
@@ -1293,7 +1293,7 @@
         {
           "n": "Jalah",
           "ri": "CAI39911",
-          "s": "",
+          "s": "CT-NEW LONDON",
           "c": "TBD",
           "ta": 3,
           "na": 3,
@@ -1312,7 +1312,7 @@
         {
           "n": "Jazmine",
           "ri": "QQL00950",
-          "s": "",
+          "s": "MA-EXCHANGE ST",
           "c": "Joel Montero",
           "state": "MA",
           "ta": 12,
@@ -1332,7 +1332,7 @@
         {
           "n": "Jermaine",
           "ri": "KFE95893",
-          "s": "",
+          "s": "TN-SHALLOWFORD RD",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 2,
@@ -1352,7 +1352,7 @@
         {
           "n": "Yarele",
           "ri": "IFZ56368",
-          "s": "",
+          "s": "MA-SOUTH SHORE MALL",
           "c": "Rose Perez",
           "state": "MA",
           "ta": 1,
@@ -1372,8 +1372,8 @@
         {
           "n": "Brandon",
           "ri": "QQO06195",
-          "s": "",
-          "c": "Ambulai Sheku",
+          "s": "RI-NEWPORT AVE",
+          "c": "Rose Perez",
           "state": "RI",
           "ta": 3,
           "na": 1,
@@ -1392,7 +1392,7 @@
         {
           "n": "James",
           "ri": "BPW93549",
-          "s": "",
+          "s": "CT-NORWICH",
           "c": "TBD",
           "state": "CT",
           "ta": 11,
@@ -1412,7 +1412,7 @@
         {
           "n": "Josh",
           "ri": "KWP74551",
-          "s": "",
+          "s": "CT-NEW LONDON",
           "c": "TBD",
           "state": "CT",
           "ta": 5,
@@ -1432,7 +1432,7 @@
         {
           "n": "Alishabeth",
           "ri": "WQA62252",
-          "s": "",
+          "s": "CT-BUCKLAND HILLS MALL",
           "c": "TBD",
           "state": "CT",
           "ta": 5,
@@ -1471,7 +1471,7 @@
         {
           "n": "Maliek",
           "ri": "DDX68207",
-          "s": "",
+          "s": "MA-CAPE COD MALL",
           "c": "Ambulai Sheku",
           "state": "MA",
           "ta": 7,
@@ -1491,7 +1491,7 @@
         {
           "n": "Oscar",
           "ri": "IAS17194",
-          "s": "",
+          "s": "RI-HARTFORD AVE",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 13,
@@ -1530,7 +1530,7 @@
         {
           "n": "GAMALY",
           "ri": "RYL10527",
-          "s": "",
+          "s": "CT-BUCKLAND HILLS MALL",
           "c": "TBD",
           "state": "CT",
           "ta": 13,
@@ -1665,7 +1665,7 @@
         {
           "n": "Nathan",
           "ri": "RHF94107",
-          "s": "",
+          "s": "TN-KEITH ST",
           "c": "Mr. Watts",
           "state": "TN",
           "ta": 4,
@@ -1685,7 +1685,7 @@
         {
           "n": "Telia",
           "ri": "OID13924",
-          "s": "",
+          "s": "CT-NEW LONDON",
           "c": "TBD",
           "ta": 2,
           "na": 2,
@@ -1704,7 +1704,7 @@
         {
           "n": "Tyresha",
           "ri": "QTT65936",
-          "s": "",
+          "s": "CT-NEW LONDON",
           "c": "TBD",
           "ta": 2,
           "na": 2,
@@ -1723,7 +1723,7 @@
         {
           "n": "Keysha",
           "ri": "YFB29407",
-          "s": "",
+          "s": "RI-751 BROAD",
           "c": "Rose Perez",
           "state": "RI",
           "ta": 16,
@@ -1743,8 +1743,8 @@
         {
           "n": "Corey",
           "ri": "DFF95007",
-          "s": "",
-          "c": "TBD",
+          "s": "TN-NORTH BROADWAY",
+          "c": "Mr. Watts",
           "ta": 15,
           "na": 9,
           "ra": 1,
@@ -1781,8 +1781,8 @@
         {
           "n": "Brandon",
           "ri": "UAD98925",
-          "s": "",
-          "c": "TBD",
+          "s": "RI-COVENTRY",
+          "c": "Ambulai Sheku",
           "ta": 5,
           "na": 4,
           "ra": 0,
@@ -1800,8 +1800,8 @@
         {
           "n": "Esther",
           "ri": "LDC14150",
-          "s": "",
-          "c": "TBD",
+          "s": "MA-SOUTH SHORE MALL",
+          "c": "Rose Perez",
           "ta": 1,
           "na": 1,
           "ra": 0,
@@ -22421,7 +22421,7 @@
   "perfThresholds": "{\"ap\":90,\"a\":80,\"b\":65,\"c\":50,\"d\":40}",
   "puConfig": "[{\"id\":\"pu_af\",\"name\":\"Affirm Sale\",\"field\":\"af\",\"rate\":5,\"active\":false,\"inGross\":false,\"sd\":\"\",\"ed\":\"\"},{\"id\":\"pu_hs\",\"name\":\"Home Service (HSI)\",\"field\":\"hs\",\"rate\":5,\"active\":true,\"inGross\":false,\"sd\":\"2026-05-01\",\"ed\":\"2026-05-31\"},{\"id\":\"pu_1778099116401\",\"name\":\"New Activation Spiff $2\",\"field\":\"af\",\"rate\":2,\"active\":false,\"inGross\":false,\"sd\":\"2026-05-01\",\"ed\":\"2026-05-12\"},{\"id\":\"pu_1778099152289\",\"name\":\"$2 TABLET \",\"field\":\"af\",\"rate\":2,\"active\":true,\"inGross\":false,\"sd\":\"2026-05-01\",\"ed\":\"2026-05-31\"}]",
   "customRoster": "{\"VFE66579\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Christopher\",\"first\":\"Christopher\",\"last\":\"\",\"isNew\":true,\"addedAt\":\"4/5/2026, 3:51:56 PM\"},\"LAZ96098\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Ashton\",\"first\":\"Ashton\",\"last\":\"Diamond\",\"isNew\":true,\"addedAt\":\"4/5/2026, 3:51:56 PM\"},\"DWE43847\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Delbert\",\"first\":\"Delbert\",\"last\":\"Phillips\",\"isNew\":false,\"addedAt\":\"4/5/2026, 3:51:56 PM\"},\"NZU83170\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Ambulai\",\"first\":\"Ambulai\",\"last\":\"Sheku\",\"isNew\":true,\"addedAt\":\"4/5/2026, 3:51:56 PM\"},\"YSK35283\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"James\",\"first\":\"James\",\"last\":\"\",\"isNew\":true,\"addedAt\":\"4/5/2026, 3:51:56 PM\"},\"RTE65976\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Ana\",\"first\":\"Ana\",\"last\":\"Silva\",\"isNew\":false,\"addedAt\":\"4/14/2026, 4:15:07 PM\"},\"ZJV84218\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Andrew\",\"first\":\"Andrew\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"4/14/2026, 4:15:07 PM\"},\"DPR83914\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Ceidy\",\"first\":\"Ceidy\",\"last\":\"Desormeau\",\"isNew\":false,\"addedAt\":\"4/14/2026, 4:15:07 PM\"},\"HBS75820\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Jonah\",\"first\":\"Jonah\",\"last\":\"Vallejo\",\"isNew\":false,\"addedAt\":\"4/14/2026, 4:15:07 PM\"},\"GCP92528\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Tayla\",\"first\":\"Tayla\",\"last\":\"Wilcox\",\"isNew\":false,\"addedAt\":\"4/14/2026, 4:15:07 PM\"},\"CMP10750\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Joseph\",\"first\":\"Joseph\",\"last\":\"Robleto\",\"isNew\":false,\"addedAt\":\"4/28/2026, 3:03:11 PM\"},\"YXT90782\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Rosemary\",\"first\":\"Rosemary\",\"last\":\"\",\"isNew\":true,\"addedAt\":\"4/28/2026, 3:03:11 PM\"},\"DDX65206\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Amauri\",\"first\":\"Amauri\",\"last\":\"Razon\",\"isNew\":false,\"addedAt\":\"4/28/2026, 3:03:11 PM\"},\"YWZ19652\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Sergio\",\"first\":\"Sergio\",\"last\":\"Gomez\",\"isNew\":false,\"addedAt\":\"4/28/2026, 3:03:11 PM\"},\"CIZ66134\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Angelous\",\"first\":\"Angelous\",\"last\":\"Thomas\",\"isNew\":false,\"addedAt\":\"4/28/2026, 3:50:24 PM\"},\"CAI39911\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Jalah\",\"first\":\"Jalah\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"4/28/2026, 8:04:55 PM\"},\"RZD14638\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Immanuel\",\"first\":\"Immanuel\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"4/28/2026, 8:04:55 PM\"},\"HKT84764\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Jose\",\"first\":\"Jose\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/4/2026, 12:16:00 PM\"},\"QSN23852\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Brianna\",\"first\":\"Brianna\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/4/2026, 12:16:00 PM\"},\"YLA61766\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Jayna\",\"first\":\"Jayna\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/4/2026, 12:16:00 PM\"},\"RIP15404\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Eliezer\",\"first\":\"Eliezer\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/19/2026, 2:52:53 PM\"},\"ADO76752\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Gina\",\"first\":\"Gina\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/19/2026, 2:52:53 PM\"},\"JMX05174\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Zulmarie\",\"first\":\"Zulmarie\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/19/2026, 2:52:53 PM\"},\"XCQ64111\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Nicole\",\"first\":\"Nicole\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/19/2026, 2:52:53 PM\"},\"CJT13324\":{\"coach\":\"TBD\",\"state\":\"\",\"full\":\"Tyrone\",\"first\":\"Tyrone\",\"last\":\"\",\"isNew\":false,\"addedAt\":\"5/19/2026, 2:52:53 PM\"}}",
-  "nameOverrides": "{\"LAZ96098\":{\"last\":\"Diamond\"},\"NZU83170\":{\"last\":\"Sheku\"},\"GCP92528\":{\"last\":\"Wilcox\"},\"RTE65976\":{\"first\":\"Ana\",\"last\":\"Silva\"},\"DWE43847\":{\"last\":\"Phillips\"},\"ZJV84218\":{\"last\":\"Serpa\"},\"YSK35283\":{\"last\":\"Watts\"},\"UAO36325\":{\"first\":\"Gilberto\",\"last\":\"Alvarez\"},\"CIZ66134\":{\"last\":\"Thomas\"},\"DDX65206\":{\"first\":\"Amauri\",\"last\":\"Razon\"},\"DPR83914\":{\"first\":\"Ceidy\",\"last\":\"Desormeau\"},\"HBS75820\":{\"last\":\"Vallejo\"},\"YWZ19652\":{\"last\":\"Gomez\"},\"CMP10750\":{\"last\":\"Robleto\"},\"YXT90782\":{\"last\":\"Perez\"},\"CAI39911\":{\"last\":\"Keith\"},\"RZD14638\":{\"last\":\"Hilerio\"},\"RMN54941\":{\"first\":\"Alex\",\"last\":\"Correa\"},\"DXP98939\":{\"first\":\"Allia\",\"last\":\"Abodaher\"},\"DCZ70200\":{\"first\":\"Alma\",\"last\":\"Cedeno\"},\"PNL78523\":{\"first\":\"Amina\",\"last\":\"Fellah\"},\"VQZ19656\":{\"first\":\"Angel\",\"last\":\"Rivera\"},\"ZIW70174\":{\"first\":\"Armando\",\"last\":\"Perez\"},\"ZHW99574\":{\"first\":\"Jasmine\",\"last\":\"Griffin\"},\"IJA97207\":{\"first\":\"Karmina\",\"last\":\"Mendoza\"},\"ORK31397\":{\"first\":\"Kevin\",\"last\":\"Martinez\"},\"KWP74551\":{\"first\":\"Josh\",\"last\":\"Landry\"},\"BPW93549\":{\"first\":\"James\",\"last\":\"Garcia\"},\"RLR38159\":{\"first\":\"Lucmila\",\"last\":\"Lopes\"},\"IFZ56368\":{\"first\":\"Yarele\",\"last\":\"Soler\"},\"ZFZ71226\":{\"first\":\"Vernard\",\"last\":\"Ashe\"},\"CLG74245\":{\"first\":\"Napoleoa\",\"last\":\"DaCruz\"},\"USW26794\":{\"first\":\"Justin\",\"last\":\"Moniz\"},\"KOW08275\":{\"first\":\"Carlos\",\"last\":\"Davila\"},\"OXY97908\":{\"first\":\"Richard\",\"last\":\"Foster\"},\"CLB37831\":{\"first\":\"Derek\",\"last\":\"Tejeda\"},\"PNO47488\":{\"first\":\"Divante\",\"last\":\"Lacy\"},\"IDF00979\":{\"first\":\"Jessica\",\"last\":\"Retamar\"},\"HFO96739\":{\"first\":\"Stephanie\",\"last\":\"Melo\"},\"NIV04273\":{\"first\":\"Abel\",\"last\":\"Burgos\"},\"BWP66480\":{\"first\":\"Shelena\",\"last\":\"Hamilton\"},\"HKT84764\":{\"last\":\"Monroy\"},\"QSN23852\":{\"last\":\"Swaggerty\"},\"YLA61766\":{\"last\":\"Estrada\"},\"RIP15404\":{\"last\":\"Linares Perez\"},\"ADO76752\":{\"last\":\"Vieira\"},\"JMX05174\":{\"last\":\"Malave\"},\"XCQ64111\":{\"last\":\"Lavoie\"},\"CJT13324\":{\"last\":\"Walker\"}}",
+  "nameOverrides": "{\"LAZ96098\":{\"last\":\"Diamond\"},\"NZU83170\":{\"last\":\"Sheku\"},\"GCP92528\":{\"last\":\"Wilcox\"},\"RTE65976\":{\"first\":\"Ana\",\"last\":\"Silva\"},\"DWE43847\":{\"last\":\"Phillips\"},\"ZJV84218\":{\"last\":\"Serpa\"},\"YSK35283\":{\"last\":\"Watts\"},\"UAO36325\":{\"first\":\"Gilberto\",\"last\":\"Alvarez\"},\"CIZ66134\":{\"last\":\"Thomas\"},\"DDX65206\":{\"first\":\"Amauri\",\"last\":\"Razon\"},\"DPR83914\":{\"first\":\"Ceidy\",\"last\":\"Desormeau\"},\"HBS75820\":{\"last\":\"Vallejo\"},\"YWZ19652\":{\"last\":\"Gomez\"},\"CMP10750\":{\"last\":\"Robleto\"},\"YXT90782\":{\"last\":\"Perez\"},\"CAI39911\":{\"last\":\"Keith\"},\"RZD14638\":{\"last\":\"Hilerio\"},\"RMN54941\":{\"first\":\"Alex\",\"last\":\"Correa\"},\"DXP98939\":{\"first\":\"Allia\",\"last\":\"Abodaher\"},\"DCZ70200\":{\"first\":\"Alma\",\"last\":\"Cedeno\"},\"PNL78523\":{\"first\":\"Amina\",\"last\":\"Fellah\"},\"VQZ19656\":{\"first\":\"Angel\",\"last\":\"Rivera\"},\"ZIW70174\":{\"first\":\"Armando\",\"last\":\"Perez\"},\"ZHW99574\":{\"first\":\"Jasmine\",\"last\":\"Griffin\"},\"IJA97207\":{\"first\":\"Karmina\",\"last\":\"Mendoza\"},\"ORK31397\":{\"first\":\"Kevin\",\"last\":\"Martinez\"},\"KWP74551\":{\"first\":\"Josh\",\"last\":\"Landry\"},\"BPW93549\":{\"first\":\"James\",\"last\":\"Garcia\"},\"RLR38159\":{\"first\":\"Lucmila\",\"last\":\"Lopes\"},\"IFZ56368\":{\"first\":\"Yarele\",\"last\":\"Soler\"},\"ZFZ71226\":{\"first\":\"Vernard\",\"last\":\"Ashe\"},\"CLG74245\":{\"first\":\"Napoleoa\",\"last\":\"DaCruz\"},\"USW26794\":{\"first\":\"Justin\",\"last\":\"Moniz\"},\"KOW08275\":{\"first\":\"Carlos\",\"last\":\"Davila\"},\"OXY97908\":{\"first\":\"Richard\",\"last\":\"Foster\"},\"CLB37831\":{\"first\":\"Derek\",\"last\":\"Tejeda\"},\"PNO47488\":{\"first\":\"Divante\",\"last\":\"Lacy\"},\"IDF00979\":{\"first\":\"Jessica\",\"last\":\"Retamar\"},\"HFO96739\":{\"first\":\"Stephanie\",\"last\":\"Melo\"},\"NIV04273\":{\"first\":\"Abel\",\"last\":\"Burgos\"},\"BWP66480\":{\"first\":\"Shelena\",\"last\":\"Hamilton\"},\"HKT84764\":{\"last\":\"Monroy\"},\"QSN23852\":{\"last\":\"Swaggerty\"},\"YLA61766\":{\"last\":\"Estrada\"},\"RIP15404\":{\"last\":\"Linares Perez\"},\"ADO76752\":{\"last\":\"Vieira\"},\"JMX05174\":{\"last\":\"Malave\"},\"XCQ64111\":{\"last\":\"Lavoie\"},\"CJT13324\":{\"last\":\"Walker\"},\"DFF95007\":{\"last\":\"Watts\"},\"UAD98925\":{\"last\":\"Marsellas\"},\"LDC14150\":{\"last\":\"Burgos\"}}",
   "tiers": "{\"box\":[{\"mn\":8,\"mx\":11,\"r\":2},{\"mn\":12,\"mx\":17,\"r\":4},{\"mn\":18,\"mx\":24,\"r\":5},{\"mn\":25,\"mx\":9999,\"r\":7}],\"acc\":[{\"mp\":299,\"xp\":499,\"p\":5},{\"mp\":500,\"xp\":749,\"p\":7},{\"mp\":750,\"xp\":999,\"p\":10},{\"mp\":1000,\"xp\":1499,\"p\":15},{\"mp\":1500,\"xp\":999999,\"p\":20}],\"af\":5,\"hs\":5,\"mi\":[10,10,10,10,10,0],\"mgr\":{\"1\":{\"cats\":{\"acts\":{\"base\":300,\"up\":375},\"hsi\":{\"base\":100,\"up\":125},\"bts\":{\"base\":100,\"up\":125},\"acc\":{\"base\":300,\"up\":375}},\"baseMax\":800,\"upMax\":1000},\"2\":{\"cats\":{\"acts\":{\"base\":225,\"up\":281.25},\"hsi\":{\"base\":75,\"up\":93.75},\"bts\":{\"base\":75,\"up\":93.75},\"acc\":{\"base\":225,\"up\":281.25}},\"baseMax\":600,\"upMax\":750},\"3\":{\"cats\":{\"acts\":{\"base\":150,\"up\":187.5},\"hsi\":{\"base\":50,\"up\":62.5},\"bts\":{\"base\":50,\"up\":62.5},\"acc\":{\"base\":150,\"up\":187.5}},\"baseMax\":400,\"upMax\":500}},\"coach\":{\"at100\":200,\"at115\":275,\"at125\":325,\"atPen\":25,\"ac50\":2,\"ac60\":3,\"ac70\":4,\"acElbDrop\":1,\"sh1\":10,\"sh2\":25,\"kick1\":500,\"kick2\":750,\"mimRate\":10},\"elbDQ\":3368,\"attachDQ\":60}",
   "tierHistory": null,
   "announcements": null,
