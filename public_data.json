@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "publishedAt": "2026-06-03T18:52:44.427Z",
+  "publishedAt": "2026-06-03T20:40:28.449Z",
   "currentWeek": "2026-05-25",
   "weekIndex": [
     "2026-06-01",
@@ -716,7 +716,7 @@
           "n": "Frank",
           "ri": "TZO36978",
           "s": "RI-BROADWAY",
-          "c": "Ambulai Sheku",
+          "c": "Rose Perez",
           "state": "RI",
           "ta": 29,
           "na": 27,
@@ -874,8 +874,8 @@
         {
           "n": "IMMANUEL",
           "ri": "RZD14638",
-          "s": "RI-HARTFORD AVE",
-          "c": "Rose Perez",
+          "s": "MA-COGGESHALL",
+          "c": "Manny",
           "ta": 10,
           "na": 4,
           "ra": 1,
