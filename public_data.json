@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "publishedAt": "2026-07-01T22:07:57.712Z",
-  "currentWeek": "2026-06-22",
+  "publishedAt": "2026-07-01T22:09:25.235Z",
+  "currentWeek": "2026-05-25",
   "weekIndex": [
     "2026-06-29",
     "2026-06-22",
@@ -24,7 +24,7 @@
   ],
   "weekData": {
     "2026-06-22": {
-      "locked": false,
+      "locked": true,
       "repCount": 85,
       "reps": [
         {
@@ -1703,7 +1703,7 @@
       ]
     },
     "2026-06-15": {
-      "locked": false,
+      "locked": true,
       "repCount": 82,
       "reps": [
         {
@@ -3325,7 +3325,7 @@
       ]
     },
     "2026-06-08": {
-      "locked": false,
+      "locked": true,
       "repCount": 86,
       "reps": [
         {
@@ -4140,8 +4140,8 @@
         {
           "n": "IMMANUEL",
           "ri": "RZD14638",
-          "s": "",
-          "c": "TBD",
+          "s": "MA-COGGESHALL",
+          "c": "Manny",
           "ta": 12,
           "na": 8,
           "ra": 0,
@@ -4515,7 +4515,7 @@
           "n": "Kristina",
           "ri": "OZF78077",
           "s": "RI-BROADWAY",
-          "c": "Rose Perez",
+          "c": "Ambulai Sheku",
           "ta": 0,
           "na": 0,
           "ra": 0,
@@ -5026,7 +5026,7 @@
       ]
     },
     "2026-06-01": {
-      "locked": false,
+      "locked": true,
       "repCount": 88,
       "reps": [
         {
@@ -5507,8 +5507,8 @@
         {
           "n": "Liliana",
           "ri": "RYF61216",
-          "s": "",
-          "c": "TBD",
+          "s": "MA-ROCKDALE",
+          "c": "Manny",
           "ta": 3,
           "na": 3,
           "ra": 0,
@@ -5526,8 +5526,8 @@
         {
           "n": "Kiesha",
           "ri": "KZD75132",
-          "s": "",
-          "c": "TBD",
+          "s": "TN-SHALLOWFORD RD",
+          "c": "Mr. Watts",
           "ta": 0,
           "na": 0,
           "ra": 0,
@@ -5939,8 +5939,8 @@
         {
           "n": "IMMANUEL",
           "ri": "RZD14638",
-          "s": "",
-          "c": "TBD",
+          "s": "MA-COGGESHALL",
+          "c": "Manny",
           "ta": 5,
           "na": 2,
           "ra": 0,
@@ -6767,7 +6767,7 @@
       ]
     },
     "2026-05-25": {
-      "locked": false,
+      "locked": true,
       "repCount": 89,
       "reps": [
         {
