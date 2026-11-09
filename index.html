@@ -221,6 +221,7 @@ tbody td{padding:10px 12px;white-space:nowrap}
       <div class="pt" id="tbt">Dashboard</div>
       <div class="tr">
         <span id="tbu" style="font-size:12px;font-weight:600;color:var(--gray)"></span>
+        <button class="btn btn-s btn-sm" id="preview-rollout-btn" style="display:none" onclick="previewRollout()">👁 Preview Rollout</button>
         <button class="btn btn-pu btn-sm" id="ms-connect-btn" style="display:none" onclick="adminMsConnect()">CONNECT MICROSOFT</button>
         <button class="btn btn-s btn-sm" onclick="logout()">Sign Out</button>
       </div>
@@ -1463,6 +1464,7 @@ function launchApp(){
   document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';
   var msBtn=document.getElementById('ms-connect-btn');
   if(msBtn)msBtn.style.display=(role==='admin'&&!msalAccount)?'inline-block':'none';
+  var prvBtn=document.getElementById('preview-rollout-btn');if(prvBtn)prvBtn.style.display=(role!=='rep')?'inline-block':'none';
   updateSyncBadge();
   var wk=getLatestWeek();document.getElementById('sw').textContent=wk?fmtR(wk.weekStart,wk.weekEnd):'No data';
   fillCoachSelects();
@@ -4148,6 +4150,7 @@ function dismissRollout(){
   cm('mo-rollout');
 }
 function rolloutToMyPay(){dismissRollout();navTo('mypay');}
+function previewRollout(){om('mo-rollout');}
 function dlFile(name,content,type){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:type}));a.download=name;a.click();}
 function openConf(msg,cb){document.getElementById('conf-msg').textContent=msg;confCBfn=cb;om('mo-confirm');}
 document.getElementById('conf-ok').onclick=function(){cm('mo-confirm');if(confCBfn)confCBfn();};
